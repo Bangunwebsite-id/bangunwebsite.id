@@ -24,6 +24,16 @@ export type TrafficSummary = {
     last7DaysTopPages: PathStat[];
 };
 
+export type DashboardOverviewMetrics = {
+    totalUsers: number;
+    totalBlogs: number;
+    todayUniqueVisitors: number;
+    yesterdayUniqueVisitors: number;
+    last7DaysUniqueVisitors: number;
+    todayMainSource: string;
+    last7DaysMainSource: string;
+};
+
 export async function getTrafficSummary() {
     const timezone = process.env.APP_TIMEZONE ?? 'UTC';
 
@@ -123,4 +133,91 @@ export async function getTrafficSummary() {
         last7DaysTopSources: last7DaysSourcesResult.rows,
         last7DaysTopPages: last7DaysPagesResult.rows,
     } satisfies TrafficSummary;
+}
+
+export async function getDashboardOverviewMetrics() {
+    const timezone = process.env.APP_TIMEZONE ?? 'UTC';
+
+    const [
+        totalUsersResult,
+        totalBlogsResult,
+        todayCountResult,
+        yesterdayCountResult,
+        last7DaysCountResult,
+        todayMainSourceResult,
+        last7DaysMainSourceResult,
+    ] = await Promise.all([
+        dbPool.query<{ total: string }>(
+            `
+                SELECT COUNT(*)::text AS total
+                FROM users
+            `
+        ),
+        dbPool.query<{ total: string }>(
+            `
+                SELECT COUNT(*)::text AS total
+                FROM blog_posts
+            `
+        ),
+        dbPool.query<{ total: string }>(
+            `
+                SELECT COUNT(*)::text AS total
+                FROM traffic_daily_visitors
+                WHERE visit_date = (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date
+            `,
+            [timezone]
+        ),
+        dbPool.query<{ total: string }>(
+            `
+                SELECT COUNT(*)::text AS total
+                FROM traffic_daily_visitors
+                WHERE visit_date = ((NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date - INTERVAL '1 day')::date
+            `,
+            [timezone]
+        ),
+        dbPool.query<{ total: string }>(
+            `
+                SELECT COUNT(*)::text AS total
+                FROM traffic_daily_visitors
+                WHERE visit_date BETWEEN
+                    ((NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date - INTERVAL '6 day')::date
+                    AND (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date
+            `,
+            [timezone]
+        ),
+        dbPool.query<{ source_label: string }>(
+            `
+                SELECT source_label
+                FROM traffic_daily_visitors
+                WHERE visit_date = (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date
+                GROUP BY source_label
+                ORDER BY COUNT(*) DESC, source_label ASC
+                LIMIT 1
+            `,
+            [timezone]
+        ),
+        dbPool.query<{ source_label: string }>(
+            `
+                SELECT source_label
+                FROM traffic_daily_visitors
+                WHERE visit_date BETWEEN
+                    ((NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date - INTERVAL '6 day')::date
+                    AND (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date
+                GROUP BY source_label
+                ORDER BY COUNT(*) DESC, source_label ASC
+                LIMIT 1
+            `,
+            [timezone]
+        ),
+    ]);
+
+    return {
+        totalUsers: Number(totalUsersResult.rows[0]?.total ?? 0),
+        totalBlogs: Number(totalBlogsResult.rows[0]?.total ?? 0),
+        todayUniqueVisitors: Number(todayCountResult.rows[0]?.total ?? 0),
+        yesterdayUniqueVisitors: Number(yesterdayCountResult.rows[0]?.total ?? 0),
+        last7DaysUniqueVisitors: Number(last7DaysCountResult.rows[0]?.total ?? 0),
+        todayMainSource: todayMainSourceResult.rows[0]?.source_label ?? '-',
+        last7DaysMainSource: last7DaysMainSourceResult.rows[0]?.source_label ?? '-',
+    } satisfies DashboardOverviewMetrics;
 }

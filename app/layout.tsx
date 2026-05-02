@@ -13,8 +13,15 @@ export const metadata: Metadata = {
     description:
         'BangunWebsite.id membantu UMKM dan bisnis lokal melalui pembuatan website, maintenance website, dan konsultasi IT yang terarah.',
     icons: {
-        icon: '/bangun-website.ico',
+        icon: [
+            { url: '/favicon.ico' },
+            { url: '/favicon.svg', type: 'image/svg+xml' },
+            { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
+        ],
+        shortcut: '/favicon.ico',
+        apple: '/apple-touch-icon.png',
     },
+    manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({

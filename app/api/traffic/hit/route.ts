@@ -67,22 +67,22 @@ export async function POST(request: NextRequest) {
                     landing_path
                 )
                 SELECT
-                    (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date,
-                    $2,
-                    $3,
-                    $4,
-                    $5,
-                    $6,
-                    $7,
-                    $8,
-                    $9
+                    (NOW() AT TIME ZONE COALESCE($1::text, 'UTC'))::date,
+                    $2::text,
+                    $3::varchar,
+                    $4::varchar,
+                    $5::text,
+                    $6::varchar,
+                    $7::varchar,
+                    $8::text,
+                    $9::text
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM traffic_daily_visitors t
-                    WHERE t.visit_date = (NOW() AT TIME ZONE COALESCE($1, 'UTC'))::date
+                    WHERE t.visit_date = (NOW() AT TIME ZONE COALESCE($1::text, 'UTC'))::date
                       AND (
-                          t.visitor_id = $3
-                          OR ($4 IS NOT NULL AND t.ip_address = $4)
+                          t.visitor_id = $3::varchar
+                          OR ($4::varchar IS NOT NULL AND t.ip_address = $4::varchar)
                       )
                 )
                 ON CONFLICT DO NOTHING

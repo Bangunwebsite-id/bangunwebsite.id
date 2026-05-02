@@ -12,6 +12,8 @@ import {
 } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
 
+import { BlogCard } from '../blog-card';
+
 type BlogDetailProps = {
     params: Promise<{ slug: string }>;
 };
@@ -189,28 +191,9 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
 
             <section className='mx-auto w-full max-w-6xl px-4 pb-16'>
                 <h2 className='text-2xl font-bold md:text-3xl'>Artikel Lainnya</h2>
-                <div className='mt-6 grid gap-4 md:grid-cols-3'>
+                <div className='mt-6 grid gap-6 md:grid-cols-3'>
                     {related.map((item) => (
-                        <article
-                            key={item.slug}
-                            className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
-                        >
-                            <p className='text-xs font-bold uppercase tracking-[0.12em] text-cyan-700'>
-                                {item.categories[0] ?? 'Blog'}
-                            </p>
-                            <h3 className='mt-2 text-lg font-bold leading-tight'>
-                                {item.title}
-                            </h3>
-                            <p className='mt-2 text-sm text-slate-700'>
-                                {item.summary}
-                            </p>
-                            <Link
-                                href={`/blog/${item.slug}`}
-                                className='mt-4 inline-flex text-sm font-bold text-cyan-700 underline underline-offset-2'
-                            >
-                                Baca Artikel
-                            </Link>
-                        </article>
+                        <BlogCard key={item.slug} post={item} />
                     ))}
                 </div>
             </section>

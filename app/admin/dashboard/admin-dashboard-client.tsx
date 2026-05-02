@@ -52,10 +52,18 @@ type DashboardTrafficSummary = {
 
 type AdminDashboardClientProps = {
     username: string;
-    initialUsers: DashboardUser[];
-    initialBlogPosts: DashboardBlogPost[];
-    trafficSummary: DashboardTrafficSummary;
+    initialOverviewMetrics: DashboardOverviewMetrics;
     timezone: string;
+};
+
+type DashboardOverviewMetrics = {
+    totalUsers: number;
+    totalBlogs: number;
+    todayUniqueVisitors: number;
+    yesterdayUniqueVisitors: number;
+    last7DaysUniqueVisitors: number;
+    todayMainSource: string;
+    last7DaysMainSource: string;
 };
 
 type BlogFormState = {
@@ -195,15 +203,26 @@ function getDefaultBlogFormState(): BlogFormState {
 
 export function AdminDashboardClient({
     username,
-    initialUsers,
-    initialBlogPosts,
-    trafficSummary,
+    initialOverviewMetrics,
     timezone,
 }: AdminDashboardClientProps) {
     const [activeTab, setActiveTab] = useState<DashboardTabId>('overview');
-    const [users, setUsers] = useState<DashboardUser[]>(initialUsers);
-    const [blogPosts, setBlogPosts] =
-        useState<DashboardBlogPost[]>(initialBlogPosts);
+    const [users, setUsers] = useState<DashboardUser[]>([]);
+    const [blogPosts, setBlogPosts] = useState<DashboardBlogPost[]>([]);
+    const [overviewMetrics, setOverviewMetrics] =
+        useState<DashboardOverviewMetrics | null>(initialOverviewMetrics);
+    const [trafficSummary, setTrafficSummary] =
+        useState<DashboardTrafficSummary | null>(null);
+    const [isLoadingOverview, setIsLoadingOverview] = useState(false);
+    const [isLoadingTraffic, setIsLoadingTraffic] = useState(false);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+    const [isLoadingBlogs, setIsLoadingBlogs] = useState(false);
+    const [overviewError, setOverviewError] = useState<string | null>(null);
+    const [trafficError, setTrafficError] = useState<string | null>(null);
+    const [usersError, setUsersError] = useState<string | null>(null);
+    const [blogsError, setBlogsError] = useState<string | null>(null);
+    const [isUsersLoaded, setIsUsersLoaded] = useState(false);
+    const [isBlogsLoaded, setIsBlogsLoaded] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [isSubmittingUser, setIsSubmittingUser] = useState(false);
@@ -229,33 +248,58 @@ export function AdminDashboardClient({
         message: string;
     } | null>(null);
 
-    const growthLabel = useMemo(
-        () =>
-            getGrowthLabel(
-                trafficSummary.todayUniqueVisitors,
-                trafficSummary.yesterdayUniqueVisitors
-            ),
-        [
-            trafficSummary.todayUniqueVisitors,
-            trafficSummary.yesterdayUniqueVisitors,
-        ]
-    );
+    const growthLabel = useMemo(() => {
+        if (!overviewMetrics) {
+            return '-';
+        }
+
+        return getGrowthLabel(
+            overviewMetrics.todayUniqueVisitors,
+            overviewMetrics.yesterdayUniqueVisitors
+        );
+    }, [overviewMetrics]);
 
     const maxDailyUnique = useMemo(
         () =>
             Math.max(
                 1,
-                ...trafficSummary.last7DaysDaily.map((item) => item.uniques)
+                ...(trafficSummary?.last7DaysDaily ?? []).map(
+                    (item) => item.uniques
+                )
             ),
-        [trafficSummary.last7DaysDaily]
+        [trafficSummary]
     );
 
-    const totalUsers = users.length;
-    const totalBlogs = blogPosts.length;
-    const todayMainSource = trafficSummary.todayTopSources[0]?.source_label ?? '-';
-    const last7DaysMainSource =
-        trafficSummary.last7DaysTopSources[0]?.source_label ?? '-';
+    const totalUsers = overviewMetrics?.totalUsers ?? users.length;
+    const totalBlogs = overviewMetrics?.totalBlogs ?? blogPosts.length;
+    const todayMainSource = overviewMetrics?.todayMainSource ?? '-';
+    const last7DaysMainSource = overviewMetrics?.last7DaysMainSource ?? '-';
     const latestBlog = blogPosts[0] ?? null;
+    const todayVisitorValue = overviewMetrics
+        ? String(overviewMetrics.todayUniqueVisitors)
+        : isLoadingOverview
+          ? '...'
+          : '-';
+    const yesterdayVisitorValue = overviewMetrics
+        ? String(overviewMetrics.yesterdayUniqueVisitors)
+        : isLoadingOverview
+          ? '...'
+          : '-';
+    const last7DaysVisitorValue = overviewMetrics
+        ? String(overviewMetrics.last7DaysUniqueVisitors)
+        : isLoadingOverview
+          ? '...'
+          : '-';
+    const totalUsersValue = overviewMetrics
+        ? String(totalUsers)
+        : isLoadingOverview
+          ? '...'
+          : '-';
+    const totalBlogsValue = overviewMetrics
+        ? String(totalBlogs)
+        : isLoadingOverview
+          ? '...'
+          : '-';
     const totalBlogCategories = useMemo(
         () =>
             new Set(
@@ -263,33 +307,160 @@ export function AdminDashboardClient({
             ).size,
         [blogPosts]
     );
+    const blogTotalValue = isBlogsLoaded
+        ? String(totalBlogs)
+        : isLoadingBlogs
+          ? '...'
+          : '-';
+    const trafficDaily = trafficSummary?.last7DaysDaily ?? [];
+    const trafficTodaySources = trafficSummary?.todayTopSources ?? [];
+    const trafficLast7DaysSources = trafficSummary?.last7DaysTopSources ?? [];
+    const trafficTopPages = trafficSummary?.last7DaysTopPages ?? [];
+
+    async function refreshOverview() {
+        setIsLoadingOverview(true);
+        setOverviewError(null);
+
+        try {
+            const response = await fetch('/api/admin/dashboard/overview', {
+                method: 'GET',
+                cache: 'no-store',
+            });
+
+            const result = (await response.json()) as {
+                message?: string;
+                overview?: DashboardOverviewMetrics;
+            };
+
+            if (!response.ok || !result.overview) {
+                throw new Error(
+                    result.message ?? 'Gagal memuat ringkasan dashboard.'
+                );
+            }
+
+            setOverviewMetrics(result.overview);
+        } catch (error) {
+            setOverviewError(
+                error instanceof Error
+                    ? error.message
+                    : 'Terjadi kesalahan saat memuat ringkasan dashboard.'
+            );
+            throw error;
+        } finally {
+            setIsLoadingOverview(false);
+        }
+    }
+
+    async function refreshTrafficSummary() {
+        setIsLoadingTraffic(true);
+        setTrafficError(null);
+
+        try {
+            const response = await fetch('/api/admin/traffic/summary', {
+                method: 'GET',
+                cache: 'no-store',
+            });
+
+            const result = (await response.json()) as {
+                message?: string;
+                trafficSummary?: DashboardTrafficSummary;
+            };
+
+            if (!response.ok || !result.trafficSummary) {
+                throw new Error(
+                    result.message ?? 'Gagal memuat data traffic terbaru.'
+                );
+            }
+
+            setTrafficSummary(result.trafficSummary);
+        } catch (error) {
+            setTrafficError(
+                error instanceof Error
+                    ? error.message
+                    : 'Terjadi kesalahan saat memuat data traffic.'
+            );
+            throw error;
+        } finally {
+            setIsLoadingTraffic(false);
+        }
+    }
 
     async function refreshUsers() {
-        const response = await fetch('/api/admin/users', {
-            method: 'GET',
-            cache: 'no-store',
-        });
+        setIsLoadingUsers(true);
+        setUsersError(null);
 
-        if (!response.ok) {
-            throw new Error('Gagal memuat daftar user terbaru.');
+        try {
+            const response = await fetch('/api/admin/users', {
+                method: 'GET',
+                cache: 'no-store',
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat daftar user terbaru.');
+            }
+
+            const result = (await response.json()) as { users: DashboardUser[] };
+            setUsers(result.users);
+            setIsUsersLoaded(true);
+        } catch (error) {
+            setUsersError(
+                error instanceof Error
+                    ? error.message
+                    : 'Terjadi kesalahan saat memuat user dashboard.'
+            );
+            throw error;
+        } finally {
+            setIsLoadingUsers(false);
         }
-
-        const result = (await response.json()) as { users: DashboardUser[] };
-        setUsers(result.users);
     }
 
     async function refreshBlogPosts() {
-        const response = await fetch('/api/admin/blogs', {
-            method: 'GET',
-            cache: 'no-store',
-        });
+        setIsLoadingBlogs(true);
+        setBlogsError(null);
 
-        if (!response.ok) {
-            throw new Error('Gagal memuat daftar artikel terbaru.');
+        try {
+            const response = await fetch('/api/admin/blogs', {
+                method: 'GET',
+                cache: 'no-store',
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat daftar artikel terbaru.');
+            }
+
+            const result = (await response.json()) as { posts: DashboardBlogPost[] };
+            setBlogPosts(result.posts);
+            setIsBlogsLoaded(true);
+        } catch (error) {
+            setBlogsError(
+                error instanceof Error
+                    ? error.message
+                    : 'Terjadi kesalahan saat memuat data artikel.'
+            );
+            throw error;
+        } finally {
+            setIsLoadingBlogs(false);
+        }
+    }
+
+    function handleSelectTab(tabId: DashboardTabId) {
+        setActiveTab(tabId);
+
+        if (tabId === 'overview' && !overviewMetrics && !isLoadingOverview) {
+            void refreshOverview();
         }
 
-        const result = (await response.json()) as { posts: DashboardBlogPost[] };
-        setBlogPosts(result.posts);
+        if (tabId === 'traffic' && !trafficSummary && !isLoadingTraffic) {
+            void refreshTrafficSummary();
+        }
+
+        if (tabId === 'users' && !isUsersLoaded && !isLoadingUsers) {
+            void refreshUsers();
+        }
+
+        if (tabId === 'blog' && !isBlogsLoaded && !isLoadingBlogs) {
+            void refreshBlogPosts();
+        }
     }
 
     async function handleAddUser(event: FormEvent<HTMLFormElement>) {
@@ -327,6 +498,7 @@ export function AdminDashboardClient({
             setNewUsername('');
             setNewPassword('');
             await refreshUsers();
+            void refreshOverview();
         } catch {
             setUserFeedback({
                 type: 'error',
@@ -470,6 +642,7 @@ export function AdminDashboardClient({
                         : 'Artikel berhasil dibuat.'),
             });
             await refreshBlogPosts();
+            void refreshOverview();
             resetBlogForm(false);
         } catch {
             setBlogFeedback({
@@ -517,6 +690,7 @@ export function AdminDashboardClient({
                 message: result.message ?? 'Artikel berhasil dihapus.',
             });
             await refreshBlogPosts();
+            void refreshOverview();
         } catch {
             setBlogFeedback({
                 type: 'error',
@@ -550,7 +724,7 @@ export function AdminDashboardClient({
                             <button
                                 key={tab.id}
                                 type='button'
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => handleSelectTab(tab.id)}
                                 className={`w-full rounded-xl border px-3 py-2.5 text-left transition ${
                                     isActive
                                         ? 'border-cyan-200 bg-cyan-50'
@@ -636,7 +810,7 @@ export function AdminDashboardClient({
                                     <button
                                         key={tab.id}
                                         type='button'
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => handleSelectTab(tab.id)}
                                         className={`rounded-xl border px-3 py-2 text-sm font-bold transition ${
                                             isActive
                                                 ? 'border-cyan-200 bg-cyan-50 text-cyan-700'
@@ -658,10 +832,28 @@ export function AdminDashboardClient({
                                         <h3 className='text-xl font-bold text-slate-900 md:text-2xl'>
                                             Overview
                                         </h3>
-                                        <span className='rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-cyan-700'>
-                                            Unique Daily Tracking
-                                        </span>
+                                        <div className='flex items-center gap-2'>
+                                            <span className='rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-cyan-700'>
+                                                Unique Daily Tracking
+                                            </span>
+                                            <button
+                                                type='button'
+                                                onClick={() => void refreshOverview()}
+                                                disabled={isLoadingOverview}
+                                                className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
+                                            >
+                                                {isLoadingOverview
+                                                    ? 'Memuat...'
+                                                    : 'Refresh'}
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    {overviewError && (
+                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
+                                            {overviewError}
+                                        </p>
+                                    )}
 
                                     <div className='mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4'>
                                         <article className='rounded-xl border border-slate-200 bg-white p-4'>
@@ -669,7 +861,7 @@ export function AdminDashboardClient({
                                                 Visitor Hari Ini
                                             </p>
                                             <p className='mt-2 text-3xl font-bold text-slate-900'>
-                                                {trafficSummary.todayUniqueVisitors}
+                                                {todayVisitorValue}
                                             </p>
                                             <p className='mt-2 text-xs font-semibold text-slate-500'>
                                                 Timezone {timezone}
@@ -681,7 +873,7 @@ export function AdminDashboardClient({
                                                 Visitor Kemarin
                                             </p>
                                             <p className='mt-2 text-3xl font-bold text-slate-900'>
-                                                {trafficSummary.yesterdayUniqueVisitors}
+                                                {yesterdayVisitorValue}
                                             </p>
                                             <p className='mt-2 text-xs font-semibold text-slate-500'>
                                                 Baseline harian
@@ -693,7 +885,7 @@ export function AdminDashboardClient({
                                                 Unique 7 Hari
                                             </p>
                                             <p className='mt-2 text-3xl font-bold text-slate-900'>
-                                                {trafficSummary.last7DaysUniqueVisitors}
+                                                {last7DaysVisitorValue}
                                             </p>
                                             <p className='mt-2 text-xs font-semibold text-slate-500'>
                                                 Rolling 7 hari
@@ -719,7 +911,7 @@ export function AdminDashboardClient({
                                                 User Dashboard
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {totalUsers}
+                                                {totalUsersValue}
                                             </p>
                                         </div>
 
@@ -728,7 +920,7 @@ export function AdminDashboardClient({
                                                 Total Artikel
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {totalBlogs}
+                                                {totalBlogsValue}
                                             </p>
                                         </div>
 
@@ -765,13 +957,32 @@ export function AdminDashboardClient({
                         {activeTab === 'traffic' && (
                             <section className='space-y-4'>
                                 <div className='rounded-2xl border border-slate-200 bg-white p-5 md:p-6'>
-                                    <h3 className='text-xl font-bold text-slate-900 md:text-2xl'>
-                                        Traffic
-                                    </h3>
+                                    <div className='flex flex-wrap items-center justify-between gap-3'>
+                                        <h3 className='text-xl font-bold text-slate-900 md:text-2xl'>
+                                            Traffic
+                                        </h3>
+                                        <button
+                                            type='button'
+                                            onClick={() =>
+                                                void refreshTrafficSummary()
+                                            }
+                                            disabled={isLoadingTraffic}
+                                            className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
+                                        >
+                                            {isLoadingTraffic
+                                                ? 'Memuat...'
+                                                : 'Refresh Traffic'}
+                                        </button>
+                                    </div>
                                     <p className='mt-2 text-sm font-medium text-slate-600'>
                                         Data traffic dedupe harian berdasarkan
                                         visitor/IP.
                                     </p>
+                                    {trafficError && (
+                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
+                                            {trafficError}
+                                        </p>
+                                    )}
 
                                     <div className='mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4'>
                                         <div className='mb-4 flex items-center justify-between gap-3'>
@@ -784,42 +995,41 @@ export function AdminDashboardClient({
                                         </div>
 
                                         <div className='space-y-3'>
-                                            {trafficSummary.last7DaysDaily.length ===
-                                            0 ? (
+                                            {trafficDaily.length === 0 ? (
                                                 <p className='text-sm font-medium text-slate-500'>
-                                                    Belum ada data tren harian.
+                                                    {isLoadingTraffic
+                                                        ? 'Memuat data tren harian...'
+                                                        : 'Belum ada data tren harian.'}
                                                 </p>
                                             ) : (
-                                                trafficSummary.last7DaysDaily.map(
-                                                    (item) => (
-                                                        <div
-                                                            key={item.visit_date}
-                                                            className='grid grid-cols-[76px_1fr_auto] items-center gap-3'
-                                                        >
-                                                            <span className='text-xs font-bold text-slate-500'>
-                                                                {formatDayLabel(
-                                                                    item.visit_date
-                                                                )}
-                                                            </span>
-                                                            <div className='h-2 rounded-full bg-slate-200'>
-                                                                <div
-                                                                    className='h-2 rounded-full bg-cyan-500'
-                                                                    style={{
-                                                                        width: `${Math.max(
-                                                                            6,
-                                                                            (item.uniques /
-                                                                                maxDailyUnique) *
-                                                                                100
-                                                                        )}%`,
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <span className='min-w-10 text-right text-sm font-bold text-slate-900'>
-                                                                {item.uniques}
-                                                            </span>
+                                                trafficDaily.map((item) => (
+                                                    <div
+                                                        key={item.visit_date}
+                                                        className='grid grid-cols-[76px_1fr_auto] items-center gap-3'
+                                                    >
+                                                        <span className='text-xs font-bold text-slate-500'>
+                                                            {formatDayLabel(
+                                                                item.visit_date
+                                                            )}
+                                                        </span>
+                                                        <div className='h-2 rounded-full bg-slate-200'>
+                                                            <div
+                                                                className='h-2 rounded-full bg-cyan-500'
+                                                                style={{
+                                                                    width: `${Math.max(
+                                                                        6,
+                                                                        (item.uniques /
+                                                                            maxDailyUnique) *
+                                                                            100
+                                                                    )}%`,
+                                                                }}
+                                                            />
                                                         </div>
-                                                    )
-                                                )
+                                                        <span className='min-w-10 text-right text-sm font-bold text-slate-900'>
+                                                            {item.uniques}
+                                                        </span>
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
                                     </div>
@@ -846,19 +1056,20 @@ export function AdminDashboardClient({
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {trafficSummary.todayTopSources
-                                                        .length === 0 ? (
+                                                    {trafficTodaySources.length ===
+                                                    0 ? (
                                                         <tr>
                                                             <td
                                                                 colSpan={3}
                                                                 className='px-2 py-4 text-sm font-medium text-slate-500'
                                                             >
-                                                                Belum ada data
-                                                                traffic hari ini.
+                                                                {isLoadingTraffic
+                                                                    ? 'Memuat data traffic hari ini...'
+                                                                    : 'Belum ada data traffic hari ini.'}
                                                             </td>
                                                         </tr>
                                                     ) : (
-                                                        trafficSummary.todayTopSources.map(
+                                                        trafficTodaySources.map(
                                                             (item) => (
                                                                 <tr
                                                                     key={`${item.source_label}-${item.source_host ?? 'none'}`}
@@ -907,19 +1118,20 @@ export function AdminDashboardClient({
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {trafficSummary.last7DaysTopSources
-                                                        .length === 0 ? (
+                                                    {trafficLast7DaysSources.length ===
+                                                    0 ? (
                                                         <tr>
                                                             <td
                                                                 colSpan={3}
                                                                 className='px-2 py-4 text-sm font-medium text-slate-500'
                                                             >
-                                                                Belum ada data
-                                                                traffic 7 hari.
+                                                                {isLoadingTraffic
+                                                                    ? 'Memuat data traffic 7 hari...'
+                                                                    : 'Belum ada data traffic 7 hari.'}
                                                             </td>
                                                         </tr>
                                                     ) : (
-                                                        trafficSummary.last7DaysTopSources.map(
+                                                        trafficLast7DaysSources.map(
                                                             (item) => (
                                                                 <tr
                                                                     key={`${item.source_label}-${item.source_host ?? 'none'}-7d`}
@@ -954,27 +1166,26 @@ export function AdminDashboardClient({
                                         Top Landing Page (7 Hari)
                                     </h4>
                                     <div className='mt-4 space-y-3'>
-                                        {trafficSummary.last7DaysTopPages.length ===
-                                        0 ? (
+                                        {trafficTopPages.length === 0 ? (
                                             <p className='text-sm font-medium text-slate-500'>
-                                                Belum ada data landing page.
+                                                {isLoadingTraffic
+                                                    ? 'Memuat data landing page...'
+                                                    : 'Belum ada data landing page.'}
                                             </p>
                                         ) : (
-                                            trafficSummary.last7DaysTopPages.map(
-                                                (item) => (
-                                                    <div
-                                                        key={item.landing_path}
-                                                        className='flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5'
-                                                    >
-                                                        <p className='truncate text-sm font-semibold text-slate-800'>
-                                                            {item.landing_path}
-                                                        </p>
-                                                        <span className='rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-bold text-cyan-700'>
-                                                            {item.uniques} unik
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )
+                                            trafficTopPages.map((item) => (
+                                                <div
+                                                    key={item.landing_path}
+                                                    className='flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5'
+                                                >
+                                                    <p className='truncate text-sm font-semibold text-slate-800'>
+                                                        {item.landing_path}
+                                                    </p>
+                                                    <span className='rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-bold text-cyan-700'>
+                                                        {item.uniques} unik
+                                                    </span>
+                                                </div>
+                                            ))
                                         )}
                                     </div>
                                 </article>
@@ -984,13 +1195,30 @@ export function AdminDashboardClient({
                         {activeTab === 'users' && (
                             <section className='space-y-4'>
                                 <div className='rounded-2xl border border-slate-200 bg-white p-5 md:p-6'>
-                                    <h3 className='text-xl font-bold text-slate-900 md:text-2xl'>
-                                        Users
-                                    </h3>
+                                    <div className='flex flex-wrap items-center justify-between gap-3'>
+                                        <h3 className='text-xl font-bold text-slate-900 md:text-2xl'>
+                                            Users
+                                        </h3>
+                                        <button
+                                            type='button'
+                                            onClick={() => void refreshUsers()}
+                                            disabled={isLoadingUsers}
+                                            className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
+                                        >
+                                            {isLoadingUsers
+                                                ? 'Memuat...'
+                                                : 'Refresh Users'}
+                                        </button>
+                                    </div>
                                     <p className='mt-2 text-sm font-medium text-slate-600'>
                                         Menambahkan akun admin baru yang bisa login
                                         ke dashboard.
                                     </p>
+                                    {usersError && (
+                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
+                                            {usersError}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className='grid gap-4 xl:grid-cols-2'>
@@ -1093,26 +1321,39 @@ export function AdminDashboardClient({
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {users.map((user) => (
-                                                        <tr
-                                                            key={user.id}
-                                                            className='border-b border-slate-100 text-sm text-slate-700'
-                                                        >
-                                                            <td className='px-2 py-3 font-semibold text-slate-900'>
-                                                                {user.username}
-                                                            </td>
-                                                            <td className='px-2 py-3'>
-                                                                {formatDate(
-                                                                    user.created_at
-                                                                )}
-                                                            </td>
-                                                            <td className='px-2 py-3'>
-                                                                {formatDate(
-                                                                    user.updated_at
-                                                                )}
+                                                    {users.length === 0 ? (
+                                                        <tr>
+                                                            <td
+                                                                colSpan={3}
+                                                                className='px-2 py-4 text-sm font-medium text-slate-500'
+                                                            >
+                                                                {isLoadingUsers
+                                                                    ? 'Memuat daftar user admin...'
+                                                                    : 'Belum ada user admin.'}
                                                             </td>
                                                         </tr>
-                                                    ))}
+                                                    ) : (
+                                                        users.map((user) => (
+                                                            <tr
+                                                                key={user.id}
+                                                                className='border-b border-slate-100 text-sm text-slate-700'
+                                                            >
+                                                                <td className='px-2 py-3 font-semibold text-slate-900'>
+                                                                    {user.username}
+                                                                </td>
+                                                                <td className='px-2 py-3'>
+                                                                    {formatDate(
+                                                                        user.created_at
+                                                                    )}
+                                                                </td>
+                                                                <td className='px-2 py-3'>
+                                                                    {formatDate(
+                                                                        user.updated_at
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -1137,19 +1378,30 @@ export function AdminDashboardClient({
                                         </div>
                                         <button
                                             type='button'
-                                            onClick={async () => {
-                                                await refreshBlogPosts();
-                                                setBlogFeedback({
-                                                    type: 'success',
-                                                    message:
-                                                        'Daftar artikel diperbarui.',
-                                                });
+                                            onClick={() => {
+                                                void refreshBlogPosts()
+                                                    .then(() => {
+                                                        setBlogFeedback({
+                                                            type: 'success',
+                                                            message:
+                                                                'Daftar artikel diperbarui.',
+                                                        });
+                                                    })
+                                                    .catch(() => null);
                                             }}
+                                            disabled={isLoadingBlogs}
                                             className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
                                         >
-                                            Refresh Data
+                                            {isLoadingBlogs
+                                                ? 'Memuat...'
+                                                : 'Refresh Data'}
                                         </button>
                                     </div>
+                                    {blogsError && (
+                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
+                                            {blogsError}
+                                        </p>
+                                    )}
 
                                     <div className='mt-5 grid gap-3 md:grid-cols-3'>
                                         <article className='rounded-xl border border-slate-200 bg-slate-50 p-4'>
@@ -1157,7 +1409,7 @@ export function AdminDashboardClient({
                                                 Total Artikel
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {totalBlogs}
+                                                {blogTotalValue}
                                             </p>
                                         </article>
 
@@ -1520,8 +1772,9 @@ export function AdminDashboardClient({
                                                                 colSpan={5}
                                                                 className='px-2 py-4 text-sm font-medium text-slate-500'
                                                             >
-                                                                Belum ada artikel
-                                                                blog di database.
+                                                                {isLoadingBlogs
+                                                                    ? 'Memuat daftar artikel blog...'
+                                                                    : 'Belum ada artikel blog di database.'}
                                                             </td>
                                                         </tr>
                                                     ) : (

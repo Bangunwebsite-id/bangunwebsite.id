@@ -84,15 +84,21 @@ function mapRecordToPublicPost(row: BlogPostRecord): PublicBlogPost {
     };
 }
 
-export async function listPublishedBlogPosts(limit?: number) {
+export async function listPublishedBlogPosts(limit?: number, offset?: number) {
     noStore();
 
     const params: Array<number> = [];
     let limitClause = '';
+    let offsetClause = '';
 
     if (limit && Number.isFinite(limit) && limit > 0) {
         params.push(limit);
         limitClause = `LIMIT $${params.length}`;
+    }
+
+    if (offset && Number.isFinite(offset) && offset >= 0) {
+        params.push(offset);
+        offsetClause = `OFFSET $${params.length}`;
     }
 
     const result = await dbPool.query<BlogPostRecord>(
@@ -112,11 +118,20 @@ export async function listPublishedBlogPosts(limit?: number) {
             FROM blog_posts
             ORDER BY published_at DESC, id DESC
             ${limitClause}
+            ${offsetClause}
         `,
         params
     );
 
     return result.rows.map(mapRecordToPublicPost);
+}
+
+export async function countPublishedBlogPosts() {
+    noStore();
+    const result = await dbPool.query<{ total: string }>(
+        'SELECT COUNT(*) as total FROM blog_posts'
+    );
+    return parseInt(result.rows[0]?.total ?? '0', 10);
 }
 
 export async function getPublishedBlogPostBySlug(slug: string) {
