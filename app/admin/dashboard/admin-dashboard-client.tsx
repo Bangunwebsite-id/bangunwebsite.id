@@ -187,7 +187,7 @@ function getDefaultBlogFormState(): BlogFormState {
         summary: '',
         content: '',
         author: 'Tim Bangunwebsite.id',
-        image: '/blog/',
+        image: '',
         categories: 'Website, SEO',
         publishedAt: getTodayDateInput(),
     };
@@ -222,6 +222,12 @@ export function AdminDashboardClient({
         message: string;
     } | null>(null);
     const [isDeletingBlogId, setIsDeletingBlogId] = useState<number | null>(null);
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [imageUploadFeedback, setImageUploadFeedback] = useState<{
+        type: 'success' | 'error';
+        message: string;
+    } | null>(null);
 
     const growthLabel = useMemo(
         () =>
@@ -331,16 +337,22 @@ export function AdminDashboardClient({
         }
     }
 
-    function resetBlogForm() {
+    function resetBlogForm(clearFeedback = true) {
         setEditingBlogId(null);
         setBlogForm(getDefaultBlogFormState());
-        setBlogFeedback(null);
+        setSelectedImageFile(null);
+        setImageUploadFeedback(null);
+        if (clearFeedback) {
+            setBlogFeedback(null);
+        }
     }
 
     function handleEditBlog(post: DashboardBlogPost) {
         setActiveTab('blog');
         setEditingBlogId(post.id);
         setBlogFeedback(null);
+        setImageUploadFeedback(null);
+        setSelectedImageFile(null);
         setBlogForm({
             title: post.title,
             slug: post.slug,
@@ -351,6 +363,62 @@ export function AdminDashboardClient({
             categories: post.categories.join(', '),
             publishedAt: toDateInputValue(post.published_at),
         });
+    }
+
+    async function handleUploadBlogImage() {
+        if (!selectedImageFile) {
+            setImageUploadFeedback({
+                type: 'error',
+                message: 'Pilih file gambar terlebih dulu.',
+            });
+            return;
+        }
+
+        setIsUploadingImage(true);
+        setImageUploadFeedback(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedImageFile);
+
+            const response = await fetch('/api/admin/blogs/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = (await response.json()) as {
+                message?: string;
+                imageUrl?: string;
+            };
+
+            if (!response.ok || !result.imageUrl) {
+                setImageUploadFeedback({
+                    type: 'error',
+                    message:
+                        result.message ?? 'Upload gambar gagal. Silakan coba lagi.',
+                });
+                return;
+            }
+
+            setBlogForm((prev) => ({
+                ...prev,
+                image: result.imageUrl ?? prev.image,
+            }));
+            setImageUploadFeedback({
+                type: 'success',
+                message:
+                    result.message ??
+                    'Gambar berhasil diupload dan URL sudah terisi otomatis.',
+            });
+            setSelectedImageFile(null);
+        } catch {
+            setImageUploadFeedback({
+                type: 'error',
+                message: 'Terjadi masalah koneksi saat upload gambar.',
+            });
+        } finally {
+            setIsUploadingImage(false);
+        }
     }
 
     async function handleSaveBlog(event: FormEvent<HTMLFormElement>) {
@@ -402,7 +470,7 @@ export function AdminDashboardClient({
                         : 'Artikel berhasil dibuat.'),
             });
             await refreshBlogPosts();
-            resetBlogForm();
+            resetBlogForm(false);
         } catch {
             setBlogFeedback({
                 type: 'error',
@@ -1131,7 +1199,7 @@ export function AdminDashboardClient({
                                             {editingBlogId && (
                                                 <button
                                                     type='button'
-                                                    onClick={resetBlogForm}
+                                                    onClick={() => resetBlogForm()}
                                                     className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'
                                                 >
                                                     Batal Edit
@@ -1259,6 +1327,46 @@ export function AdminDashboardClient({
                                                 >
                                                     Path Gambar
                                                 </label>
+                                                <div className='mb-2 grid gap-2 sm:grid-cols-[1fr_auto]'>
+                                                    <input
+                                                        id='blog-image-file'
+                                                        type='file'
+                                                        accept='image/png,image/jpeg,image/webp,image/gif,image/svg+xml'
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.target.files?.[0] ??
+                                                                null;
+                                                            setSelectedImageFile(file);
+                                                            setImageUploadFeedback(null);
+                                                        }}
+                                                        className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-slate-700 hover:file:bg-slate-200'
+                                                    />
+                                                    <button
+                                                        type='button'
+                                                        onClick={handleUploadBlogImage}
+                                                        disabled={
+                                                            isUploadingImage ||
+                                                            !selectedImageFile
+                                                        }
+                                                        className='rounded-xl border border-cyan-300 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60'
+                                                    >
+                                                        {isUploadingImage
+                                                            ? 'Upload...'
+                                                            : 'Upload Gambar'}
+                                                    </button>
+                                                </div>
+                                                {imageUploadFeedback && (
+                                                    <p
+                                                        className={`mb-2 rounded-lg border px-3 py-2 text-xs font-semibold ${
+                                                            imageUploadFeedback.type ===
+                                                            'success'
+                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                                : 'border-red-200 bg-red-50 text-red-700'
+                                                        }`}
+                                                    >
+                                                        {imageUploadFeedback.message}
+                                                    </p>
+                                                )}
                                                 <input
                                                     id='blog-image'
                                                     type='text'
@@ -1272,6 +1380,11 @@ export function AdminDashboardClient({
                                                     placeholder='/blog/nama-gambar.jpeg'
                                                     className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
                                                 />
+                                                <p className='mt-1 text-xs font-medium text-slate-500'>
+                                                    URL terisi otomatis setelah upload.
+                                                    Kamu juga tetap bisa isi manual jika
+                                                    perlu.
+                                                </p>
                                             </div>
 
                                             <div>

@@ -63,3 +63,16 @@ npm run db:setup-admin
 - Dynamic sitemap is served at `/sitemap.xml`.
 - `robots.txt` points to the sitemap.
 - New blog posts added from admin dashboard are automatically included in sitemap.
+
+## Blog Image Upload (CDN)
+
+- Admin dashboard supports image upload for blog posts via `/api/admin/blogs/upload`.
+- Configure S3/MinIO env variables:
+  - `MINIO_ENDPOINT`
+  - `MINIO_PORT`
+  - `MINIO_USE_SSL`
+  - `MINIO_ACCESS_KEY`
+  - `MINIO_SECRET_KEY`
+  - `MINIO_BUCKET`
+  - `MINIO_PUBLIC_BASE_URL`
+  - `MINIO_OBJECT_PREFIX` (recommended: `assets`)

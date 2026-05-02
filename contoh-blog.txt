@@ -1,0 +1,81 @@
+CONTOH INPUT BLOG UNTUK DASHBOARD
+=================================
+
+Judul:
+Cara UMKM Memilih Website yang Tepat di 2026
+
+Slug:
+cara-umkm-memilih-website-yang-tepat-di-2026
+
+Author:
+Tim Bangunwebsite.id
+
+Tanggal Publish:
+2026-05-03
+
+Path Gambar:
+/blog/cara-umkm-memilih-website-2026.jpeg
+
+Kategori (pisahkan koma):
+Website, UMKM, Bisnis Digital
+
+Ringkasan:
+Banyak UMKM sudah sadar pentingnya website, tapi masih bingung memilih jenis website yang sesuai tujuan bisnis. Artikel ini membantu menentukan pilihan paling tepat agar biaya lebih efisien dan hasil lebih maksimal.
+
+Konten (Markdown):
+# Cara UMKM Memilih Website yang Tepat di 2026
+
+Banyak pemilik UMKM ingin punya website, tapi sering bingung harus mulai dari mana. Ada yang langsung ingin fitur lengkap, padahal kebutuhan awal belum tentu sejauh itu.
+
+## 1. Tentukan Tujuan Utama Website
+
+Sebelum bicara desain atau fitur, tentukan dulu tujuan:
+
+- Ingin meningkatkan kepercayaan brand
+- Ingin mendapatkan leads dari Google
+- Ingin menerima order langsung
+- Ingin menampilkan katalog produk/jasa
+
+Kalau tujuan belum jelas, website cenderung jadi hanya pajangan.
+
+## 2. Pilih Tipe Website Sesuai Kebutuhan
+
+Secara umum, UMKM biasanya cukup mulai dari salah satu ini:
+
+- Company profile sederhana
+- Landing page promosi
+- Website katalog produk
+- Toko online ringan
+
+Mulai dari versi yang tepat lebih baik daripada memaksakan fitur besar di awal.
+
+## 3. Pastikan Fokus Mobile dan Kecepatan
+
+Mayoritas pengunjung datang dari HP. Maka website harus:
+
+- Cepat dibuka
+- Nyaman dibaca di layar kecil
+- Tombol WhatsApp mudah ditemukan
+
+Website lambat akan menurunkan peluang kontak dan order.
+
+## 4. Siapkan Struktur Konten yang Jelas
+
+Minimal halaman penting:
+
+- Beranda
+- Layanan atau Produk
+- Tentang Kami
+- Kontak
+
+Tambahkan blog jika ingin jangka panjang di SEO.
+
+## 5. Gunakan Dashboard agar Konten Mudah Diupdate
+
+Banyak website berhenti berkembang karena sulit update konten. Dengan dashboard admin, tim kantor bisa menambah artikel tanpa ubah kode.
+
+Inilah langkah penting agar website jadi aset bisnis, bukan proyek sekali jadi.
+
+## Kesimpulan
+
+Website yang tepat untuk UMKM bukan yang paling rumit, tapi yang paling relevan dengan tujuan bisnis saat ini. Mulai dari kebutuhan inti, ukur hasil, lalu tingkatkan bertahap.
