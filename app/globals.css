@@ -23,10 +23,22 @@ section[id] {
 body {
     background: var(--background);
     color: var(--foreground);
-    font-family:
-        'Plus Jakarta Sans',
-        'Poppins',
-        'Nunito Sans',
-        'Segoe UI',
-        sans-serif;
+    font-family: var(--font-jakarta), sans-serif;
 }
+
+/* Base scroll animations */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-on-scroll.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-delay-100 { transition-delay: 100ms; }
+.reveal-delay-200 { transition-delay: 200ms; }
+.reveal-delay-300 { transition-delay: 300ms; }
+.reveal-delay-400 { transition-delay: 400ms; }

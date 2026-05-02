@@ -2,10 +2,13 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { LoadingLink } from '@/app/components/loading-link';
 import { countPublishedBlogPosts, listPublishedBlogPosts } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
 
 import { BlogCard } from './blog-card';
+
+export const revalidate = 3600; // Cache for 1 hour
 
 export const metadata: Metadata = {
     title: 'Blog',
@@ -47,12 +50,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                     </Link>
 
                     <div className='flex items-center gap-3'>
-                        <Link
+                        <LoadingLink
                             href='/'
                             className='rounded-full border-2 border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
                         >
                             Kembali ke Home
-                        </Link>
+                        </LoadingLink>
                         <a
                             href={whatsappDefaultUrl}
                             target='_blank'
@@ -89,12 +92,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 {totalPages > 1 && (
                     <div className='mt-12 flex justify-center gap-2'>
                         {currentPage > 1 && (
-                            <Link
+                            <LoadingLink
                                 href={`/blog?page=${currentPage - 1}`}
                                 className='rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
                             >
                                 Sebelumnya
-                            </Link>
+                            </LoadingLink>
                         )}
                         
                         <div className='flex items-center gap-1'>
@@ -102,7 +105,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                                 const p = i + 1;
                                 const isCurrent = p === currentPage;
                                 return (
-                                    <Link
+                                    <LoadingLink
                                         key={p}
                                         href={`/blog?page=${p}`}
                                         className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
@@ -112,18 +115,18 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                                         }`}
                                     >
                                         {p}
-                                    </Link>
+                                    </LoadingLink>
                                 );
                             })}
                         </div>
 
                         {currentPage < totalPages && (
-                            <Link
+                            <LoadingLink
                                 href={`/blog?page=${currentPage + 1}`}
                                 className='rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
                             >
                                 Berikutnya
-                            </Link>
+                            </LoadingLink>
                         )}
                     </div>
                 )}

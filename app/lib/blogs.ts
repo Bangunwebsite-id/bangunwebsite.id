@@ -120,7 +120,7 @@ export async function listPublishedBlogPosts(limit?: number, offset?: number) {
             ${limitClause}
             ${offsetClause}
         `,
-        params
+        params,
     );
 
     return result.rows.map(mapRecordToPublicPost);
@@ -129,7 +129,7 @@ export async function listPublishedBlogPosts(limit?: number, offset?: number) {
 export async function countPublishedBlogPosts() {
     noStore();
     const result = await dbPool.query<{ total: string }>(
-        'SELECT COUNT(*) as total FROM blog_posts'
+        'SELECT COUNT(*) as total FROM blog_posts',
     );
     return parseInt(result.rows[0]?.total ?? '0', 10);
 }
@@ -155,16 +155,21 @@ export async function getPublishedBlogPostBySlug(slug: string) {
             WHERE slug = $1
             LIMIT 1
         `,
-        [slug]
+        [slug],
     );
 
     const row = result.rows[0];
     return row ? mapRecordToPublicPost(row) : null;
 }
 
-export async function listRelatedBlogPosts(slug: string, limit = 3) {
+export async function listRelatedBlogPosts(
+    slug: string,
+    categories: string[] = [],
+    limit = 3,
+) {
     noStore();
 
+    // Prioritize posts that share at least one category, then by date
     const result = await dbPool.query<BlogPostRecord>(
         `
             SELECT
@@ -178,13 +183,18 @@ export async function listRelatedBlogPosts(slug: string, limit = 3) {
                 categories,
                 published_at,
                 created_at,
-                updated_at
+                updated_at,
+                (
+                    SELECT COUNT(*)
+                    FROM unnest(categories) AS c
+                    WHERE c = ANY($2::text[])
+                ) as match_count
             FROM blog_posts
             WHERE slug <> $1
-            ORDER BY published_at DESC, id DESC
-            LIMIT $2
+            ORDER BY match_count DESC, published_at DESC, id DESC
+            LIMIT $3
         `,
-        [slug, limit]
+        [slug, categories, limit],
     );
 
     return result.rows.map(mapRecordToPublicPost);
@@ -207,7 +217,7 @@ export async function listAdminBlogPosts() {
                 updated_at
             FROM blog_posts
             ORDER BY published_at DESC, id DESC
-        `
+        `,
     );
 
     return result.rows.map((item) => ({
@@ -242,7 +252,7 @@ export async function createBlogPost(input: UpsertBlogPostInput) {
                 input.image || null,
                 normalizeCategories(input.categories),
                 input.publishedAt,
-            ]
+            ],
         );
 
         return { status: 'created' as const, id: result.rows[0]?.id ?? 0 };
@@ -260,7 +270,10 @@ export async function createBlogPost(input: UpsertBlogPostInput) {
     }
 }
 
-export async function updateBlogPostById(id: number, input: UpsertBlogPostInput) {
+export async function updateBlogPostById(
+    id: number,
+    input: UpsertBlogPostInput,
+) {
     try {
         const result = await dbPool.query<{ id: number }>(
             `
@@ -288,7 +301,7 @@ export async function updateBlogPostById(id: number, input: UpsertBlogPostInput)
                 input.image || null,
                 normalizeCategories(input.categories),
                 input.publishedAt,
-            ]
+            ],
         );
 
         if ((result.rowCount ?? 0) === 0) {
@@ -310,13 +323,20 @@ export async function updateBlogPostById(id: number, input: UpsertBlogPostInput)
     }
 }
 
+export async function listAllBlogPostSlugs() {
+    const result = await dbPool.query<{ slug: string }>(
+        'SELECT slug FROM blog_posts ORDER BY published_at DESC'
+    );
+    return result.rows.map((row) => row.slug);
+}
+
 export async function deleteBlogPostById(id: number) {
     const result = await dbPool.query(
         `
             DELETE FROM blog_posts
             WHERE id = $1
         `,
-        [id]
+        [id],
     );
 
     return (result.rowCount ?? 0) > 0;

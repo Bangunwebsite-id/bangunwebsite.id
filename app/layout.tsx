@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Suspense } from 'react';
 
 import { TrafficTracker } from './components/traffic-tracker';
 import './globals.css';
+
+const jakartaSans = Plus_Jakarta_Sans({
+    subsets: ['latin'],
+    variable: '--font-jakarta',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
     title: {
@@ -30,8 +37,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang='id' className='h-full antialiased'>
-            <body className='min-h-full'>
+        <html lang='id' className={`h-full antialiased ${jakartaSans.variable}`}>
+            <body className='min-h-full font-sans'>
                 {children}
                 <Suspense fallback={null}>
                     <TrafficTracker />

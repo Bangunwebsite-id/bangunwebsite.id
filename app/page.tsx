@@ -1,8 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { LoadingLink } from '@/app/components/loading-link';
+import { ScrollReveal } from '@/app/components/scroll-reveal';
 import { listPublishedBlogPosts } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
+
+export const revalidate = 3600; // Cache for 1 hour (ISR)
 
 const navItems = [
     { label: 'Layanan', href: '#layanan' },
@@ -284,6 +288,7 @@ export default async function Home() {
 
     return (
         <main className='min-h-screen bg-slate-50 text-slate-900'>
+            <ScrollReveal />
             <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
                 <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3'>
                     <a href='#top' className='flex items-center gap-3'>
@@ -299,13 +304,13 @@ export default async function Home() {
 
                     <nav className='hidden items-center gap-7 text-base font-semibold md:flex'>
                         {navItems.map((item) => (
-                            <a
+                            <LoadingLink
                                 key={item.label}
                                 href={item.href}
                                 className='text-slate-700 transition hover:text-cyan-700'
                             >
                                 {item.label}
-                            </a>
+                            </LoadingLink>
                         ))}
                     </nav>
 
@@ -327,18 +332,18 @@ export default async function Home() {
                 <div className='absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.25),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(251,191,36,0.2),transparent_35%)]' />
                 <div className='relative mx-auto w-full max-w-6xl px-4'>
                     <div className='max-w-4xl'>
-                        <p className='mb-5 inline-flex rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-semibold text-cyan-100 md:text-base'>
+                        <p className='animate-on-scroll mb-5 inline-flex rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-semibold text-cyan-100 md:text-base'>
                             Solusi Website & Konsultasi Digital untuk UMKM dan
                             Bisnis Lokal
                         </p>
-                        <h1 className='text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl'>
+                        <h1 className='animate-on-scroll reveal-delay-100 text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl'>
                             Jasa Website, Maintenance, dan Konsultasi IT
                         </h1>
-                        <p className='mt-6 max-w-3xl text-lg text-slate-200 md:text-2xl'>
+                        <p className='animate-on-scroll reveal-delay-200 mt-6 max-w-3xl text-lg text-slate-200 md:text-2xl'>
                             Kami bantu bisnis lokal punya website yang jalan,
                             stabil, dan menghasilkan.
                         </p>
-                        <div className='mt-9 flex flex-wrap gap-3'>
+                        <div className='animate-on-scroll reveal-delay-300 mt-9 flex flex-wrap gap-3'>
                             <a
                                 href={whatsappUrl}
                                 target='_blank'
@@ -359,7 +364,7 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <div className='rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_-35px_rgba(15,23,42,0.25)] md:p-10'>
+                <div className='animate-on-scroll rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_-35px_rgba(15,23,42,0.25)] md:p-10'>
                     <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
                         Masalah yang Sering Terjadi di Website Bisnis
                     </h2>
@@ -367,7 +372,8 @@ export default async function Home() {
                         {issues.map((issue, index) => (
                             <div
                                 key={issue}
-                                className='flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base font-semibold text-slate-800 md:text-lg'
+                                className='animate-on-scroll flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base font-semibold text-slate-800 md:text-lg'
+                                style={{ transitionDelay: `${index * 50}ms` }}
                             >
                                 <span className='inline-flex h-8 w-8 flex-none items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white'>
                                     {index + 1}
@@ -381,7 +387,7 @@ export default async function Home() {
 
             <section id='layanan' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
-                    <div className='max-w-3xl'>
+                    <div className='animate-on-scroll max-w-3xl'>
                         <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
                             3 Layanan Utama
                         </h2>
@@ -391,8 +397,8 @@ export default async function Home() {
                     </div>
 
                     <div className='mt-10 grid gap-6 lg:grid-cols-3'>
-                        {servicePillars.map((service) => (
-                            <article key={service.title} className={panelBase}>
+                        {servicePillars.map((service, index) => (
+                            <article key={service.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
                                 <div
                                     className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${service.tone}`}
                                 />
@@ -440,12 +446,12 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
                     Solusi Berdasarkan Kebutuhan
                 </h2>
                 <div className='mt-8 grid gap-6 md:grid-cols-3'>
                     {solutions.map((solution, idx) => (
-                        <article key={solution.title} className={panelBase}>
+                        <article key={solution.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${idx * 100}ms` }}>
                             <div className='mb-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold text-cyan-800'>
                                 Solusi {idx + 1}
                             </div>
@@ -470,7 +476,7 @@ export default async function Home() {
 
             <section id='produk' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
-                    <div className='relative overflow-hidden rounded-[32px] border border-amber-200 bg-gradient-to-r from-amber-100 via-white to-cyan-100 p-8 shadow-[0_24px_70px_-35px_rgba(245,158,11,0.45)] md:p-10'>
+                    <div className='animate-on-scroll relative overflow-hidden rounded-[32px] border border-amber-200 bg-gradient-to-r from-amber-100 via-white to-cyan-100 p-8 shadow-[0_24px_70px_-35px_rgba(245,158,11,0.45)] md:p-10'>
                         <div className='absolute -right-12 -top-12 h-40 w-40 rounded-full bg-amber-300/40 blur-2xl' />
                         <p className='relative text-sm font-bold uppercase tracking-[0.2em] text-cyan-800'>
                             Produk Khusus
@@ -503,7 +509,7 @@ export default async function Home() {
                 id='portfolio'
                 className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'
             >
-                <div className='flex flex-wrap items-end justify-between gap-4'>
+                <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                     <div>
                         <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
                             Portfolio
@@ -526,7 +532,8 @@ export default async function Home() {
                     {portfolioProjects.map((project, index) => (
                         <article
                             key={project.id}
-                            className={`group relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${index % 3 === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                            className={`animate-on-scroll group relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${index % 3 === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                            style={{ transitionDelay: `${(index % 3) * 100}ms` }}
                         >
                             <div className='relative'>
                                 <Image
@@ -577,19 +584,20 @@ export default async function Home() {
 
             <section id='harga' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
-                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
                         Paket Layanan
                     </h2>
 
                     <div className='mt-10'>
-                        <h3 className='text-3xl font-bold md:text-4xl'>
+                        <h3 className='animate-on-scroll text-3xl font-bold md:text-4xl'>
                             Paket Website Baru
                         </h3>
                         <div className='mt-5 grid gap-4 md:grid-cols-3'>
                             {websitePackages.map((item, idx) => (
                                 <article
                                     key={item.name}
-                                    className={`relative overflow-hidden rounded-3xl border p-6 shadow-sm ${idx === 1 ? 'border-cyan-300 bg-cyan-700 text-white' : 'border-slate-200 bg-white'}`}
+                                    className={`animate-on-scroll relative overflow-hidden rounded-3xl border p-6 shadow-sm ${idx === 1 ? 'border-cyan-300 bg-cyan-700 text-white' : 'border-slate-200 bg-white'}`}
+                                    style={{ transitionDelay: `${idx * 100}ms` }}
                                 >
                                     {idx === 1 && (
                                         <span className='mb-4 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold'>
@@ -613,12 +621,12 @@ export default async function Home() {
                     </div>
 
                     <div className='mt-12'>
-                        <h3 className='text-3xl font-bold md:text-4xl'>
+                        <h3 className='animate-on-scroll text-3xl font-bold md:text-4xl'>
                             Paket Maintenance
                         </h3>
                         <div className='mt-5 grid gap-4 md:grid-cols-3'>
-                            {maintenancePackages.map((item) => (
-                                <article key={item.name} className={panelBase}>
+                            {maintenancePackages.map((item, index) => (
+                                <article key={item.name} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
@@ -640,12 +648,12 @@ export default async function Home() {
                     </div>
 
                     <div className='mt-12'>
-                        <h3 className='text-3xl font-bold md:text-4xl'>
+                        <h3 className='animate-on-scroll text-3xl font-bold md:text-4xl'>
                             Paket Konsultasi IT
                         </h3>
                         <div className='mt-5 grid gap-4 md:grid-cols-3'>
-                            {consultationPackages.map((item) => (
-                                <article key={item.name} className={panelBase}>
+                            {consultationPackages.map((item, index) => (
+                                <article key={item.name} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
@@ -666,12 +674,12 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
                     Proses Kerja
                 </h2>
                 <div className='mt-8 grid gap-6 md:grid-cols-3'>
                     {processSteps.map((step, idx) => (
-                        <article key={step.title} className={panelBase}>
+                        <article key={step.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${idx * 100}ms` }}>
                             <p className='text-sm font-bold uppercase tracking-[0.2em] text-cyan-700'>
                                 Langkah {idx + 1}
                             </p>
@@ -688,7 +696,7 @@ export default async function Home() {
 
             <section id='blog' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
-                    <div className='flex flex-wrap items-end justify-between gap-4'>
+                    <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                         <div>
                             <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
                                 Blog
@@ -698,17 +706,17 @@ export default async function Home() {
                                 halaman blog.
                             </p>
                         </div>
-                        <Link
+                        <LoadingLink
                             href='/blog'
                             className='rounded-full border-2 border-cyan-700 px-5 py-2.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 md:text-base'
                         >
                             Lihat Semua Blog
-                        </Link>
+                        </LoadingLink>
                     </div>
 
                     <div className='mt-8 grid gap-6 md:grid-cols-3'>
-                        {blogPosts.slice(0, 3).map((post) => (
-                            <article key={post.slug} className={panelBase}>
+                        {blogPosts.slice(0, 3).map((post, index) => (
+                            <article key={post.slug} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
                                 <p className='text-xs font-bold uppercase tracking-[0.2em] text-cyan-700'>
                                     {post.categories[0] ?? 'Blog'}
                                 </p>
@@ -718,12 +726,12 @@ export default async function Home() {
                                 <p className='mt-3 text-base font-medium text-slate-700'>
                                     {post.summary}
                                 </p>
-                                <Link
+                                <LoadingLink
                                     href={`/blog/${post.slug}`}
                                     className='mt-4 inline-flex rounded-full border border-cyan-700 px-4 py-1.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50'
                                 >
                                     Baca Artikel
-                                </Link>
+                                </LoadingLink>
                                 <p className='mt-3 text-sm font-semibold text-slate-500'>
                                     {new Date(post.published_at).toLocaleDateString(
                                         'id-ID',
@@ -741,14 +749,15 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
                     FAQ
                 </h2>
                 <div className='mt-8 space-y-4'>
-                    {faqs.map((faq) => (
+                    {faqs.map((faq, index) => (
                         <details
                             key={faq.q}
-                            className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+                            className='animate-on-scroll rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+                            style={{ transitionDelay: `${index * 50}ms` }}
                         >
                             <summary className='cursor-pointer text-lg font-bold md:text-xl'>
                                 {faq.q}
@@ -766,7 +775,7 @@ export default async function Home() {
                 className='bg-gradient-to-r from-cyan-800 to-slate-900 py-20 text-white md:py-24'
             >
                 <div className='mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-2'>
-                    <div>
+                    <div className='animate-on-scroll'>
                         <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
                             Siap Bangun atau Rapikan Website Anda?
                         </h2>
@@ -784,7 +793,7 @@ export default async function Home() {
                         </a>
                     </div>
 
-                    <div className='rounded-[24px] border border-white/20 bg-white/10 p-6 backdrop-blur-sm'>
+                    <div className='animate-on-scroll reveal-delay-200 rounded-[24px] border border-white/20 bg-white/10 p-6 backdrop-blur-sm'>
                         <h3 className='text-2xl font-bold md:text-3xl'>Kontak</h3>
                         <ul className='mt-4 space-y-3 text-base font-medium text-slate-100 md:text-lg'>
                             <li>
