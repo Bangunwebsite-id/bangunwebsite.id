@@ -1,65 +1,836 @@
-import Image from "next/image";
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+import { listPublishedBlogPosts } from '@/app/lib/blogs';
+import { getPublicSiteConfig } from '@/app/lib/site-config';
+
+const navItems = [
+    { label: 'Layanan', href: '#layanan' },
+    { label: 'Produk', href: '#produk' },
+    { label: 'Portfolio', href: '#portfolio' },
+    { label: 'Harga', href: '#harga' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Kontak', href: '#kontak' },
+];
+
+const issues = [
+    'Belum punya website profesional',
+    'Website lama tidak terurus',
+    'Website lemot atau sering error',
+    'Ingin iklan tapi belum ada landing page',
+    'Bingung pilih tools digital',
+    'Butuh booking, katalog, order, atau invoice',
+    'Ingin bisnis terlihat lebih dipercaya',
+];
+
+function getServicePillars(whatsappUrl: string) {
+    return [
+        {
+            number: '01',
+            title: 'Pembuatan Website',
+            description: 'Website baru yang rapi, cepat, dan siap jualan.',
+            points: [
+                'Company profile',
+                'Website UMKM',
+                'Landing page promosi',
+                'Toko online sederhana',
+                'Website custom system',
+                'Website rental/event booking',
+            ],
+            cta: 'Lihat Paket Website',
+            href: '#harga',
+            tone: 'from-cyan-600 to-blue-600',
+        },
+        {
+            number: '02',
+            title: 'Maintenance Website',
+            description: 'Website lama diperbaiki, dirawat, dan dipantau rutin.',
+            points: [
+                'Perbaikan error',
+                'Update konten & backup',
+                'Optimasi kecepatan',
+                'Update plugin/theme',
+                'Monitoring keamanan dasar',
+                'Support WhatsApp',
+            ],
+            cta: 'Cek Website Saya',
+            href: whatsappUrl,
+            tone: 'from-amber-500 to-orange-500',
+        },
+        {
+            number: '03',
+            title: 'Konsultasi IT',
+            description: 'Arah digital yang jelas sebelum eksekusi biaya besar.',
+            points: [
+                'Pemetaan kebutuhan website/sistem',
+                'Audit alur kerja digital',
+                'Rekomendasi tools bisnis',
+                'Pendampingan hosting/domain',
+                'Integrasi WhatsApp, form, invoice, CRM sederhana',
+            ],
+            cta: 'Konsultasi Kebutuhan',
+            href: whatsappUrl,
+            tone: 'from-slate-700 to-slate-900',
+        },
+    ];
+}
+
+const solutions = [
+    {
+        title: 'Belum Punya Website',
+        description: 'Mulai dari website yang langsung siap dipakai jualan.',
+        action: 'Buat Website Baru',
+    },
+    {
+        title: 'Website Bermasalah',
+        description: 'Perbaiki error, percepat performa, dan amankan sistem.',
+        action: 'Cek Kondisi Website',
+    },
+    {
+        title: 'Butuh Arahan IT',
+        description: 'Petakan prioritas digital agar investasi lebih tepat.',
+        action: 'Konsultasi Kebutuhan IT',
+    },
+];
+
+const portfolioProjects = [
+    {
+        id: 1,
+        title: 'Rental Mobil Makassar',
+        description:
+            'Website promosi rental mobil dengan fokus trust dan lead cepat.',
+        image: '/lovable-uploads/77e2b1a3-1f70-45c9-b30b-0944cdbafab4.png',
+        tech: ['Next.js', 'React.js', 'Responsive', 'SEO'],
+        category: 'Corporate',
+        url: 'https://www.rentalmobilmakassar.co.id',
+    },
+    {
+        id: 2,
+        title: 'Teknik Academy',
+        description:
+            'Platform e-course teknik untuk akuisisi siswa dan penjualan kelas.',
+        image: '/lovable-uploads/6740e6ed-df81-4708-b579-9613605b29b3.png',
+        tech: ['Next.js', 'React.js', 'Responsive', 'SEO'],
+        category: 'Education',
+        url: 'https://teknikacademy.id',
+    },
+    {
+        id: 3,
+        title: 'Lion Magazine',
+        description:
+            'Portal media berita dan e-magazine dengan struktur konten rapi.',
+        image: '/lovable-uploads/lionmag.png',
+        tech: ['CodeIgniter', 'MySQL', 'Responsive', 'SEO'],
+        category: 'Media',
+        url: 'https://lionmag.id/',
+    },
+    {
+        id: 4,
+        title: 'Zero Carbon Run',
+        description:
+            'Website event dengan alur registrasi, pembayaran, dan tiket digital.',
+        image: '/lovable-uploads/zero-carbon.png',
+        tech: ['Next.js', 'PostgreSQL', 'SEO', 'Server Opt'],
+        category: 'Event',
+        url: 'https://www.zerocarbonrun.com/',
+    },
+    {
+        id: 5,
+        title: 'Simulasi Tes Psikologi Polda Sulsel',
+        description:
+            'Sistem simulasi tes dengan dashboard admin dan manajemen soal.',
+        image: '/lovable-uploads/psikologi-polda.png',
+        tech: ['React.js', 'Express.js', 'AWS', 'Server Opt'],
+        category: 'Government',
+        url: 'https://psikologipoldasulsel.com/login',
+    },
+    {
+        id: 6,
+        title: 'MALLF Salon',
+        description:
+            'Company profile salon dengan konten harga yang mudah diupdate.',
+        image: '/lovable-uploads/mallf.png',
+        tech: ['CMS', 'Admin Dashboard', 'Responsive', 'SEO'],
+        category: 'Beauty',
+        url: 'https://mallf.vercel.app/',
+    },
+    {
+        id: 7,
+        title: 'Ryuki Indo Sakato',
+        description:
+            'Company profile brand otomotif dengan fondasi katalog produk.',
+        image: '/lovable-uploads/ryuki.png',
+        tech: ['Next.js', 'Vercel', 'SEO'],
+        category: 'Automotive',
+        url: 'https://ryuki-amber.vercel.app/',
+    },
+];
+
+const websitePackages = [
+    {
+        name: 'Starter Website',
+        price: 'Mulai Rp750.000',
+        note: 'Untuk bisnis baru yang butuh landing cepat.',
+    },
+    {
+        name: 'Business Website',
+        price: 'Mulai Rp1.500.000',
+        note: 'Untuk UMKM yang butuh fitur lebih lengkap.',
+    },
+    {
+        name: 'Custom Website/System',
+        price: 'Mulai Rp3.000.000',
+        note: 'Untuk kebutuhan alur kerja dan fitur khusus.',
+    },
+];
+
+const maintenancePackages = [
+    {
+        name: 'Maintenance Basic',
+        price: 'Mulai Rp150.000/bulan',
+        points: [
+            'Backup berkala',
+            'Update konten ringan',
+            'Update plugin/theme',
+            'Support WhatsApp',
+        ],
+    },
+    {
+        name: 'Maintenance Pro',
+        price: 'Mulai Rp300.000-Rp500.000/bulan',
+        points: [
+            'Semua fitur Basic',
+            'Optimasi kecepatan ringan',
+            'Perbaikan bug minor',
+            'Laporan bulanan',
+        ],
+    },
+    {
+        name: 'Perbaikan Sekali Jalan',
+        price: 'Mulai Rp250.000/kasus',
+        points: [
+            'Website error / gagal login',
+            'Form tidak jalan',
+            'Masalah hosting, SSL, domain',
+            'Perbaikan tampilan',
+        ],
+    },
+];
+
+const consultationPackages = [
+    {
+        name: 'Konsultasi Singkat',
+        price: 'Rp100.000-Rp250.000/sesi',
+        detail: 'Diskusi 30-60 menit untuk arah langkah awal.',
+    },
+    {
+        name: 'Audit Digital Bisnis',
+        price: 'Mulai Rp500.000',
+        detail: 'Audit kondisi saat ini + prioritas implementasi.',
+    },
+    {
+        name: 'Pendampingan Implementasi',
+        price: 'Mulai Rp1.000.000+',
+        detail: 'Pendampingan sampai solusi berjalan.',
+    },
+];
+
+const processSteps = [
+    {
+        title: 'Konsultasi',
+        description: 'Kita tentukan target bisnis dan kebutuhan paling prioritas.',
+    },
+    {
+        title: 'Rencana Kerja',
+        description: 'Kami siapkan scope, timeline, dan estimasi biaya yang jelas.',
+    },
+    {
+        title: 'Eksekusi',
+        description: 'Implementasi, testing, dan evaluasi hasil secara terukur.',
+    },
+];
+
+const faqs = [
+    {
+        q: 'Apakah konsultasi awal berbayar?',
+        a: 'Tidak. Konsultasi awal gratis via WhatsApp.',
+    },
+    {
+        q: 'Bisa maintenance website yang bukan buatan BangunWebsite.id?',
+        a: 'Bisa. Kami audit singkat dulu lalu susun prioritas perbaikan.',
+    },
+    {
+        q: 'Apakah harga paket sudah final?',
+        a: 'Belum. Harga di halaman ini adalah harga mulai.',
+    },
+    {
+        q: 'Apakah bisa minta fitur booking atau dashboard?',
+        a: 'Bisa. Ini masuk kategori custom website/system.',
+    },
+];
+
+const panelBase =
+    'relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-6 shadow-[0_16px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)]';
+
+export default async function Home() {
+    const blogPosts = await listPublishedBlogPosts(3);
+    const {
+        whatsappNumber,
+        whatsappDefaultUrl: whatsappUrl,
+        whatsappPortfolioUrl,
+        instagramUrl,
+    } = getPublicSiteConfig();
+    const servicePillars = getServicePillars(whatsappUrl);
+
+    return (
+        <main className='min-h-screen bg-slate-50 text-slate-900'>
+            <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
+                <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3'>
+                    <a href='#top' className='flex items-center gap-3'>
+                        <Image
+                            src='/bangun-website.png'
+                            alt='BangunWebsite.id'
+                            width={170}
+                            height={44}
+                            className='h-11 w-auto'
+                            priority
+                        />
+                    </a>
+
+                    <nav className='hidden items-center gap-7 text-base font-semibold md:flex'>
+                        {navItems.map((item) => (
+                            <a
+                                key={item.label}
+                                href={item.href}
+                                className='text-slate-700 transition hover:text-cyan-700'
+                            >
+                                {item.label}
+                            </a>
+                        ))}
+                    </nav>
+
+                    <a
+                        href={whatsappUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='rounded-full bg-cyan-700 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-cyan-800'
+                    >
+                        Konsultasi Gratis
+                    </a>
+                </div>
+            </header>
+
+            <section
+                id='top'
+                className='relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-amber-900 py-24 text-white md:py-28'
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+                <div className='absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.25),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(251,191,36,0.2),transparent_35%)]' />
+                <div className='relative mx-auto w-full max-w-6xl px-4'>
+                    <div className='max-w-4xl'>
+                        <p className='mb-5 inline-flex rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-semibold text-cyan-100 md:text-base'>
+                            Solusi Website & Konsultasi Digital untuk UMKM dan
+                            Bisnis Lokal
+                        </p>
+                        <h1 className='text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl'>
+                            Jasa Website, Maintenance, dan Konsultasi IT
+                        </h1>
+                        <p className='mt-6 max-w-3xl text-lg text-slate-200 md:text-2xl'>
+                            Kami bantu bisnis lokal punya website yang jalan,
+                            stabil, dan menghasilkan.
+                        </p>
+                        <div className='mt-9 flex flex-wrap gap-3'>
+                            <a
+                                href={whatsappUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='rounded-full bg-amber-400 px-7 py-3 text-base font-bold text-slate-900 transition hover:bg-amber-300 md:text-lg'
+                            >
+                                Konsultasi Gratis via WhatsApp
+                            </a>
+                            <a
+                                href='#layanan'
+                                className='rounded-full border border-white/40 px-7 py-3 text-base font-bold text-white transition hover:bg-white/10 md:text-lg'
+                            >
+                                Lihat Layanan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
+                <div className='rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_-35px_rgba(15,23,42,0.25)] md:p-10'>
+                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                        Masalah yang Sering Terjadi di Website Bisnis
+                    </h2>
+                    <div className='mt-8 grid gap-4 md:grid-cols-2'>
+                        {issues.map((issue, index) => (
+                            <div
+                                key={issue}
+                                className='flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base font-semibold text-slate-800 md:text-lg'
+                            >
+                                <span className='inline-flex h-8 w-8 flex-none items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white'>
+                                    {index + 1}
+                                </span>
+                                {issue}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section id='layanan' className='bg-slate-100 py-20 md:py-24'>
+                <div className='mx-auto w-full max-w-6xl px-4'>
+                    <div className='max-w-3xl'>
+                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                            3 Layanan Utama
+                        </h2>
+                        <p className='mt-3 text-lg text-slate-700 md:text-xl'>
+                            Fokus, ringkas, dan langsung ke kebutuhan bisnis.
+                        </p>
+                    </div>
+
+                    <div className='mt-10 grid gap-6 lg:grid-cols-3'>
+                        {servicePillars.map((service) => (
+                            <article key={service.title} className={panelBase}>
+                                <div
+                                    className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${service.tone}`}
+                                />
+                                <div className='mb-4 flex items-center justify-between'>
+                                    <span className='text-sm font-bold tracking-[0.2em] text-slate-500'>
+                                        {service.number}
+                                    </span>
+                                    <span
+                                        className={`rounded-full bg-gradient-to-r px-3 py-1 text-xs font-bold text-white ${service.tone}`}
+                                    >
+                                        Service
+                                    </span>
+                                </div>
+                                <h3 className='text-2xl font-bold leading-tight md:text-3xl'>
+                                    {service.title}
+                                </h3>
+                                <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                                    {service.description}
+                                </p>
+                                <ul className='mt-5 space-y-2 text-sm font-medium text-slate-700 md:text-base'>
+                                    {service.points.map((point) => (
+                                        <li key={point}>- {point}</li>
+                                    ))}
+                                </ul>
+                                <a
+                                    href={service.href}
+                                    target={
+                                        service.href.startsWith('http')
+                                            ? '_blank'
+                                            : undefined
+                                    }
+                                    rel={
+                                        service.href.startsWith('http')
+                                            ? 'noopener noreferrer'
+                                            : undefined
+                                    }
+                                    className='mt-6 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 md:text-base'
+                                >
+                                    {service.cta}
+                                </a>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
+                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    Solusi Berdasarkan Kebutuhan
+                </h2>
+                <div className='mt-8 grid gap-6 md:grid-cols-3'>
+                    {solutions.map((solution, idx) => (
+                        <article key={solution.title} className={panelBase}>
+                            <div className='mb-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold text-cyan-800'>
+                                Solusi {idx + 1}
+                            </div>
+                            <h3 className='text-2xl font-bold leading-tight md:text-3xl'>
+                                {solution.title}
+                            </h3>
+                            <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                                {solution.description}
+                            </p>
+                            <a
+                                href={whatsappUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='mt-5 inline-flex rounded-full border-2 border-cyan-700 px-4 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 md:text-base'
+                            >
+                                {solution.action}
+                            </a>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            <section id='produk' className='bg-slate-100 py-20 md:py-24'>
+                <div className='mx-auto w-full max-w-6xl px-4'>
+                    <div className='relative overflow-hidden rounded-[32px] border border-amber-200 bg-gradient-to-r from-amber-100 via-white to-cyan-100 p-8 shadow-[0_24px_70px_-35px_rgba(245,158,11,0.45)] md:p-10'>
+                        <div className='absolute -right-12 -top-12 h-40 w-40 rounded-full bg-amber-300/40 blur-2xl' />
+                        <p className='relative text-sm font-bold uppercase tracking-[0.2em] text-cyan-800'>
+                            Produk Khusus
+                        </p>
+                        <h2 className='relative mt-2 text-4xl font-bold leading-tight md:text-5xl'>
+                            Website Rental Event
+                        </h2>
+                        <p className='relative mt-4 max-w-3xl text-lg font-medium text-slate-700 md:text-xl'>
+                            Untuk bisnis rental event yang butuh katalog,
+                            booking, jadwal sewa, invoice, dan dashboard order.
+                        </p>
+                        <div className='relative mt-6 flex flex-wrap items-center gap-3'>
+                            <span className='rounded-full bg-amber-500 px-4 py-1.5 text-sm font-bold text-white'>
+                                Segera Hadir
+                            </span>
+                            <a
+                                href={whatsappUrl}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 md:text-base'
+                            >
+                                Daftar Early Access
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id='portfolio'
+                className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+                <div className='flex flex-wrap items-end justify-between gap-4'>
+                    <div>
+                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                            Portfolio
+                        </h2>
+                        <p className='mt-2 max-w-3xl text-lg font-medium text-slate-700 md:text-xl'>
+                            Project real yang sudah online dan dipakai klien.
+                        </p>
+                    </div>
+                    <a
+                        href={whatsappPortfolioUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='rounded-full border-2 border-cyan-700 px-5 py-2.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 md:text-base'
+                    >
+                        Konsultasi Setelah Lihat Portfolio
+                    </a>
+                </div>
+
+                <div className='mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                    {portfolioProjects.map((project, index) => (
+                        <article
+                            key={project.id}
+                            className={`group relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${index % 3 === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                        >
+                            <div className='relative'>
+                                <Image
+                                    src={project.image}
+                                    alt={project.title}
+                                    width={640}
+                                    height={400}
+                                    className='aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105'
+                                />
+                                <div className='absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent' />
+                                <span className='absolute left-3 top-3 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-bold text-white'>
+                                    {project.category}
+                                </span>
+                            </div>
+
+                            <div className='space-y-4 p-5'>
+                                <h3 className='text-2xl font-bold leading-tight'>
+                                    {project.title}
+                                </h3>
+                                <p className='text-base font-medium text-slate-700'>
+                                    {project.description}
+                                </p>
+
+                                <div className='flex flex-wrap gap-2'>
+                                    {project.tech.map((tech) => (
+                                        <span
+                                            key={tech}
+                                            className='rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700'
+                                        >
+                                            {tech}
+                                        </span>
+                                    ))}
+                                </div>
+
+                                <a
+                                    href={project.url}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className='inline-flex w-full justify-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-800 md:text-base'
+                                >
+                                    Cek Website
+                                </a>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            <section id='harga' className='bg-slate-100 py-20 md:py-24'>
+                <div className='mx-auto w-full max-w-6xl px-4'>
+                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                        Paket Layanan
+                    </h2>
+
+                    <div className='mt-10'>
+                        <h3 className='text-3xl font-bold md:text-4xl'>
+                            Paket Website Baru
+                        </h3>
+                        <div className='mt-5 grid gap-4 md:grid-cols-3'>
+                            {websitePackages.map((item, idx) => (
+                                <article
+                                    key={item.name}
+                                    className={`relative overflow-hidden rounded-3xl border p-6 shadow-sm ${idx === 1 ? 'border-cyan-300 bg-cyan-700 text-white' : 'border-slate-200 bg-white'}`}
+                                >
+                                    {idx === 1 && (
+                                        <span className='mb-4 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold'>
+                                            Paling Populer
+                                        </span>
+                                    )}
+                                    <h4 className='text-2xl font-bold'>
+                                        {item.name}
+                                    </h4>
+                                    <p className='mt-2 text-lg font-bold'>
+                                        {item.price}
+                                    </p>
+                                    <p
+                                        className={`mt-3 text-base font-medium ${idx === 1 ? 'text-cyan-50' : 'text-slate-700'}`}
+                                    >
+                                        {item.note}
+                                    </p>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className='mt-12'>
+                        <h3 className='text-3xl font-bold md:text-4xl'>
+                            Paket Maintenance
+                        </h3>
+                        <div className='mt-5 grid gap-4 md:grid-cols-3'>
+                            {maintenancePackages.map((item) => (
+                                <article key={item.name} className={panelBase}>
+                                    <h4 className='text-2xl font-bold'>
+                                        {item.name}
+                                    </h4>
+                                    <p className='mt-2 text-lg font-bold text-cyan-800'>
+                                        {item.price}
+                                    </p>
+                                    <ul className='mt-4 space-y-2 text-base font-medium text-slate-700'>
+                                        {item.points.map((point) => (
+                                            <li key={point}>- {point}</li>
+                                        ))}
+                                    </ul>
+                                </article>
+                            ))}
+                        </div>
+                        <p className='mt-4 text-base font-medium text-slate-600'>
+                            Harga final menyesuaikan tingkat kerusakan dan
+                            teknologi website.
+                        </p>
+                    </div>
+
+                    <div className='mt-12'>
+                        <h3 className='text-3xl font-bold md:text-4xl'>
+                            Paket Konsultasi IT
+                        </h3>
+                        <div className='mt-5 grid gap-4 md:grid-cols-3'>
+                            {consultationPackages.map((item) => (
+                                <article key={item.name} className={panelBase}>
+                                    <h4 className='text-2xl font-bold'>
+                                        {item.name}
+                                    </h4>
+                                    <p className='mt-2 text-lg font-bold text-cyan-800'>
+                                        {item.price}
+                                    </p>
+                                    <p className='mt-3 text-base font-medium text-slate-700'>
+                                        {item.detail}
+                                    </p>
+                                </article>
+                            ))}
+                        </div>
+                        <p className='mt-4 text-base font-medium text-slate-700'>
+                            Konsultasi awal gratis via WhatsApp.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
+                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    Proses Kerja
+                </h2>
+                <div className='mt-8 grid gap-6 md:grid-cols-3'>
+                    {processSteps.map((step, idx) => (
+                        <article key={step.title} className={panelBase}>
+                            <p className='text-sm font-bold uppercase tracking-[0.2em] text-cyan-700'>
+                                Langkah {idx + 1}
+                            </p>
+                            <h3 className='mt-2 text-2xl font-bold md:text-3xl'>
+                                {step.title}
+                            </h3>
+                            <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                                {step.description}
+                            </p>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            <section id='blog' className='bg-slate-100 py-20 md:py-24'>
+                <div className='mx-auto w-full max-w-6xl px-4'>
+                    <div className='flex flex-wrap items-end justify-between gap-4'>
+                        <div>
+                            <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                                Blog
+                            </h2>
+                            <p className='mt-2 text-lg font-medium text-slate-700 md:text-xl'>
+                                3 artikel terbaru. Untuk semua artikel, buka
+                                halaman blog.
+                            </p>
+                        </div>
+                        <Link
+                            href='/blog'
+                            className='rounded-full border-2 border-cyan-700 px-5 py-2.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 md:text-base'
+                        >
+                            Lihat Semua Blog
+                        </Link>
+                    </div>
+
+                    <div className='mt-8 grid gap-6 md:grid-cols-3'>
+                        {blogPosts.slice(0, 3).map((post) => (
+                            <article key={post.slug} className={panelBase}>
+                                <p className='text-xs font-bold uppercase tracking-[0.2em] text-cyan-700'>
+                                    {post.categories[0] ?? 'Blog'}
+                                </p>
+                                <h3 className='mt-2 text-2xl font-bold leading-tight'>
+                                    {post.title}
+                                </h3>
+                                <p className='mt-3 text-base font-medium text-slate-700'>
+                                    {post.summary}
+                                </p>
+                                <Link
+                                    href={`/blog/${post.slug}`}
+                                    className='mt-4 inline-flex rounded-full border border-cyan-700 px-4 py-1.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50'
+                                >
+                                    Baca Artikel
+                                </Link>
+                                <p className='mt-3 text-sm font-semibold text-slate-500'>
+                                    {new Date(post.published_at).toLocaleDateString(
+                                        'id-ID',
+                                        {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        }
+                                    )}
+                                </p>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
+                <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    FAQ
+                </h2>
+                <div className='mt-8 space-y-4'>
+                    {faqs.map((faq) => (
+                        <details
+                            key={faq.q}
+                            className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'
+                        >
+                            <summary className='cursor-pointer text-lg font-bold md:text-xl'>
+                                {faq.q}
+                            </summary>
+                            <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                                {faq.a}
+                            </p>
+                        </details>
+                    ))}
+                </div>
+            </section>
+
+            <section
+                id='kontak'
+                className='bg-gradient-to-r from-cyan-800 to-slate-900 py-20 text-white md:py-24'
+            >
+                <div className='mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-2'>
+                    <div>
+                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                            Siap Bangun atau Rapikan Website Anda?
+                        </h2>
+                        <p className='mt-4 max-w-2xl text-lg font-medium text-slate-200 md:text-xl'>
+                            Kirim kebutuhan Anda, kami bantu petakan langkah
+                            paling efisien.
+                        </p>
+                        <a
+                            href={whatsappUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='mt-7 inline-flex rounded-full bg-amber-400 px-7 py-3 text-base font-bold text-slate-900 transition hover:bg-amber-300 md:text-lg'
+                        >
+                            Konsultasi Gratis via WhatsApp
+                        </a>
+                    </div>
+
+                    <div className='rounded-[24px] border border-white/20 bg-white/10 p-6 backdrop-blur-sm'>
+                        <h3 className='text-2xl font-bold md:text-3xl'>Kontak</h3>
+                        <ul className='mt-4 space-y-3 text-base font-medium text-slate-100 md:text-lg'>
+                            <li>
+                                WhatsApp:{' '}
+                                <a
+                                    className='font-bold underline'
+                                    href={`https://wa.me/${whatsappNumber}`}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    +62 821-5192-8443
+                                </a>
+                            </li>
+                            <li>
+                                Instagram:{' '}
+                                <a
+                                    className='font-bold underline'
+                                    href={instagramUrl}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    @bangunwebsite_id
+                                </a>
+                            </li>
+                            <li>Jam support: Senin - Jumat, 09:00 - 18:00</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <footer className='border-t border-slate-200 bg-white py-8'>
+                <div className='mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 text-sm font-medium text-slate-600 md:flex-row md:text-base'>
+                    <p>© {new Date().getFullYear()} BangunWebsite.id</p>
+                    <p>
+                        WhatsApp Support:{' '}
+                        <a
+                            href={`https://wa.me/${whatsappNumber}`}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='font-bold text-cyan-800'
+                        >
+                            +62 821-5192-8443
+                        </a>
+                    </p>
+                </div>
+            </footer>
+        </main>
+    );
 }
