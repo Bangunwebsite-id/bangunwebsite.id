@@ -817,7 +817,7 @@ export default async function Home() {
                                     @bangunwebsite_id
                                 </a>
                             </li>
-                            <li>Jam support: Senin - Jumat, 09:00 - 18:00</li>
+                            <li>Jam support: Senin - Minggu, 08:00 - 18:00</li>
                         </ul>
                     </div>
                 </div>
