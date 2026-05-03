@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Suspense } from 'react';
@@ -43,7 +44,9 @@ export default function RootLayout({
                 <Suspense fallback={null}>
                     <TrafficTracker />
                 </Suspense>
+                <Analytics />
             </body>
         </html>
     );
 }
+

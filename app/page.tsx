@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { LoadingLink } from '@/app/components/loading-link';
 import { ScrollReveal } from '@/app/components/scroll-reveal';
