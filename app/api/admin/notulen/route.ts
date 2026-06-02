@@ -20,33 +20,20 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
     const status = (body.status ?? 'Draft').trim();
 
     return {
-        title: (body.title ?? '').trim(),
         meetingDate: (body.meetingDate ?? '').trim(),
         startTime: (body.startTime ?? '').trim(),
         endTime: (body.endTime ?? '').trim(),
         place: (body.place ?? '').trim(),
-        leader: (body.leader ?? '').trim(),
         noteTaker: (body.noteTaker ?? '').trim(),
         attendees: (body.attendees ?? '').trim(),
-        agenda: (body.agenda ?? '').trim(),
         decisions: (body.decisions ?? '').trim(),
-        followUp: (body.followUp ?? '').trim(),
-        notes: (body.notes ?? '').trim(),
         status: isNotulenStatus(status) ? status : 'Draft',
     };
 }
 
 function validatePayload(payload: UpsertNotulenInput) {
-    if (!payload.title) {
-        return 'Judul rapat wajib diisi.';
-    }
-
     if (!payload.meetingDate || !Date.parse(payload.meetingDate)) {
         return 'Tanggal rapat wajib diisi dengan format yang valid.';
-    }
-
-    if (!payload.leader) {
-        return 'Pemimpin rapat wajib diisi.';
     }
 
     if (!payload.noteTaker) {

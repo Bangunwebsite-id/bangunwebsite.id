@@ -6,36 +6,26 @@ type NotulenStatus = 'Draft' | 'Final' | 'Arsip';
 
 type DashboardNotulen = {
     id: number;
-    title: string;
     meeting_date: string;
     start_time: string | null;
     end_time: string | null;
     place: string | null;
-    leader: string;
     note_taker: string;
     attendees: string | null;
-    agenda: string | null;
     decisions: string | null;
-    follow_up: string | null;
-    notes: string | null;
     status: NotulenStatus;
     created_at: string;
     updated_at: string;
 };
 
 type NotulenFormState = {
-    title: string;
     meetingDate: string;
     startTime: string;
     endTime: string;
     place: string;
-    leader: string;
     noteTaker: string;
     attendees: string;
-    agenda: string;
     decisions: string;
-    followUp: string;
-    notes: string;
     status: NotulenStatus;
 };
 
@@ -48,18 +38,13 @@ function getTodayDateInput() {
 
 function getDefaultFormState(): NotulenFormState {
     return {
-        title: '',
         meetingDate: getTodayDateInput(),
         startTime: '',
         endTime: '',
         place: '',
-        leader: '',
         noteTaker: '',
         attendees: '',
-        agenda: '',
         decisions: '',
-        followUp: '',
-        notes: '',
         status: 'Draft',
     };
 }
@@ -114,10 +99,7 @@ function buildPrintDocument(item: DashboardNotulen) {
     const timeRange = `${item.start_time ?? '-'} - ${item.end_time ?? '-'}`;
     const sections = [
         ['DAFTAR HADIR', item.attendees],
-        ['AGENDA RAPAT', item.agenda],
         ['HASIL RAPAT', item.decisions],
-        ['TINDAK LANJUT', item.follow_up],
-        ['CATATAN TAMBAHAN', item.notes],
         ['STATUS', item.status],
     ];
 
@@ -132,7 +114,7 @@ function buildPrintDocument(item: DashboardNotulen) {
         <!doctype html>
         <html>
             <head>
-                <title>Notulen - ${escapeHtml(item.title)}</title>
+                <title>Notulen Rapat</title>
                 <style>
                     body { font-family: Arial, sans-serif; color: #0f172a; margin: 40px; }
                     h1 { text-align: center; font-size: 22px; letter-spacing: 0.08em; margin-bottom: 28px; }
@@ -147,12 +129,10 @@ function buildPrintDocument(item: DashboardNotulen) {
             </head>
             <body>
                 <h1>NOTULEN RAPAT</h1>
-                <h2>${escapeHtml(item.title)}</h2>
                 <table class="meta">
                     <tr><td>Hari, Tanggal</td><td>${formatDateShort(item.meeting_date)}</td></tr>
                     <tr><td>Waktu</td><td>${escapeHtml(timeRange)}</td></tr>
                     <tr><td>Tempat</td><td>${escapeHtml(item.place)}</td></tr>
-                    <tr><td>Pemimpin Rapat</td><td>${escapeHtml(item.leader)}</td></tr>
                     <tr><td>Notulis</td><td>${escapeHtml(item.note_taker)}</td></tr>
                 </table>
                 ${sections
@@ -194,7 +174,14 @@ export function NotulenPanel() {
         }
 
         return notulen.filter((item) =>
-            item.title.toLowerCase().includes(query),
+            [
+                item.note_taker,
+                item.place ?? '',
+                formatDateShort(item.meeting_date),
+            ]
+                .join(' ')
+                .toLowerCase()
+                .includes(query),
         );
     }, [notulen, search]);
 
@@ -306,18 +293,13 @@ export function NotulenPanel() {
         setSelectedId(item.id);
         setFeedback(null);
         setForm({
-            title: item.title,
             meetingDate: item.meeting_date,
             startTime: item.start_time ?? '',
             endTime: item.end_time ?? '',
             place: item.place ?? '',
-            leader: item.leader,
             noteTaker: item.note_taker,
             attendees: item.attendees ?? '',
-            agenda: item.agenda ?? '',
             decisions: item.decisions ?? '',
-            followUp: item.follow_up ?? '',
-            notes: item.notes ?? '',
             status: item.status,
         });
     }
@@ -526,22 +508,6 @@ export function NotulenPanel() {
                     </div>
 
                     <form className='mt-4 space-y-3' onSubmit={handleSave}>
-                        <div>
-                            <label htmlFor='notulen-title' className='mb-1 block text-sm font-semibold text-slate-700'>
-                                Judul Rapat
-                            </label>
-                            <input
-                                id='notulen-title'
-                                type='text'
-                                value={form.title}
-                                onChange={(event) =>
-                                    setForm((prev) => ({ ...prev, title: event.target.value }))
-                                }
-                                className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
-                                required
-                            />
-                        </div>
-
                         <div className='grid gap-3 sm:grid-cols-2'>
                             <div>
                                 <label htmlFor='notulen-date' className='mb-1 block text-sm font-semibold text-slate-700'>
@@ -605,45 +571,25 @@ export function NotulenPanel() {
                             </div>
                         </div>
 
-                        <div className='grid gap-3 sm:grid-cols-2'>
-                            <div>
-                                <label htmlFor='notulen-leader' className='mb-1 block text-sm font-semibold text-slate-700'>
-                                    Pemimpin Rapat
-                                </label>
-                                <input
-                                    id='notulen-leader'
-                                    type='text'
-                                    value={form.leader}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({ ...prev, leader: event.target.value }))
-                                    }
-                                    className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor='notulen-note-taker' className='mb-1 block text-sm font-semibold text-slate-700'>
-                                    Notulis
-                                </label>
-                                <input
-                                    id='notulen-note-taker'
-                                    type='text'
-                                    value={form.noteTaker}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({ ...prev, noteTaker: event.target.value }))
-                                    }
-                                    className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <label htmlFor='notulen-note-taker' className='mb-1 block text-sm font-semibold text-slate-700'>
+                                Notulis
+                            </label>
+                            <input
+                                id='notulen-note-taker'
+                                type='text'
+                                value={form.noteTaker}
+                                onChange={(event) =>
+                                    setForm((prev) => ({ ...prev, noteTaker: event.target.value }))
+                                }
+                                className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
+                                required
+                            />
                         </div>
 
                         {[
                             ['Daftar Hadir', 'attendees', 5],
-                            ['Agenda Rapat', 'agenda', 4],
                             ['Hasil Rapat', 'decisions', 8],
-                            ['Tindak Lanjut', 'followUp', 7],
-                            ['Catatan Tambahan', 'notes', 4],
                         ].map(([label, key, rows]) => (
                             <div key={key}>
                                 <label className='mb-1 block text-sm font-semibold text-slate-700'>
@@ -708,7 +654,7 @@ export function NotulenPanel() {
                                     Daftar Notulen
                                 </h4>
                                 <p className='mt-1 text-sm text-slate-600'>
-                                    Cari berdasarkan judul rapat, lalu pilih untuk melihat detail.
+                                    Cari berdasarkan notulis, tempat, atau tanggal, lalu pilih untuk melihat detail.
                                 </p>
                             </div>
                             <input
@@ -718,7 +664,7 @@ export function NotulenPanel() {
                                     setSearch(event.target.value);
                                     setPage(1);
                                 }}
-                                placeholder='Cari judul rapat...'
+                                placeholder='Cari notulis/tempat...'
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2 sm:w-64'
                             />
                         </div>
@@ -727,9 +673,9 @@ export function NotulenPanel() {
                             <table className='min-w-full text-left'>
                                 <thead>
                                     <tr className='border-b border-slate-200 text-[11px] uppercase tracking-[0.12em] text-slate-500'>
-                                        <th className='px-2 py-2'>Judul Rapat</th>
                                         <th className='px-2 py-2'>Tanggal</th>
-                                        <th className='px-2 py-2'>Pemimpin Rapat</th>
+                                        <th className='px-2 py-2'>Waktu</th>
+                                        <th className='px-2 py-2'>Tempat</th>
                                         <th className='px-2 py-2'>Notulis</th>
                                         <th className='px-2 py-2'>Status</th>
                                         <th className='px-2 py-2 text-right'>Aksi</th>
@@ -752,13 +698,13 @@ export function NotulenPanel() {
                                     ) : (
                                         paginatedNotulen.map((item) => (
                                             <tr key={item.id} className='border-b border-slate-100 text-sm text-slate-700'>
-                                                <td className='px-2 py-3 font-semibold text-slate-900'>
-                                                    {item.title}
-                                                </td>
                                                 <td className='px-2 py-3'>
                                                     {formatDateShort(item.meeting_date)}
                                                 </td>
-                                                <td className='px-2 py-3'>{item.leader}</td>
+                                                <td className='px-2 py-3'>
+                                                    {item.start_time ?? '-'} - {item.end_time ?? '-'}
+                                                </td>
+                                                <td className='px-2 py-3'>{item.place ?? '-'}</td>
                                                 <td className='px-2 py-3'>{item.note_taker}</td>
                                                 <td className='px-2 py-3'>
                                                     <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${getStatusClass(item.status)}`}>
@@ -811,9 +757,6 @@ export function NotulenPanel() {
                                         <p className='text-center text-sm font-bold uppercase tracking-[0.16em] text-slate-500 sm:text-left'>
                                             NOTULEN RAPAT
                                         </p>
-                                        <h4 className='mt-2 text-2xl font-bold text-slate-900'>
-                                            {selectedNotulen.title}
-                                        </h4>
                                     </div>
                                     <button type='button' onClick={() => handleExportPdf(selectedNotulen)} className='rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100'>
                                         Export PDF
@@ -824,17 +767,13 @@ export function NotulenPanel() {
                                     <p><span className='font-bold'>Hari, Tanggal:</span> {formatDateShort(selectedNotulen.meeting_date)}</p>
                                     <p><span className='font-bold'>Waktu:</span> {selectedNotulen.start_time ?? '-'} - {selectedNotulen.end_time ?? '-'}</p>
                                     <p><span className='font-bold'>Tempat:</span> {selectedNotulen.place ?? '-'}</p>
-                                    <p><span className='font-bold'>Pemimpin Rapat:</span> {selectedNotulen.leader}</p>
                                     <p><span className='font-bold'>Notulis:</span> {selectedNotulen.note_taker}</p>
                                     <p><span className='font-bold'>Status:</span> {selectedNotulen.status}</p>
                                 </div>
 
                                 {[
                                     ['DAFTAR HADIR', selectedNotulen.attendees],
-                                    ['AGENDA RAPAT', selectedNotulen.agenda],
                                     ['HASIL RAPAT', selectedNotulen.decisions],
-                                    ['TINDAK LANJUT', selectedNotulen.follow_up],
-                                    ['CATATAN TAMBAHAN', selectedNotulen.notes],
                                 ].map(([title, content]) => (
                                     <section key={title} className='mt-5'>
                                         <h5 className='border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500'>
