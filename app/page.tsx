@@ -5,7 +5,7 @@ import { ScrollReveal } from '@/app/components/scroll-reveal';
 import { listPublishedBlogPosts } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
 
-export const revalidate = 3600; // Cache for 1 hour (ISR)
+export const revalidate = 3600; // Cache for 1 hour (ISR) piu
 
 const navItems = [
     { label: 'Layanan', href: '#layanan' },
@@ -47,7 +47,8 @@ function getServicePillars(whatsappUrl: string) {
         {
             number: '02',
             title: 'Maintenance Website',
-            description: 'Website lama diperbaiki, dirawat, dan dipantau rutin.',
+            description:
+                'Website lama diperbaiki, dirawat, dan dipantau rutin.',
             points: [
                 'Perbaikan error',
                 'Update konten & backup',
@@ -63,7 +64,8 @@ function getServicePillars(whatsappUrl: string) {
         {
             number: '03',
             title: 'Konsultasi IT',
-            description: 'Arah digital yang jelas sebelum eksekusi biaya besar.',
+            description:
+                'Arah digital yang jelas sebelum eksekusi biaya besar.',
             points: [
                 'Pemetaan kebutuhan website/sistem',
                 'Audit alur kerja digital',
@@ -241,15 +243,18 @@ const consultationPackages = [
 const processSteps = [
     {
         title: 'Konsultasi',
-        description: 'Kita tentukan target bisnis dan kebutuhan paling prioritas.',
+        description:
+            'Kita tentukan target bisnis dan kebutuhan paling prioritas.',
     },
     {
         title: 'Rencana Kerja',
-        description: 'Kami siapkan scope, timeline, dan estimasi biaya yang jelas.',
+        description:
+            'Kami siapkan scope, timeline, dan estimasi biaya yang jelas.',
     },
     {
         title: 'Eksekusi',
-        description: 'Implementasi, testing, dan evaluasi hasil secara terukur.',
+        description:
+            'Implementasi, testing, dan evaluasi hasil secara terukur.',
     },
 ];
 
@@ -397,7 +402,11 @@ export default async function Home() {
 
                     <div className='mt-10 grid gap-6 lg:grid-cols-3'>
                         {servicePillars.map((service, index) => (
-                            <article key={service.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
+                            <article
+                                key={service.title}
+                                className={`${panelBase} animate-on-scroll`}
+                                style={{ transitionDelay: `${index * 100}ms` }}
+                            >
                                 <div
                                     className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${service.tone}`}
                                 />
@@ -450,7 +459,11 @@ export default async function Home() {
                 </h2>
                 <div className='mt-8 grid gap-6 md:grid-cols-3'>
                     {solutions.map((solution, idx) => (
-                        <article key={solution.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${idx * 100}ms` }}>
+                        <article
+                            key={solution.title}
+                            className={`${panelBase} animate-on-scroll`}
+                            style={{ transitionDelay: `${idx * 100}ms` }}
+                        >
                             <div className='mb-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold text-cyan-800'>
                                 Solusi {idx + 1}
                             </div>
@@ -532,7 +545,9 @@ export default async function Home() {
                         <article
                             key={project.id}
                             className={`animate-on-scroll group relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${index % 3 === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
-                            style={{ transitionDelay: `${(index % 3) * 100}ms` }}
+                            style={{
+                                transitionDelay: `${(index % 3) * 100}ms`,
+                            }}
                         >
                             <div className='relative'>
                                 <Image
@@ -596,7 +611,9 @@ export default async function Home() {
                                 <article
                                     key={item.name}
                                     className={`animate-on-scroll relative overflow-hidden rounded-3xl border p-6 shadow-sm ${idx === 1 ? 'border-cyan-300 bg-cyan-700 text-white' : 'border-slate-200 bg-white'}`}
-                                    style={{ transitionDelay: `${idx * 100}ms` }}
+                                    style={{
+                                        transitionDelay: `${idx * 100}ms`,
+                                    }}
                                 >
                                     {idx === 1 && (
                                         <span className='mb-4 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold'>
@@ -625,7 +642,13 @@ export default async function Home() {
                         </h3>
                         <div className='mt-5 grid gap-4 md:grid-cols-3'>
                             {maintenancePackages.map((item, index) => (
-                                <article key={item.name} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
+                                <article
+                                    key={item.name}
+                                    className={`${panelBase} animate-on-scroll`}
+                                    style={{
+                                        transitionDelay: `${index * 100}ms`,
+                                    }}
+                                >
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
@@ -652,7 +675,13 @@ export default async function Home() {
                         </h3>
                         <div className='mt-5 grid gap-4 md:grid-cols-3'>
                             {consultationPackages.map((item, index) => (
-                                <article key={item.name} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
+                                <article
+                                    key={item.name}
+                                    className={`${panelBase} animate-on-scroll`}
+                                    style={{
+                                        transitionDelay: `${index * 100}ms`,
+                                    }}
+                                >
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
@@ -678,7 +707,11 @@ export default async function Home() {
                 </h2>
                 <div className='mt-8 grid gap-6 md:grid-cols-3'>
                     {processSteps.map((step, idx) => (
-                        <article key={step.title} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${idx * 100}ms` }}>
+                        <article
+                            key={step.title}
+                            className={`${panelBase} animate-on-scroll`}
+                            style={{ transitionDelay: `${idx * 100}ms` }}
+                        >
                             <p className='text-sm font-bold uppercase tracking-[0.2em] text-cyan-700'>
                                 Langkah {idx + 1}
                             </p>
@@ -715,7 +748,11 @@ export default async function Home() {
 
                     <div className='mt-8 grid gap-6 md:grid-cols-3'>
                         {blogPosts.slice(0, 3).map((post, index) => (
-                            <article key={post.slug} className={`${panelBase} animate-on-scroll`} style={{ transitionDelay: `${index * 100}ms` }}>
+                            <article
+                                key={post.slug}
+                                className={`${panelBase} animate-on-scroll`}
+                                style={{ transitionDelay: `${index * 100}ms` }}
+                            >
                                 <p className='text-xs font-bold uppercase tracking-[0.2em] text-cyan-700'>
                                     {post.categories[0] ?? 'Blog'}
                                 </p>
@@ -732,14 +769,13 @@ export default async function Home() {
                                     Baca Artikel
                                 </LoadingLink>
                                 <p className='mt-3 text-sm font-semibold text-slate-500'>
-                                    {new Date(post.published_at).toLocaleDateString(
-                                        'id-ID',
-                                        {
-                                            day: 'numeric',
-                                            month: 'long',
-                                            year: 'numeric',
-                                        }
-                                    )}
+                                    {new Date(
+                                        post.published_at,
+                                    ).toLocaleDateString('id-ID', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric',
+                                    })}
                                 </p>
                             </article>
                         ))}
@@ -793,7 +829,9 @@ export default async function Home() {
                     </div>
 
                     <div className='animate-on-scroll reveal-delay-200 rounded-[24px] border border-white/20 bg-white/10 p-6 backdrop-blur-sm'>
-                        <h3 className='text-2xl font-bold md:text-3xl'>Kontak</h3>
+                        <h3 className='text-2xl font-bold md:text-3xl'>
+                            Kontak
+                        </h3>
                         <ul className='mt-4 space-y-3 text-base font-medium text-slate-100 md:text-lg'>
                             <li>
                                 WhatsApp:{' '}
