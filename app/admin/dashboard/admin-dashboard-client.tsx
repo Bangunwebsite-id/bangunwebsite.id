@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 
+import { NotulenPanel } from './notulen-panel';
+
 type DashboardUser = {
     id: number;
     username: string;
@@ -97,6 +99,11 @@ const dashboardTabs = [
         id: 'blog',
         label: 'Blog',
         description: 'CRUD artikel',
+    },
+    {
+        id: 'notulen',
+        label: 'Notulen',
+        description: 'CRUD rapat',
     },
 ] as const;
 
@@ -437,7 +444,7 @@ export function AdminDashboardClient({
             setBlogsError(
                 error instanceof Error
                     ? error.message
-                    : 'Terjadi kesalahan saat memuat data artikel.'
+                    : 'Terjadi kesalahan saat memuatt data artikel.'
             );
             throw error;
         } finally {
@@ -1897,6 +1904,8 @@ export function AdminDashboardClient({
                                 </div>
                             </section>
                         )}
+
+                        {activeTab === 'notulen' && <NotulenPanel />}
                     </div>
                 </div>
             </div>
