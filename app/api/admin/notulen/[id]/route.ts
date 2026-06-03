@@ -40,12 +40,28 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
         noteTaker: (body.noteTaker ?? '').trim(),
         attendees: (body.attendees ?? '').trim(),
         decisions: (body.decisions ?? '').trim(),
+        documentationPhotoUrl: (body.documentationPhotoUrl ?? '').trim(),
         status: isNotulenStatus(status) ? status : 'Draft',
     };
 }
 
+function isValidDateInput(value: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+    );
+}
+
 function validatePayload(payload: UpsertNotulenInput) {
-    if (!payload.meetingDate || !Date.parse(payload.meetingDate)) {
+    if (!isValidDateInput(payload.meetingDate)) {
         return 'Tanggal rapat wajib diisi dengan format yang valid.';
     }
 

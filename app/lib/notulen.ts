@@ -6,13 +6,14 @@ export type NotulenStatus = 'Draft' | 'Final' | 'Arsip';
 
 export type NotulenRecord = {
     id: number;
-    meeting_date: Date | string;
+    meeting_date: string;
     start_time: string | null;
     end_time: string | null;
     place: string | null;
     note_taker: string;
     attendees: string | null;
     decisions: string | null;
+    documentation_photo_url: string | null;
     status: NotulenStatus;
     created_at: Date;
     updated_at: Date;
@@ -26,6 +27,7 @@ export type UpsertNotulenInput = {
     noteTaker: string;
     attendees: string;
     decisions: string;
+    documentationPhotoUrl: string;
     status: NotulenStatus;
 };
 
@@ -56,6 +58,15 @@ async function ensureNotulenTable() {
     await dbPool.query(`
         DO $$
         BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'meeting_minutes'
+                    AND column_name = 'documentation_photo_url'
+            ) THEN
+                ALTER TABLE meeting_minutes ADD COLUMN documentation_photo_url TEXT;
+            END IF;
+
             IF EXISTS (
                 SELECT 1
                 FROM information_schema.columns
@@ -91,13 +102,14 @@ export async function listAdminNotulen() {
     const result = await dbPool.query<NotulenRecord>(`
         SELECT
             id,
-            meeting_date,
+            meeting_date::text AS meeting_date,
             start_time::text,
             end_time::text,
             place,
             note_taker,
             attendees,
             decisions,
+            documentation_photo_url,
             status,
             created_at,
             updated_at
@@ -121,6 +133,7 @@ export async function createNotulen(input: UpsertNotulenInput) {
                 note_taker,
                 attendees,
                 decisions,
+                documentation_photo_url,
                 status
             )
             VALUES (
@@ -131,7 +144,8 @@ export async function createNotulen(input: UpsertNotulenInput) {
                 $5,
                 $6,
                 $7,
-                $8
+                $8,
+                $9
             )
             RETURNING id
         `,
@@ -143,6 +157,7 @@ export async function createNotulen(input: UpsertNotulenInput) {
             input.noteTaker,
             normalizeOptional(input.attendees),
             normalizeOptional(input.decisions),
+            normalizeOptional(input.documentationPhotoUrl),
             input.status,
         ],
     );
@@ -167,7 +182,8 @@ export async function updateNotulenById(
                 note_taker = $6,
                 attendees = $7,
                 decisions = $8,
-                status = $9,
+                documentation_photo_url = $9,
+                status = $10,
                 updated_at = NOW()
             WHERE id = $1
         `,
@@ -180,6 +196,7 @@ export async function updateNotulenById(
             input.noteTaker,
             normalizeOptional(input.attendees),
             normalizeOptional(input.decisions),
+            normalizeOptional(input.documentationPhotoUrl),
             input.status,
         ],
     );
