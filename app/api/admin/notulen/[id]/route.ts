@@ -40,6 +40,7 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
         noteTaker: (body.noteTaker ?? '').trim(),
         attendees: (body.attendees ?? '').trim(),
         decisions: (body.decisions ?? '').trim(),
+        documentationPhotoUrl: (body.documentationPhotoUrl ?? '').trim(),
         status: isNotulenStatus(status) ? status : 'Draft',
     };
 }

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { NotulenPanel } from './notulen-panel';
+import { SecretVariablePanel } from './secret-variable-panel';
 
 type DashboardUser = {
     id: number;
@@ -104,6 +105,11 @@ const dashboardTabs = [
         id: 'notulen',
         label: 'Notulen',
         description: 'CRUD rapat',
+    },
+    {
+        id: 'secret-variable',
+        label: 'Secret Variable',
+        description: 'Credential & token',
     },
 ] as const;
 
@@ -1906,6 +1912,8 @@ export function AdminDashboardClient({
                         )}
 
                         {activeTab === 'notulen' && <NotulenPanel />}
+
+                        {activeTab === 'secret-variable' && <SecretVariablePanel />}
                     </div>
                 </div>
             </div>
