@@ -253,6 +253,7 @@ export function AdminDashboardClient({
         type: 'success' | 'error';
         message: string;
     } | null>(null);
+    const [isBlogFormModalOpen, setIsBlogFormModalOpen] = useState(false);
     const [isDeletingBlogId, setIsDeletingBlogId] = useState<number | null>(null);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -529,9 +530,19 @@ export function AdminDashboardClient({
         setBlogForm(getDefaultBlogFormState());
         setSelectedImageFile(null);
         setImageUploadFeedback(null);
+        setIsBlogFormModalOpen(false);
         if (clearFeedback) {
             setBlogFeedback(null);
         }
+    }
+
+    function handleAddBlog() {
+        setEditingBlogId(null);
+        setBlogForm(getDefaultBlogFormState());
+        setSelectedImageFile(null);
+        setImageUploadFeedback(null);
+        setBlogFeedback(null);
+        setIsBlogFormModalOpen(true);
     }
 
     function handleEditBlog(post: DashboardBlogPost) {
@@ -550,6 +561,7 @@ export function AdminDashboardClient({
             categories: post.categories.join(', '),
             publishedAt: toDateInputValue(post.published_at),
         });
+        setIsBlogFormModalOpen(true);
     }
 
     async function handleUploadBlogImage() {
@@ -1383,26 +1395,35 @@ export function AdminDashboardClient({
                                                 langsung dari admin panel.
                                             </p>
                                         </div>
-                                        <button
-                                            type='button'
-                                            onClick={() => {
-                                                void refreshBlogPosts()
-                                                    .then(() => {
-                                                        setBlogFeedback({
-                                                            type: 'success',
-                                                            message:
-                                                                'Daftar artikel diperbarui.',
-                                                        });
-                                                    })
-                                                    .catch(() => null);
-                                            }}
-                                            disabled={isLoadingBlogs}
-                                            className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
-                                        >
-                                            {isLoadingBlogs
-                                                ? 'Memuat...'
-                                                : 'Refresh Data'}
-                                        </button>
+                                        <div className='flex flex-wrap gap-2'>
+                                            <button
+                                                type='button'
+                                                onClick={handleAddBlog}
+                                                className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                                            >
+                                                + Tambah Artikel
+                                            </button>
+                                            <button
+                                                type='button'
+                                                onClick={() => {
+                                                    void refreshBlogPosts()
+                                                        .then(() => {
+                                                            setBlogFeedback({
+                                                                type: 'success',
+                                                                message:
+                                                                    'Daftar artikel diperbarui.',
+                                                            });
+                                                        })
+                                                        .catch(() => null);
+                                                }}
+                                                disabled={isLoadingBlogs}
+                                                className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
+                                            >
+                                                {isLoadingBlogs
+                                                    ? 'Memuat...'
+                                                    : 'Refresh Data'}
+                                            </button>
+                                        </div>
                                     </div>
                                     {blogsError && (
                                         <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
@@ -1447,23 +1468,24 @@ export function AdminDashboardClient({
                                     </div>
                                 </div>
 
-                                <div className='grid gap-4 xl:grid-cols-5'>
-                                    <article className='rounded-2xl border border-slate-200 bg-white p-5 xl:col-span-2'>
+                                <div className='grid gap-4'>
+                                    {isBlogFormModalOpen && (
+                                        <div className='fixed inset-0 z-[99] bg-slate-900/45 p-4 backdrop-blur-sm' />
+                                    )}
+                                    <article className={isBlogFormModalOpen ? 'fixed left-1/2 top-1/2 z-[100] max-h-[90vh] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl' : 'hidden'}>
                                         <div className='flex items-center justify-between gap-2'>
                                             <h4 className='text-lg font-bold text-slate-900'>
                                                 {editingBlogId
                                                     ? 'Edit Artikel'
                                                     : 'Buat Artikel Baru'}
                                             </h4>
-                                            {editingBlogId && (
-                                                <button
-                                                    type='button'
-                                                    onClick={() => resetBlogForm()}
-                                                    className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'
-                                                >
-                                                    Batal Edit
-                                                </button>
-                                            )}
+                                            <button
+                                                type='button'
+                                                onClick={() => resetBlogForm()}
+                                                className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'
+                                            >
+                                                Batal
+                                            </button>
                                         </div>
 
                                         <form
@@ -1728,21 +1750,30 @@ export function AdminDashboardClient({
                                                 </p>
                                             )}
 
-                                            <button
-                                                type='submit'
-                                                disabled={isSubmittingBlog}
-                                                className='w-full rounded-xl bg-cyan-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-70'
-                                            >
-                                                {isSubmittingBlog
-                                                    ? 'Menyimpan...'
-                                                    : editingBlogId
-                                                      ? 'Update Artikel'
-                                                      : 'Publikasikan Artikel'}
-                                            </button>
+                                            <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => resetBlogForm()}
+                                                    className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
+                                                >
+                                                    Batal
+                                                </button>
+                                                <button
+                                                    type='submit'
+                                                    disabled={isSubmittingBlog}
+                                                    className='rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-70'
+                                                >
+                                                    {isSubmittingBlog
+                                                        ? 'Menyimpan...'
+                                                        : editingBlogId
+                                                          ? 'Update Artikel'
+                                                          : 'Simpan'}
+                                                </button>
+                                            </div>
                                         </form>
                                     </article>
 
-                                    <article className='rounded-2xl border border-slate-200 bg-white p-5 xl:col-span-3'>
+                                    <article className='rounded-2xl border border-slate-200 bg-white p-5'>
                                         <h4 className='text-lg font-bold text-slate-900'>
                                             Daftar Artikel
                                         </h4>

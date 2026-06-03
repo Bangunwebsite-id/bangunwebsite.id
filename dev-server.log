@@ -366,3 +366,9 @@
  GET /admin/dashboard 200 in 1884ms (next.js: 872ms, application-code: 1012ms)
 ✓ Compiled in 3.1s
  GET /admin/dashboard 200 in 3.4s (next.js: 723ms, application-code: 2.7s)
+✓ Compiled in 1251ms
+ GET /admin/dashboard 200 in 6.5s (next.js: 2.1s, application-code: 4.3s)
+✓ Compiled in 897ms
+ GET /admin/dashboard 200 in 4.5s (next.js: 636ms, application-code: 3.9s)
+✓ Compiled in 614ms
+ GET /admin/dashboard 200 in 3.4s (next.js: 549ms, application-code: 2.8s)
