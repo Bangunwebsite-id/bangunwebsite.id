@@ -3,36 +3,32 @@ import { NextResponse } from 'next/server';
 import { ensureAdminSession } from '@/app/lib/admin-guard';
 import {
     createSecretVariable,
+    listSecretVariableCategories,
     listSecretVariables,
-    SecretVariableCategory,
+    secretVariableCategoryExists,
     UpsertSecretVariableInput,
 } from '@/app/lib/secret-variables';
 
 type SecretVariablePayload = Partial<UpsertSecretVariableInput>;
 
-const categories = new Set<SecretVariableCategory>([
-    'Akses Server',
-    'Akses Lain',
-]);
-
-function isCategory(value: string): value is SecretVariableCategory {
-    return categories.has(value as SecretVariableCategory);
-}
-
 function normalizePayload(body: SecretVariablePayload): UpsertSecretVariableInput {
-    const category = (body.category ?? '').trim();
-
     return {
-        category: isCategory(category) ? category : 'Akses Lain',
+        category: (body.category ?? '').trim(),
         name: (body.name ?? '').trim(),
         value: body.value ?? '',
         description: (body.description ?? '').trim(),
     };
 }
 
-function validatePayload(payload: UpsertSecretVariableInput) {
-    if (!categories.has(payload.category)) {
-        return 'Kategori secret variable tidak valid.';
+async function validatePayload(payload: UpsertSecretVariableInput) {
+    if (!payload.category) {
+        return 'Kategori secret variable wajib dipilih.';
+    }
+
+    const categoryExists = await secretVariableCategoryExists(payload.category);
+
+    if (!categoryExists) {
+        return 'Kategori secret variable tidak ditemukan.';
     }
 
     if (!payload.name) {
@@ -62,9 +58,17 @@ export async function GET(request: Request) {
     }
 
     try {
-        const secretVariables = await listSecretVariables();
+        const [secretVariables, categories] = await Promise.all([
+            listSecretVariables(),
+            listSecretVariableCategories(),
+        ]);
 
         return NextResponse.json({
+            categories: categories.map((item) => ({
+                ...item,
+                created_at: serializeDate(item.created_at),
+                updated_at: serializeDate(item.updated_at),
+            })),
             secretVariables: secretVariables.map((item) => ({
                 ...item,
                 created_at: serializeDate(item.created_at),
@@ -90,7 +94,7 @@ export async function POST(request: Request) {
     try {
         const body = (await request.json()) as SecretVariablePayload;
         const payload = normalizePayload(body);
-        const validationMessage = validatePayload(payload);
+        const validationMessage = await validatePayload(payload);
 
         if (validationMessage) {
             return NextResponse.json(

@@ -2,17 +2,16 @@ import { NextResponse } from 'next/server';
 
 import { ensureAdminSession } from '@/app/lib/admin-guard';
 import {
-    deleteSecretVariableById,
-    secretVariableCategoryExists,
-    updateSecretVariableById,
-    UpsertSecretVariableInput,
+    deleteSecretVariableCategoryById,
+    updateSecretVariableCategoryById,
+    UpsertSecretCategoryInput,
 } from '@/app/lib/secret-variables';
 
 type RouteParams = {
     params: Promise<{ id: string }>;
 };
 
-type SecretVariablePayload = Partial<UpsertSecretVariableInput>;
+type SecretCategoryPayload = Partial<UpsertSecretCategoryInput>;
 
 function getValidatedId(rawId: string) {
     const id = Number(rawId);
@@ -23,36 +22,20 @@ function getValidatedId(rawId: string) {
     return id;
 }
 
-function normalizePayload(body: SecretVariablePayload): UpsertSecretVariableInput {
+function normalizePayload(body: SecretCategoryPayload): UpsertSecretCategoryInput {
     return {
-        category: (body.category ?? '').trim(),
         name: (body.name ?? '').trim(),
-        value: body.value ?? '',
         description: (body.description ?? '').trim(),
     };
 }
 
-async function validatePayload(payload: UpsertSecretVariableInput) {
-    if (!payload.category) {
-        return 'Kategori secret variable wajib dipilih.';
-    }
-
-    const categoryExists = await secretVariableCategoryExists(payload.category);
-
-    if (!categoryExists) {
-        return 'Kategori secret variable tidak ditemukan.';
-    }
-
+function validatePayload(payload: UpsertSecretCategoryInput) {
     if (!payload.name) {
-        return 'Nama variable wajib diisi.';
+        return 'Nama kategori wajib diisi.';
     }
 
-    if (payload.name.length > 120) {
-        return 'Nama variable maksimal 120 karakter.';
-    }
-
-    if (!payload.value) {
-        return 'Value wajib diisi.';
+    if (payload.name.length > 80) {
+        return 'Nama kategori maksimal 80 karakter.';
     }
 
     return null;
@@ -70,15 +53,15 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     if (!id) {
         return NextResponse.json(
-            { message: 'ID secret variable tidak valid.' },
+            { message: 'ID kategori tidak valid.' },
             { status: 400 },
         );
     }
 
     try {
-        const body = (await request.json()) as SecretVariablePayload;
+        const body = (await request.json()) as SecretCategoryPayload;
         const payload = normalizePayload(body);
-        const validationMessage = await validatePayload(payload);
+        const validationMessage = validatePayload(payload);
 
         if (validationMessage) {
             return NextResponse.json(
@@ -87,22 +70,20 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        const updated = await updateSecretVariableById(id, payload);
+        const updated = await updateSecretVariableCategoryById(id, payload);
 
         if (!updated) {
             return NextResponse.json(
-                { message: 'Secret variable tidak ditemukan.' },
+                { message: 'Kategori tidak ditemukan.' },
                 { status: 404 },
             );
         }
 
-        return NextResponse.json({
-            message: 'Secret variable berhasil diperbarui.',
-        });
+        return NextResponse.json({ message: 'Kategori berhasil diperbarui.' });
     } catch (error) {
-        console.error('Update secret variable error:', error);
+        console.error('Update secret variable category error:', error);
         return NextResponse.json(
-            { message: 'Terjadi kesalahan saat update secret variable.' },
+            { message: 'Terjadi kesalahan saat update kategori.' },
             { status: 500 },
         );
     }
@@ -120,28 +101,36 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     if (!id) {
         return NextResponse.json(
-            { message: 'ID secret variable tidak valid.' },
+            { message: 'ID kategori tidak valid.' },
             { status: 400 },
         );
     }
 
     try {
-        const deleted = await deleteSecretVariableById(id);
+        const result = await deleteSecretVariableCategoryById(id);
 
-        if (!deleted) {
+        if (result === 'has_variables') {
             return NextResponse.json(
-                { message: 'Secret variable tidak ditemukan.' },
+                {
+                    message:
+                        'Kategori masih memiliki data Secret Variable. Pindahkan atau hapus data terlebih dahulu.',
+                },
+                { status: 409 },
+            );
+        }
+
+        if (result === 'not_found') {
+            return NextResponse.json(
+                { message: 'Kategori tidak ditemukan.' },
                 { status: 404 },
             );
         }
 
-        return NextResponse.json({
-            message: 'Secret variable berhasil dihapus.',
-        });
+        return NextResponse.json({ message: 'Kategori berhasil dihapus.' });
     } catch (error) {
-        console.error('Delete secret variable error:', error);
+        console.error('Delete secret variable category error:', error);
         return NextResponse.json(
-            { message: 'Terjadi kesalahan saat menghapus secret variable.' },
+            { message: 'Terjadi kesalahan saat menghapus kategori.' },
             { status: 500 },
         );
     }

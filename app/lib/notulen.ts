@@ -6,7 +6,7 @@ export type NotulenStatus = 'Draft' | 'Final' | 'Arsip';
 
 export type NotulenRecord = {
     id: number;
-    meeting_date: Date | string;
+    meeting_date: string;
     start_time: string | null;
     end_time: string | null;
     place: string | null;
@@ -102,7 +102,7 @@ export async function listAdminNotulen() {
     const result = await dbPool.query<NotulenRecord>(`
         SELECT
             id,
-            meeting_date,
+            meeting_date::text AS meeting_date,
             start_time::text,
             end_time::text,
             place,

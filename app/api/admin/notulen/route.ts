@@ -32,8 +32,23 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
     };
 }
 
+function isValidDateInput(value: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+    );
+}
+
 function validatePayload(payload: UpsertNotulenInput) {
-    if (!payload.meetingDate || !Date.parse(payload.meetingDate)) {
+    if (!isValidDateInput(payload.meetingDate)) {
         return 'Tanggal rapat wajib diisi dengan format yang valid.';
     }
 
@@ -46,14 +61,6 @@ function validatePayload(payload: UpsertNotulenInput) {
     }
 
     return null;
-}
-
-function serializeDate(value: Date | string) {
-    if (value instanceof Date) {
-        return value.toISOString().slice(0, 10);
-    }
-
-    return value;
 }
 
 export async function GET(request: Request) {
@@ -69,7 +76,6 @@ export async function GET(request: Request) {
         return NextResponse.json({
             notulen: notulen.map((item) => ({
                 ...item,
-                meeting_date: serializeDate(item.meeting_date),
                 created_at: item.created_at.toISOString(),
                 updated_at: item.updated_at.toISOString(),
             })),

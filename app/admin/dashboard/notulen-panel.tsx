@@ -47,7 +47,8 @@ const dateFormatter = new Intl.DateTimeFormat('id-ID', {
 const statuses: NotulenStatus[] = ['Draft', 'Final', 'Arsip'];
 
 function getTodayDateInput() {
-    return new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    return toDateInputValue(today);
 }
 
 function getDefaultFormState(): NotulenFormState {

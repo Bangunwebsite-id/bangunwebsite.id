@@ -3,12 +3,20 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 
-type SecretVariableCategory = 'Akses Server' | 'Akses Lain';
-type ModalMode = 'create' | 'edit';
+type ModalMode = 'variable-create' | 'variable-edit' | 'category-create' | 'category-edit';
+
+type DashboardSecretCategory = {
+    id: number;
+    name: string;
+    description: string | null;
+    variable_count: number;
+    created_at: string;
+    updated_at: string;
+};
 
 type DashboardSecretVariable = {
     id: number;
-    category: SecretVariableCategory;
+    category: string;
     name: string;
     value: string;
     description: string | null;
@@ -17,19 +25,29 @@ type DashboardSecretVariable = {
 };
 
 type SecretVariableFormState = {
-    category: SecretVariableCategory;
+    category: string;
     name: string;
     value: string;
     description: string;
 };
 
-const categories: SecretVariableCategory[] = ['Akses Server', 'Akses Lain'];
+type SecretCategoryFormState = {
+    name: string;
+    description: string;
+};
 
-function getDefaultFormState(category: SecretVariableCategory = 'Akses Server'): SecretVariableFormState {
+function getDefaultVariableFormState(category = ''): SecretVariableFormState {
     return {
         category,
         name: '',
         value: '',
+        description: '',
+    };
+}
+
+function getDefaultCategoryFormState(): SecretCategoryFormState {
+    return {
+        name: '',
         description: '',
     };
 }
@@ -39,7 +57,7 @@ function maskValue(value: string) {
         return '---';
     }
 
-    return '•'.repeat(Math.min(Math.max(value.length, 8), 18));
+    return '*'.repeat(Math.min(Math.max(value.length, 8), 18));
 }
 
 function Modal({
@@ -62,7 +80,7 @@ function Modal({
                         className='flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-xl font-bold text-slate-500 transition hover:bg-slate-50 hover:text-slate-700'
                         aria-label='Tutup modal'
                     >
-                        ×
+                        x
                     </button>
                 </div>
                 <div className='p-5'>{children}</div>
@@ -72,34 +90,31 @@ function Modal({
 }
 
 export function SecretVariablePanel() {
+    const [categories, setCategories] = useState<DashboardSecretCategory[]>([]);
     const [secretVariables, setSecretVariables] = useState<DashboardSecretVariable[]>([]);
-    const [activeCategory, setActiveCategory] = useState<SecretVariableCategory>('Akses Server');
-    const [form, setForm] = useState<SecretVariableFormState>(getDefaultFormState());
+    const [activeCategory, setActiveCategory] = useState('');
+    const [variableForm, setVariableForm] = useState<SecretVariableFormState>(getDefaultVariableFormState());
+    const [categoryForm, setCategoryForm] = useState<SecretCategoryFormState>(getDefaultCategoryFormState());
     const [modalMode, setModalMode] = useState<ModalMode | null>(null);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingVariableId, setEditingVariableId] = useState<number | null>(null);
+    const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
     const [visibleIds, setVisibleIds] = useState<Set<number>>(() => new Set());
     const [search, setSearch] = useState('');
     const [isLoaded, setIsLoaded] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deletingVariableId, setDeletingVariableId] = useState<number | null>(null);
+    const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-    const categoryCounts = useMemo(() => {
-        return categories.reduce<Record<SecretVariableCategory, number>>(
-            (acc, category) => {
-                acc[category] = secretVariables.filter((item) => item.category === category).length;
-                return acc;
-            },
-            { 'Akses Server': 0, 'Akses Lain': 0 },
-        );
-    }, [secretVariables]);
+    const activeCategoryData = categories.find((item) => item.name === activeCategory) ?? categories[0] ?? null;
 
     const filteredVariables = useMemo(() => {
+        const categoryName = activeCategoryData?.name ?? '';
         const query = search.trim().toLowerCase();
 
         return secretVariables.filter((item) => {
-            if (item.category !== activeCategory) {
+            if (item.category !== categoryName) {
                 return false;
             }
 
@@ -112,32 +127,44 @@ export function SecretVariablePanel() {
                 .toLowerCase()
                 .includes(query);
         });
-    }, [activeCategory, search, secretVariables]);
+    }, [activeCategoryData?.name, search, secretVariables]);
 
-    const fetchSecretVariables = useCallback(async () => {
+    const fetchSecretData = useCallback(async () => {
         const response = await fetch('/api/admin/secret-variables', {
             method: 'GET',
             cache: 'no-store',
         });
         const result = (await response.json()) as {
             message?: string;
+            categories?: DashboardSecretCategory[];
             secretVariables?: DashboardSecretVariable[];
         };
 
-        if (!response.ok || !result.secretVariables) {
+        if (!response.ok || !result.secretVariables || !result.categories) {
             throw new Error(result.message ?? 'Gagal memuat secret variable.');
         }
 
-        return result.secretVariables;
+        return {
+            categories: result.categories,
+            secretVariables: result.secretVariables,
+        };
     }, []);
 
-    const refreshSecretVariables = useCallback(async () => {
+    const refreshSecretData = useCallback(async () => {
         setIsLoading(true);
         setFeedback(null);
 
         try {
-            const nextSecretVariables = await fetchSecretVariables();
-            setSecretVariables(nextSecretVariables);
+            const nextData = await fetchSecretData();
+            setCategories(nextData.categories);
+            setSecretVariables(nextData.secretVariables);
+            setActiveCategory((current) => {
+                if (nextData.categories.some((item) => item.name === current)) {
+                    return current;
+                }
+
+                return nextData.categories[0]?.name ?? '';
+            });
             setIsLoaded(true);
         } catch (error) {
             setFeedback({
@@ -147,38 +174,62 @@ export function SecretVariablePanel() {
         } finally {
             setIsLoading(false);
         }
-    }, [fetchSecretVariables]);
+    }, [fetchSecretData]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        void refreshSecretVariables();
-    }, [refreshSecretVariables]);
+        void refreshSecretData();
+    }, [refreshSecretData]);
 
     function closeModal() {
         setModalMode(null);
-        setEditingId(null);
-        setForm(getDefaultFormState(activeCategory));
+        setEditingVariableId(null);
+        setEditingCategoryId(null);
+        setVariableForm(getDefaultVariableFormState(activeCategoryData?.name ?? ''));
+        setCategoryForm(getDefaultCategoryFormState());
     }
 
-    function openCreateModal(category: SecretVariableCategory) {
-        setActiveCategory(category);
-        setForm(getDefaultFormState(category));
-        setEditingId(null);
+    function openCreateVariableModal(categoryName: string) {
+        if (!categoryName) {
+            setFeedback({ type: 'error', message: 'Tambahkan kategori terlebih dahulu.' });
+            return;
+        }
+
+        setActiveCategory(categoryName);
+        setVariableForm(getDefaultVariableFormState(categoryName));
+        setEditingVariableId(null);
         setFeedback(null);
-        setModalMode('create');
+        setModalMode('variable-create');
     }
 
-    function openEditModal(item: DashboardSecretVariable) {
+    function openEditVariableModal(item: DashboardSecretVariable) {
         setActiveCategory(item.category);
-        setEditingId(item.id);
-        setForm({
+        setEditingVariableId(item.id);
+        setVariableForm({
             category: item.category,
             name: item.name,
             value: item.value,
             description: item.description ?? '',
         });
         setFeedback(null);
-        setModalMode('edit');
+        setModalMode('variable-edit');
+    }
+
+    function openCreateCategoryModal() {
+        setCategoryForm(getDefaultCategoryFormState());
+        setEditingCategoryId(null);
+        setFeedback(null);
+        setModalMode('category-create');
+    }
+
+    function openEditCategoryModal(item: DashboardSecretCategory) {
+        setEditingCategoryId(item.id);
+        setCategoryForm({
+            name: item.name,
+            description: item.description ?? '',
+        });
+        setFeedback(null);
+        setModalMode('category-edit');
     }
 
     function toggleValueVisibility(id: number) {
@@ -208,21 +259,21 @@ export function SecretVariablePanel() {
         }
     }
 
-    async function handleSave(event: FormEvent<HTMLFormElement>) {
+    async function handleSaveVariable(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setIsSubmitting(true);
         setFeedback(null);
 
-        const endpoint = editingId
-            ? `/api/admin/secret-variables/${editingId}`
+        const endpoint = editingVariableId
+            ? `/api/admin/secret-variables/${editingVariableId}`
             : '/api/admin/secret-variables';
-        const method = editingId ? 'PUT' : 'POST';
+        const method = editingVariableId ? 'PUT' : 'POST';
 
         try {
             const response = await fetch(endpoint, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify(variableForm),
             });
             const result = (await response.json()) as { message?: string };
 
@@ -234,12 +285,12 @@ export function SecretVariablePanel() {
                 return;
             }
 
-            await refreshSecretVariables();
-            setActiveCategory(form.category);
+            await refreshSecretData();
+            setActiveCategory(variableForm.category);
             closeModal();
             setFeedback({
                 type: 'success',
-                message: result.message ?? (editingId ? 'Secret variable berhasil diperbarui.' : 'Secret variable berhasil dibuat.'),
+                message: result.message ?? (editingVariableId ? 'Secret variable berhasil diperbarui.' : 'Secret variable berhasil dibuat.'),
             });
         } catch {
             setFeedback({
@@ -251,7 +302,50 @@ export function SecretVariablePanel() {
         }
     }
 
-    async function handleDelete(id: number) {
+    async function handleSaveCategory(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setIsSubmitting(true);
+        setFeedback(null);
+
+        const endpoint = editingCategoryId
+            ? `/api/admin/secret-variable-categories/${editingCategoryId}`
+            : '/api/admin/secret-variable-categories';
+        const method = editingCategoryId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(endpoint, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(categoryForm),
+            });
+            const result = (await response.json()) as { message?: string };
+
+            if (!response.ok) {
+                setFeedback({
+                    type: 'error',
+                    message: result.message ?? 'Gagal menyimpan kategori.',
+                });
+                return;
+            }
+
+            await refreshSecretData();
+            setActiveCategory(categoryForm.name);
+            closeModal();
+            setFeedback({
+                type: 'success',
+                message: result.message ?? (editingCategoryId ? 'Kategori berhasil diperbarui.' : 'Kategori berhasil dibuat.'),
+            });
+        } catch {
+            setFeedback({
+                type: 'error',
+                message: 'Terjadi masalah koneksi saat menyimpan kategori.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    async function handleDeleteVariable(id: number) {
         const confirmation = await Swal.fire({
             title: 'Hapus Secret Variable?',
             text: 'Data yang dihapus tidak dapat dikembalikan.',
@@ -267,7 +361,7 @@ export function SecretVariablePanel() {
             return;
         }
 
-        setDeletingId(id);
+        setDeletingVariableId(id);
 
         try {
             const response = await fetch(`/api/admin/secret-variables/${id}`, {
@@ -285,14 +379,55 @@ export function SecretVariablePanel() {
                 next.delete(id);
                 return next;
             });
-            await refreshSecretVariables();
+            await refreshSecretData();
             await Swal.fire('Berhasil', result.message ?? 'Secret variable berhasil dihapus.', 'success');
         } catch {
             await Swal.fire('Gagal', 'Terjadi masalah koneksi saat menghapus secret variable.', 'error');
         } finally {
-            setDeletingId(null);
+            setDeletingVariableId(null);
         }
     }
+
+    async function handleDeleteCategory(item: DashboardSecretCategory) {
+        const confirmation = await Swal.fire({
+            title: 'Hapus kategori ini?',
+            text: 'Data kategori yang dihapus tidak dapat dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#475569',
+        });
+
+        if (!confirmation.isConfirmed) {
+            return;
+        }
+
+        setDeletingCategoryId(item.id);
+
+        try {
+            const response = await fetch(`/api/admin/secret-variable-categories/${item.id}`, {
+                method: 'DELETE',
+            });
+            const result = (await response.json()) as { message?: string };
+
+            if (!response.ok) {
+                await Swal.fire('Gagal', result.message ?? 'Gagal menghapus kategori.', 'error');
+                return;
+            }
+
+            await refreshSecretData();
+            await Swal.fire('Berhasil', result.message ?? 'Kategori berhasil dihapus.', 'success');
+        } catch {
+            await Swal.fire('Gagal', 'Terjadi masalah koneksi saat menghapus kategori.', 'error');
+        } finally {
+            setDeletingCategoryId(null);
+        }
+    }
+
+    const isVariableModal = modalMode === 'variable-create' || modalMode === 'variable-edit';
+    const isCategoryModal = modalMode === 'category-create' || modalMode === 'category-edit';
 
     return (
         <section className='space-y-4'>
@@ -306,14 +441,23 @@ export function SecretVariablePanel() {
                             Simpan credential, API key, token, dan konfigurasi sensitif dashboard.
                         </p>
                     </div>
-                    <button
-                        type='button'
-                        onClick={() => void refreshSecretVariables()}
-                        disabled={isLoading}
-                        className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
-                    >
-                        {isLoading ? 'Memuat...' : 'Refresh Data'}
-                    </button>
+                    <div className='flex flex-wrap gap-2'>
+                        <button
+                            type='button'
+                            onClick={openCreateCategoryModal}
+                            className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                        >
+                            Tambah Kategori
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => void refreshSecretData()}
+                            disabled={isLoading}
+                            className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'
+                        >
+                            {isLoading ? 'Memuat...' : 'Refresh Data'}
+                        </button>
+                    </div>
                 </div>
 
                 {feedback && (
@@ -323,50 +467,73 @@ export function SecretVariablePanel() {
                 )}
             </div>
 
-            <div className='grid gap-4 lg:grid-cols-2'>
-                {categories.map((category) => (
-                    <article key={category} className='rounded-2xl border border-slate-200 bg-white p-5 md:p-6'>
-                        <div className='flex items-start justify-between gap-4'>
-                            <div>
-                                <p className='text-xs font-bold uppercase tracking-[0.1em] text-slate-500'>
-                                    Kategori
-                                </p>
-                                <h4 className='mt-2 text-xl font-bold text-slate-900'>
-                                    {category}
-                                </h4>
-                                <p className='mt-2 text-3xl font-bold text-slate-900'>
-                                    {isLoaded ? categoryCounts[category] : isLoading ? '...' : '-'} <span className='text-base font-bold text-slate-500'>Variable</span>
-                                </p>
-                            </div>
-                            <div className='rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700'>
-                                Secret
-                            </div>
-                        </div>
-                        <div className='mt-6 flex flex-wrap gap-2'>
-                            <button
-                                type='button'
-                                onClick={() => setActiveCategory(category)}
-                                className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
-                            >
-                                Kelola
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => openCreateModal(category)}
-                                className='rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
-                            >
-                                Tambah
-                            </button>
-                        </div>
+            <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
+                {categories.length === 0 ? (
+                    <article className='rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center md:col-span-2 xl:col-span-3'>
+                        <p className='text-sm font-bold text-slate-700'>
+                            Belum ada kategori secret variable.
+                        </p>
+                        <p className='mt-1 text-sm text-slate-500'>
+                            Tambahkan kategori seperti Database, WhatsApp, AI, atau Payment Gateway.
+                        </p>
+                        <button
+                            type='button'
+                            onClick={openCreateCategoryModal}
+                            className='mt-4 rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                        >
+                            Tambah Kategori
+                        </button>
                     </article>
-                ))}
+                ) : (
+                    categories.map((category) => (
+                        <article key={category.id} className='rounded-2xl border border-slate-200 bg-white p-5 md:p-6'>
+                            <div className='flex items-start justify-between gap-4'>
+                                <div>
+                                    <p className='text-xs font-bold uppercase tracking-[0.1em] text-slate-500'>
+                                        Kategori
+                                    </p>
+                                    <h4 className='mt-2 text-xl font-bold text-slate-900'>
+                                        {category.name}
+                                    </h4>
+                                    <p className='mt-2 text-3xl font-bold text-slate-900'>
+                                        {isLoaded ? category.variable_count : isLoading ? '...' : '-'} <span className='text-base font-bold text-slate-500'>Variable</span>
+                                    </p>
+                                    {category.description && (
+                                        <p className='mt-2 line-clamp-2 text-sm text-slate-600'>
+                                            {category.description}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className='rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700'>
+                                    Secret
+                                </div>
+                            </div>
+                            <div className='mt-6 flex flex-wrap gap-2'>
+                                <button
+                                    type='button'
+                                    onClick={() => setActiveCategory(category.name)}
+                                    className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
+                                >
+                                    Kelola
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => openCreateVariableModal(category.name)}
+                                    className='rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                                >
+                                    Tambah
+                                </button>
+                            </div>
+                        </article>
+                    ))
+                )}
             </div>
 
             <article className='rounded-2xl border border-slate-200 bg-white p-5'>
                 <div className='flex flex-wrap items-center justify-between gap-3'>
                     <div>
                         <h4 className='text-lg font-bold text-slate-900'>
-                            Kelola {activeCategory}
+                            Kelola {activeCategoryData?.name ?? 'Secret Variable'}
                         </h4>
                         <p className='mt-1 text-sm text-slate-600'>
                             Value disembunyikan secara default. Gunakan Lihat hanya saat diperlukan.
@@ -382,8 +549,9 @@ export function SecretVariablePanel() {
                         />
                         <button
                             type='button'
-                            onClick={() => openCreateModal(activeCategory)}
-                            className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                            onClick={() => openCreateVariableModal(activeCategoryData?.name ?? '')}
+                            disabled={!activeCategoryData}
+                            className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60'
                         >
                             Tambah
                         </button>
@@ -439,11 +607,11 @@ export function SecretVariablePanel() {
                                                     <button type='button' onClick={() => void copyValue(item.value)} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>
                                                         Copy
                                                     </button>
-                                                    <button type='button' onClick={() => openEditModal(item)} className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'>
+                                                    <button type='button' onClick={() => openEditVariableModal(item)} className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'>
                                                         Edit
                                                     </button>
-                                                    <button type='button' onClick={() => void handleDelete(item.id)} disabled={deletingId === item.id} className='rounded-lg border border-red-200 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50'>
-                                                        {deletingId === item.id ? 'Hapus...' : 'Hapus'}
+                                                    <button type='button' onClick={() => void handleDeleteVariable(item.id)} disabled={deletingVariableId === item.id} className='rounded-lg border border-red-200 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50'>
+                                                        {deletingVariableId === item.id ? 'Hapus...' : 'Hapus'}
                                                     </button>
                                                 </div>
                                             </td>
@@ -456,19 +624,79 @@ export function SecretVariablePanel() {
                 </div>
             </article>
 
-            {modalMode && (
-                <Modal title={modalMode === 'edit' ? 'Edit Secret Variable' : 'Tambah Secret Variable'} onClose={closeModal}>
-                    <form className='space-y-4' onSubmit={handleSave}>
+            <article className='rounded-2xl border border-slate-200 bg-white p-5'>
+                <div className='flex flex-wrap items-center justify-between gap-3'>
+                    <div>
+                        <h4 className='text-lg font-bold text-slate-900'>Kelola Kategori</h4>
+                        <p className='mt-1 text-sm text-slate-600'>
+                            Tambah, edit, atau hapus kategori secret variable.
+                        </p>
+                    </div>
+                    <button
+                        type='button'
+                        onClick={openCreateCategoryModal}
+                        className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                    >
+                        Tambah Kategori
+                    </button>
+                </div>
+
+                <div className='mt-4 overflow-x-auto'>
+                    <table className='min-w-full text-left'>
+                        <thead>
+                            <tr className='border-b border-slate-200 text-[11px] uppercase tracking-[0.12em] text-slate-500'>
+                                <th className='px-2 py-2'>Nama Kategori</th>
+                                <th className='px-2 py-2'>Jumlah Variable</th>
+                                <th className='px-2 py-2'>Deskripsi</th>
+                                <th className='px-2 py-2 text-right'>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {categories.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className='px-2 py-6 text-center text-sm font-medium text-slate-500'>
+                                        Belum ada kategori.
+                                    </td>
+                                </tr>
+                            ) : (
+                                categories.map((category) => (
+                                    <tr key={category.id} className='border-b border-slate-100 text-sm text-slate-700'>
+                                        <td className='px-2 py-3 font-bold text-slate-900'>{category.name}</td>
+                                        <td className='px-2 py-3'>{category.variable_count} Variable</td>
+                                        <td className='px-2 py-3'>{category.description ?? '-'}</td>
+                                        <td className='px-2 py-3'>
+                                            <div className='flex flex-wrap justify-end gap-2'>
+                                                <button type='button' onClick={() => openEditCategoryModal(category)} className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100'>
+                                                    Edit
+                                                </button>
+                                                <button type='button' onClick={() => void handleDeleteCategory(category)} disabled={deletingCategoryId === category.id} className='rounded-lg border border-red-200 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50'>
+                                                    {deletingCategoryId === category.id ? 'Hapus...' : 'Hapus'}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            {isVariableModal && (
+                <Modal title={modalMode === 'variable-edit' ? 'Edit Secret Variable' : 'Tambah Secret Variable'} onClose={closeModal}>
+                    <form className='space-y-4' onSubmit={handleSaveVariable}>
                         <Field label='Kategori' id='secret-category'>
                             <select
                                 id='secret-category'
-                                value={form.category}
-                                onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value as SecretVariableCategory }))}
+                                value={variableForm.category}
+                                onChange={(event) => setVariableForm((prev) => ({ ...prev, category: event.target.value }))}
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
+                                required
                             >
+                                <option value='' disabled>Pilih kategori</option>
                                 {categories.map((category) => (
-                                    <option key={category} value={category}>
-                                        {category}
+                                    <option key={category.id} value={category.name}>
+                                        {category.name}
                                     </option>
                                 ))}
                             </select>
@@ -477,8 +705,8 @@ export function SecretVariablePanel() {
                             <input
                                 id='secret-name'
                                 type='text'
-                                value={form.name}
-                                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                                value={variableForm.name}
+                                onChange={(event) => setVariableForm((prev) => ({ ...prev, name: event.target.value }))}
                                 placeholder='DB_HOST'
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
                                 required
@@ -487,8 +715,8 @@ export function SecretVariablePanel() {
                         <Field label='Value' id='secret-value'>
                             <textarea
                                 id='secret-value'
-                                value={form.value}
-                                onChange={(event) => setForm((prev) => ({ ...prev, value: event.target.value }))}
+                                value={variableForm.value}
+                                onChange={(event) => setVariableForm((prev) => ({ ...prev, value: event.target.value }))}
                                 placeholder='127.0.0.1'
                                 rows={4}
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
@@ -498,9 +726,52 @@ export function SecretVariablePanel() {
                         <Field label='Keterangan' id='secret-description'>
                             <textarea
                                 id='secret-description'
-                                value={form.description}
-                                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                                value={variableForm.description}
+                                onChange={(event) => setVariableForm((prev) => ({ ...prev, description: event.target.value }))}
                                 placeholder='Database utama production'
+                                rows={3}
+                                className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
+                            />
+                        </Field>
+
+                        {feedback && (
+                            <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                                {feedback.message}
+                            </p>
+                        )}
+
+                        <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
+                            <button type='button' onClick={closeModal} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>
+                                Batal
+                            </button>
+                            <button type='submit' disabled={isSubmitting} className='rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-70'>
+                                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {isCategoryModal && (
+                <Modal title={modalMode === 'category-edit' ? 'Edit Kategori' : 'Tambah Kategori'} onClose={closeModal}>
+                    <form className='space-y-4' onSubmit={handleSaveCategory}>
+                        <Field label='Nama Kategori' id='secret-category-name'>
+                            <input
+                                id='secret-category-name'
+                                type='text'
+                                value={categoryForm.name}
+                                onChange={(event) => setCategoryForm((prev) => ({ ...prev, name: event.target.value }))}
+                                placeholder='WhatsApp'
+                                className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
+                                required
+                            />
+                        </Field>
+                        <Field label='Deskripsi' id='secret-category-description'>
+                            <textarea
+                                id='secret-category-description'
+                                value={categoryForm.description}
+                                onChange={(event) => setCategoryForm((prev) => ({ ...prev, description: event.target.value }))}
+                                placeholder='Token dan konfigurasi WhatsApp Gateway'
                                 rows={3}
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
                             />
