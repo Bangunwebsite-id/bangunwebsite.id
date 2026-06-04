@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import { randomBytes } from 'crypto';
 
 import { dbPool } from './db';
 
@@ -18,6 +19,13 @@ export type TodoRecord = {
 export type TodoNoteRecord = {
     note_date: string;
     note: string;
+    created_at: Date;
+    updated_at: Date;
+};
+
+export type TodoShareRecord = {
+    id: number;
+    token: string;
     created_at: Date;
     updated_at: Date;
 };
@@ -58,7 +66,92 @@ async function ensureTodoTables() {
         )
     `);
 
+    await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS admin_todo_shares (
+            id SERIAL PRIMARY KEY,
+            token TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
     isTableReady = true;
+}
+
+function createShareToken() {
+    return randomBytes(18).toString('base64url');
+}
+
+export async function getOrCreateTodoShareToken() {
+    await ensureTodoTables();
+
+    const existing = await dbPool.query<TodoShareRecord>(`
+        SELECT
+            id,
+            token,
+            created_at,
+            updated_at
+        FROM admin_todo_shares
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+    `);
+
+    const existingToken = existing.rows[0]?.token;
+
+    if (existingToken) {
+        return existingToken;
+    }
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        const token = createShareToken();
+
+        try {
+            const result = await dbPool.query<{ token: string }>(
+                `
+                    INSERT INTO admin_todo_shares (token)
+                    VALUES ($1)
+                    RETURNING token
+                `,
+                [token],
+            );
+
+            return result.rows[0]?.token ?? token;
+        } catch (error) {
+            if (
+                typeof error === 'object' &&
+                error !== null &&
+                'code' in error &&
+                error.code === '23505'
+            ) {
+                continue;
+            }
+
+            throw error;
+        }
+    }
+
+    throw new Error('Gagal membuat token share To Do List.');
+}
+
+export async function getSharedTodoDataByToken(token: string) {
+    noStore();
+    await ensureTodoTables();
+
+    const share = await dbPool.query<{ id: number }>(
+        `
+            SELECT id
+            FROM admin_todo_shares
+            WHERE token = $1
+            LIMIT 1
+        `,
+        [token],
+    );
+
+    if (!share.rows[0]) {
+        return null;
+    }
+
+    return listTodos();
 }
 
 export async function listTodos() {

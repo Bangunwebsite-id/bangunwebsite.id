@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 
 type TodoPriority = 'Tinggi' | 'Sedang' | 'Rendah';
 type TodoStatus = 'todo' | 'done';
-type ModalMode = 'create' | 'edit' | 'history';
+type ModalMode = 'create' | 'edit' | 'history' | 'share';
 
 type DashboardTodo = {
     id: number;
@@ -214,6 +214,8 @@ export function TodoListPanel() {
     const [dailyNote, setDailyNote] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGeneratingShareLink, setIsGeneratingShareLink] = useState(false);
+    const [shareLink, setShareLink] = useState('');
     const [draggedId, setDraggedId] = useState<number | null>(null);
 
     const visibleDays = useMemo(() => buildCalendarDays(monthDate), [monthDate]);
@@ -304,6 +306,7 @@ export function TodoListPanel() {
         setModalMode(null);
         setEditingId(null);
         setSelectedHistoryDate(null);
+        setShareLink('');
         setForm(getDefaultFormState());
     }
 
@@ -491,6 +494,53 @@ export function TodoListPanel() {
         setModalMode('history');
     }
 
+    async function openShareModal(dateKey?: string) {
+        setIsGeneratingShareLink(true);
+        setModalMode('share');
+        setShareLink('');
+
+        try {
+            const response = await fetch('/api/admin/todos/share', {
+                method: 'POST',
+                cache: 'no-store',
+            });
+            const result = (await response.json()) as {
+                message?: string;
+                url?: string;
+            };
+
+            if (!response.ok || !result.url) {
+                throw new Error(result.message ?? 'Gagal membuat link share.');
+            }
+
+            const url = new URL(result.url);
+
+            if (dateKey) {
+                url.searchParams.set('date', dateKey);
+            }
+
+            setShareLink(url.toString());
+        } catch (error) {
+            await showErrorAlert(error instanceof Error ? error.message : 'Gagal membuat link share.');
+            setModalMode(null);
+        } finally {
+            setIsGeneratingShareLink(false);
+        }
+    }
+
+    async function copyShareLink() {
+        if (!shareLink) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(shareLink);
+            await showSuccessAlert('Link berhasil disalin.');
+        } catch {
+            await showErrorAlert('Link gagal disalin. Silakan copy manual.');
+        }
+    }
+
     const formTitle = modalMode === 'edit' ? 'Edit Tugas' : 'Tambah Tugas';
 
     return (
@@ -503,7 +553,10 @@ export function TodoListPanel() {
                     </div>
                     <div className='flex flex-wrap gap-2'>
                         <button type='button' onClick={openCreateModal} className='rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'>
-                            Tambah Tugas
+                            + Tambah Tugas
+                        </button>
+                        <button type='button' onClick={() => void openShareModal()} className='rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100'>
+                            Share
                         </button>
                         <button type='button' onClick={() => void refreshTodos()} disabled={isLoading} className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60'>
                             {isLoading ? 'Memuat...' : 'Refresh Data'}
@@ -672,13 +725,42 @@ export function TodoListPanel() {
             {modalMode === 'history' && (
                 <Modal title='Riwayat Tugas' onClose={closeModal}>
                     <div className='space-y-5'>
-                        <h4 className='text-lg font-bold text-slate-900'>{formatDateShort(historyDate)}</h4>
+                        <div className='flex flex-wrap items-center justify-between gap-3'>
+                            <h4 className='text-lg font-bold text-slate-900'>{formatDateShort(historyDate)}</h4>
+                            <button type='button' onClick={() => void openShareModal(historyDate)} className='rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100'>
+                                Share Hari Ini
+                            </button>
+                        </div>
                         <HistorySection title='TO DO' items={historyTodos.filter((item) => item.status === 'todo')} />
                         <HistorySection title='DONE' items={historyTodos.filter((item) => item.status === 'done')} />
                         <section>
                             <h5 className='border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500'>Catatan</h5>
                             <p className='mt-3 whitespace-pre-line text-sm leading-6 text-slate-700'>{historyNote || '-'}</p>
                         </section>
+                    </div>
+                </Modal>
+            )}
+
+            {modalMode === 'share' && (
+                <Modal title='Share To Do List' onClose={closeModal}>
+                    <div className='space-y-4'>
+                        <Field label='Link Publik To Do List' id='todo-share-link'>
+                            <input
+                                id='todo-share-link'
+                                type='text'
+                                value={isGeneratingShareLink ? 'Membuat link...' : shareLink}
+                                readOnly
+                                className='w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none'
+                            />
+                        </Field>
+                        <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
+                            <button type='button' onClick={copyShareLink} disabled={!shareLink || isGeneratingShareLink} className='rounded-xl bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60'>
+                                Copy Link
+                            </button>
+                            <button type='button' onClick={closeModal} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>
+                                Tutup
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}

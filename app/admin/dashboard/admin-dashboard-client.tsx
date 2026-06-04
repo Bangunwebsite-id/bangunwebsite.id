@@ -269,6 +269,15 @@ function confirmDeleteData() {
     });
 }
 
+function SkeletonBlock({ className }: { className: string }) {
+    return (
+        <span
+            className={`block animate-pulse rounded bg-slate-200 ${className}`}
+            aria-hidden='true'
+        />
+    );
+}
+
 export function AdminDashboardClient({
     username,
     initialOverviewMetrics,
@@ -365,6 +374,8 @@ export function AdminDashboardClient({
         : isLoadingBlogs
           ? '...'
           : '-';
+    const shouldShowBlogSkeleton =
+        activeTab === 'blog' && isLoadingBlogs && !isBlogsLoaded;
     const trafficDaily = trafficSummary?.last7DaysDaily ?? [];
     const trafficTodaySources = trafficSummary?.todayTopSources ?? [];
     const trafficLast7DaysSources = trafficSummary?.last7DaysTopSources ?? [];
@@ -1364,7 +1375,11 @@ export function AdminDashboardClient({
                                                 Total Artikel
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {blogTotalValue}
+                                                {shouldShowBlogSkeleton ? (
+                                                    <SkeletonBlock className='h-8 w-24' />
+                                                ) : (
+                                                    blogTotalValue
+                                                )}
                                             </p>
                                         </article>
 
@@ -1373,7 +1388,11 @@ export function AdminDashboardClient({
                                                 Total Kategori
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {totalBlogCategories}
+                                                {shouldShowBlogSkeleton ? (
+                                                    <SkeletonBlock className='h-8 w-24' />
+                                                ) : (
+                                                    totalBlogCategories
+                                                )}
                                             </p>
                                         </article>
 
@@ -1381,16 +1400,26 @@ export function AdminDashboardClient({
                                             <p className='text-xs font-bold uppercase tracking-[0.1em] text-slate-500'>
                                                 Artikel Terbaru
                                             </p>
-                                            <p className='mt-1 text-base font-bold text-slate-900'>
-                                                {latestBlog
-                                                    ? formatDateShort(
-                                                          latestBlog.published_at
-                                                      )
-                                                    : '-'}
-                                            </p>
-                                            <p className='mt-1 truncate text-sm text-slate-600'>
-                                                {latestBlog?.title ?? 'Belum ada'}
-                                            </p>
+                                            {shouldShowBlogSkeleton ? (
+                                                <div className='mt-2 space-y-2'>
+                                                    <SkeletonBlock className='h-5 w-28' />
+                                                    <SkeletonBlock className='h-4 w-44 max-w-full' />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <p className='mt-1 text-base font-bold text-slate-900'>
+                                                        {latestBlog
+                                                            ? formatDateShort(
+                                                                  latestBlog.published_at
+                                                              )
+                                                            : '-'}
+                                                    </p>
+                                                    <p className='mt-1 truncate text-sm text-slate-600'>
+                                                        {latestBlog?.title ??
+                                                            'Belum ada'}
+                                                    </p>
+                                                </>
+                                            )}
                                         </article>
                                     </div>
                                 </div>
@@ -1705,15 +1734,43 @@ export function AdminDashboardClient({
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {blogPosts.length === 0 ? (
+                                                    {shouldShowBlogSkeleton ? (
+                                                        Array.from({ length: 5 }).map(
+                                                            (_, index) => (
+                                                                <tr
+                                                                    key={index}
+                                                                    className='border-b border-slate-100'
+                                                                    aria-hidden='true'
+                                                                >
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-5 w-64 max-w-full' />
+                                                                        <SkeletonBlock className='mt-2 h-4 w-48 max-w-full' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-36' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-24' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-40' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <div className='flex justify-end gap-2'>
+                                                                            <SkeletonBlock className='h-8 w-14' />
+                                                                            <SkeletonBlock className='h-8 w-8' />
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )
+                                                    ) : blogPosts.length === 0 ? (
                                                         <tr>
                                                             <td
                                                                 colSpan={5}
                                                                 className='px-2 py-4 text-sm font-medium text-slate-500'
                                                             >
-                                                                {isLoadingBlogs
-                                                                    ? 'Memuat daftar artikel blog...'
-                                                                    : 'Belum ada artikel blog di database.'}
+                                                                Belum ada artikel blog di database.
                                                             </td>
                                                         </tr>
                                                     ) : (

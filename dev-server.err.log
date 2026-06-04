@@ -184,3 +184,32 @@ Create notes secret error: error: duplicate key value violates unique constraint
   line: '666',
   routine: '_bt_check_unique'
 }
+List todos error: error: duplicate key value violates unique constraint "pg_class_relname_nsp_index"
+    at async ensureTodoTables (app\lib\todos.ts:38:5)
+    at async listTodos (app\lib\todos.ts:66:5)
+    at async GET (app\api\admin\todos\route.ts:77:24)
+  36 |     }
+  37 |
+> 38 |     await dbPool.query(`
+     |     ^
+  39 |         CREATE TABLE IF NOT EXISTS admin_todos (
+  40 |             id SERIAL PRIMARY KEY,
+  41 |             task_date DATE NOT NULL, {
+  length: 261,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (relname, relnamespace)=(admin_todos_id_seq, 2200) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'pg_catalog',
+  table: 'pg_class',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'pg_class_relname_nsp_index',
+  file: 'nbtinsert.c',
+  line: '666',
+  routine: '_bt_check_unique'
+}
