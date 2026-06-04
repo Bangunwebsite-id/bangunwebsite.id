@@ -52,6 +52,54 @@ function getDefaultCategoryFormState(): SecretCategoryFormState {
     };
 }
 
+const swalConfirmButtonColor = '#0891b2';
+const swalCancelButtonColor = '#475569';
+const swalDeleteButtonColor = '#dc2626';
+
+function showSuccessAlert(text: string, title = 'Berhasil!') {
+    return Swal.fire({
+        icon: 'success',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function showErrorAlert(text: string, title = 'Gagal!') {
+    return Swal.fire({
+        icon: 'error',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function confirmSaveChanges() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Simpan Perubahan?',
+        text: 'Perubahan yang Anda lakukan akan disimpan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalConfirmButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
+
+function confirmDeleteData() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Hapus Data?',
+        text: 'Data yang dihapus tidak dapat dikembalikan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalDeleteButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
+
 function maskValue(value: string) {
     if (!value) {
         return '---';
@@ -105,7 +153,6 @@ export function SecretVariablePanel() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingVariableId, setDeletingVariableId] = useState<number | null>(null);
     const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const activeCategoryData = categories.find((item) => item.name === activeCategory) ?? categories[0] ?? null;
 
@@ -152,7 +199,6 @@ export function SecretVariablePanel() {
 
     const refreshSecretData = useCallback(async () => {
         setIsLoading(true);
-        setFeedback(null);
 
         try {
             const nextData = await fetchSecretData();
@@ -167,10 +213,7 @@ export function SecretVariablePanel() {
             });
             setIsLoaded(true);
         } catch (error) {
-            setFeedback({
-                type: 'error',
-                message: error instanceof Error ? error.message : 'Terjadi masalah koneksi saat memuat secret variable.',
-            });
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi masalah koneksi saat memuat secret variable.');
         } finally {
             setIsLoading(false);
         }
@@ -191,14 +234,13 @@ export function SecretVariablePanel() {
 
     function openCreateVariableModal(categoryName: string) {
         if (!categoryName) {
-            setFeedback({ type: 'error', message: 'Tambahkan kategori terlebih dahulu.' });
+            void showErrorAlert('Tambahkan kategori terlebih dahulu.');
             return;
         }
 
         setActiveCategory(categoryName);
         setVariableForm(getDefaultVariableFormState(categoryName));
         setEditingVariableId(null);
-        setFeedback(null);
         setModalMode('variable-create');
     }
 
@@ -211,14 +253,12 @@ export function SecretVariablePanel() {
             value: item.value,
             description: item.description ?? '',
         });
-        setFeedback(null);
         setModalMode('variable-edit');
     }
 
     function openCreateCategoryModal() {
         setCategoryForm(getDefaultCategoryFormState());
         setEditingCategoryId(null);
-        setFeedback(null);
         setModalMode('category-create');
     }
 
@@ -228,7 +268,6 @@ export function SecretVariablePanel() {
             name: item.name,
             description: item.description ?? '',
         });
-        setFeedback(null);
         setModalMode('category-edit');
     }
 
@@ -249,25 +288,35 @@ export function SecretVariablePanel() {
             await navigator.clipboard.writeText(value);
             await Swal.fire({
                 icon: 'success',
-                title: 'Berhasil',
+                title: 'Berhasil!',
                 text: 'Secret variable berhasil disalin.',
+                confirmButtonColor: swalConfirmButtonColor,
                 timer: 1600,
                 showConfirmButton: false,
             });
         } catch {
-            await Swal.fire('Gagal', 'Clipboard tidak tersedia. Salin manual dari tombol Lihat.', 'error');
+            await showErrorAlert('Clipboard tidak tersedia. Salin manual dari tombol Lihat.');
         }
     }
 
     async function handleSaveVariable(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setIsSubmitting(true);
-        setFeedback(null);
+        const isEditing = editingVariableId !== null;
 
-        const endpoint = editingVariableId
+        if (isEditing) {
+            const confirmation = await confirmSaveChanges();
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+        }
+
+        setIsSubmitting(true);
+
+        const endpoint = isEditing
             ? `/api/admin/secret-variables/${editingVariableId}`
             : '/api/admin/secret-variables';
-        const method = editingVariableId ? 'PUT' : 'POST';
+        const method = isEditing ? 'PUT' : 'POST';
 
         try {
             const response = await fetch(endpoint, {
@@ -275,28 +324,17 @@ export function SecretVariablePanel() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(variableForm),
             });
-            const result = (await response.json()) as { message?: string };
-
             if (!response.ok) {
-                setFeedback({
-                    type: 'error',
-                    message: result.message ?? 'Gagal menyimpan secret variable.',
-                });
+                await showErrorAlert(isEditing ? 'Secret Variable gagal diperbarui.' : 'Secret Variable gagal dibuat.');
                 return;
             }
 
             await refreshSecretData();
             setActiveCategory(variableForm.category);
             closeModal();
-            setFeedback({
-                type: 'success',
-                message: result.message ?? (editingVariableId ? 'Secret variable berhasil diperbarui.' : 'Secret variable berhasil dibuat.'),
-            });
+            await showSuccessAlert(isEditing ? 'Secret Variable berhasil diperbarui.' : 'Secret Variable berhasil dibuat.');
         } catch {
-            setFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi saat menyimpan secret variable.',
-            });
+            await showErrorAlert(isEditing ? 'Secret Variable gagal diperbarui.' : 'Secret Variable gagal dibuat.');
         } finally {
             setIsSubmitting(false);
         }
@@ -304,13 +342,22 @@ export function SecretVariablePanel() {
 
     async function handleSaveCategory(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setIsSubmitting(true);
-        setFeedback(null);
+        const isEditing = editingCategoryId !== null;
 
-        const endpoint = editingCategoryId
+        if (isEditing) {
+            const confirmation = await confirmSaveChanges();
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+        }
+
+        setIsSubmitting(true);
+
+        const endpoint = isEditing
             ? `/api/admin/secret-variable-categories/${editingCategoryId}`
             : '/api/admin/secret-variable-categories';
-        const method = editingCategoryId ? 'PUT' : 'POST';
+        const method = isEditing ? 'PUT' : 'POST';
 
         try {
             const response = await fetch(endpoint, {
@@ -321,41 +368,23 @@ export function SecretVariablePanel() {
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                setFeedback({
-                    type: 'error',
-                    message: result.message ?? 'Gagal menyimpan kategori.',
-                });
+                await showErrorAlert(result.message ?? 'Data gagal disimpan. Silakan coba lagi.');
                 return;
             }
 
             await refreshSecretData();
             setActiveCategory(categoryForm.name);
             closeModal();
-            setFeedback({
-                type: 'success',
-                message: result.message ?? (editingCategoryId ? 'Kategori berhasil diperbarui.' : 'Kategori berhasil dibuat.'),
-            });
+            await showSuccessAlert(isEditing ? 'Kategori berhasil diperbarui.' : 'Kategori berhasil dibuat.');
         } catch {
-            setFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi saat menyimpan kategori.',
-            });
+            await showErrorAlert('Data gagal disimpan. Silakan coba lagi.');
         } finally {
             setIsSubmitting(false);
         }
     }
 
     async function handleDeleteVariable(id: number) {
-        const confirmation = await Swal.fire({
-            title: 'Hapus Secret Variable?',
-            text: 'Data yang dihapus tidak dapat dikembalikan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#475569',
-        });
+        const confirmation = await confirmDeleteData();
 
         if (!confirmation.isConfirmed) {
             return;
@@ -370,7 +399,7 @@ export function SecretVariablePanel() {
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                await Swal.fire('Gagal', result.message ?? 'Gagal menghapus secret variable.', 'error');
+                await showErrorAlert(result.message ?? 'Data gagal dihapus.');
                 return;
             }
 
@@ -380,25 +409,16 @@ export function SecretVariablePanel() {
                 return next;
             });
             await refreshSecretData();
-            await Swal.fire('Berhasil', result.message ?? 'Secret variable berhasil dihapus.', 'success');
+            await showSuccessAlert('Data berhasil dihapus.');
         } catch {
-            await Swal.fire('Gagal', 'Terjadi masalah koneksi saat menghapus secret variable.', 'error');
+            await showErrorAlert('Data gagal dihapus.');
         } finally {
             setDeletingVariableId(null);
         }
     }
 
     async function handleDeleteCategory(item: DashboardSecretCategory) {
-        const confirmation = await Swal.fire({
-            title: 'Hapus kategori ini?',
-            text: 'Data kategori yang dihapus tidak dapat dikembalikan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#475569',
-        });
+        const confirmation = await confirmDeleteData();
 
         if (!confirmation.isConfirmed) {
             return;
@@ -413,14 +433,14 @@ export function SecretVariablePanel() {
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                await Swal.fire('Gagal', result.message ?? 'Gagal menghapus kategori.', 'error');
+                await showErrorAlert(result.message ?? 'Data gagal dihapus.');
                 return;
             }
 
             await refreshSecretData();
-            await Swal.fire('Berhasil', result.message ?? 'Kategori berhasil dihapus.', 'success');
+            await showSuccessAlert('Data berhasil dihapus.');
         } catch {
-            await Swal.fire('Gagal', 'Terjadi masalah koneksi saat menghapus kategori.', 'error');
+            await showErrorAlert('Data gagal dihapus.');
         } finally {
             setDeletingCategoryId(null);
         }
@@ -459,12 +479,6 @@ export function SecretVariablePanel() {
                         </button>
                     </div>
                 </div>
-
-                {feedback && (
-                    <p className={`mt-3 rounded-xl border px-3 py-2 text-sm font-semibold ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                        {feedback.message}
-                    </p>
-                )}
             </div>
 
             <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-3'>
@@ -734,12 +748,6 @@ export function SecretVariablePanel() {
                             />
                         </Field>
 
-                        {feedback && (
-                            <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                                {feedback.message}
-                            </p>
-                        )}
-
                         <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
                             <button type='button' onClick={closeModal} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>
                                 Batal
@@ -776,12 +784,6 @@ export function SecretVariablePanel() {
                                 className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
                             />
                         </Field>
-
-                        {feedback && (
-                            <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                                {feedback.message}
-                            </p>
-                        )}
 
                         <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
                             <button type='button' onClick={closeModal} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>

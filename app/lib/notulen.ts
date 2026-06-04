@@ -171,7 +171,7 @@ export async function updateNotulenById(
 ) {
     await ensureNotulenTable();
 
-    const result = await dbPool.query(
+    const result = await dbPool.query<NotulenRecord>(
         `
             UPDATE meeting_minutes
             SET
@@ -186,6 +186,19 @@ export async function updateNotulenById(
                 status = $10,
                 updated_at = NOW()
             WHERE id = $1
+            RETURNING
+                id,
+                meeting_date::text AS meeting_date,
+                start_time::text,
+                end_time::text,
+                place,
+                note_taker,
+                attendees,
+                decisions,
+                documentation_photo_url,
+                status,
+                created_at,
+                updated_at
         `,
         [
             id,
@@ -201,7 +214,7 @@ export async function updateNotulenById(
         ],
     );
 
-    return (result.rowCount ?? 0) > 0;
+    return result.rows[0] ?? null;
 }
 
 export async function deleteNotulenById(id: number) {

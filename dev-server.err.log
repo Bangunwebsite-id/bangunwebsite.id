@@ -5,13 +5,16 @@
  Detected additional lockfiles: 
    * C:\Users\ASUS\bangunwebsite\bangunwebsite.id\package-lock.json
 
-(node:20588) Warning: NodeVersionSupportWarning: The AWS SDK for JavaScript (v3)
-versions published after the first week of January 2027
-will require node >=22. You are running node v20.13.1.
+⚠ Blocked cross-origin request to Next.js dev resource /_next/webpack-hmr from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
 
-To continue receiving updates to AWS services, bug fixes,
-and security updates please upgrade to node >=22.
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
 
-More information can be found at: https://a.co/c895JFp
-(Use `node --trace-warnings ...` to show where the warning was created)
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
 [browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { ensureAdminSession } from '@/app/lib/admin-guard';
 import {
     deleteNotulenById,
+    NotulenRecord,
     NotulenStatus,
     updateNotulenById,
     UpsertNotulenInput,
@@ -76,6 +77,14 @@ function validatePayload(payload: UpsertNotulenInput) {
     return null;
 }
 
+function serializeNotulen(item: NotulenRecord) {
+    return {
+        ...item,
+        created_at: item.created_at.toISOString(),
+        updated_at: item.updated_at.toISOString(),
+    };
+}
+
 export async function PUT(request: Request, { params }: RouteParams) {
     const { unauthorizedResponse } = ensureAdminSession(request);
 
@@ -96,6 +105,15 @@ export async function PUT(request: Request, { params }: RouteParams) {
     try {
         const body = (await request.json()) as NotulenPayload;
         const payload = normalizePayload(body);
+        console.info('Update notulen payload:', {
+            id,
+            hasDocumentationPhotoUrl: payload.documentationPhotoUrl.length > 0,
+            documentationPhotoUrl: payload.documentationPhotoUrl || null,
+            receivedDocumentationPhotoUrl:
+                typeof body.documentationPhotoUrl === 'string'
+                    ? body.documentationPhotoUrl
+                    : null,
+        });
         const validationMessage = validatePayload(payload);
 
         if (validationMessage) {
@@ -114,7 +132,17 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({ message: 'Notulen berhasil diperbarui.' });
+        console.info('Update notulen persisted:', {
+            id,
+            hasDocumentationPhotoUrl:
+                (updated.documentation_photo_url ?? '').trim().length > 0,
+            documentationPhotoUrl: updated.documentation_photo_url,
+        });
+
+        return NextResponse.json({
+            message: 'Notulen berhasil diperbarui.',
+            notulen: serializeNotulen(updated),
+        });
     } catch (error) {
         console.error('Update notulen error:', error);
         return NextResponse.json(
