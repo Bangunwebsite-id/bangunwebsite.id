@@ -17,6 +17,8 @@ export type SecretVariableRecord = {
     name: string;
     value: string;
     description: string | null;
+    pinned: boolean;
+    display_order: number;
     created_at: Date;
     updated_at: Date;
 };
@@ -27,11 +29,18 @@ export type UpsertSecretCategoryInput = {
 };
 
 export type UpsertSecretVariableInput = {
-    category: string;
     name: string;
     value: string;
-    description: string;
+    category?: string;
+    description?: string;
 };
+
+export type ReorderSecretVariableInput = {
+    id: number;
+    displayOrder: number;
+};
+
+const DEFAULT_NOTES_SECRET_CATEGORY = 'Notes Secret';
 
 let isTableReady = false;
 
@@ -47,6 +56,8 @@ async function ensureSecretVariablesTable() {
             name TEXT NOT NULL,
             value TEXT NOT NULL,
             description TEXT,
+            pinned BOOLEAN NOT NULL DEFAULT FALSE,
+            display_order INTEGER NOT NULL DEFAULT 0,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
@@ -57,6 +68,24 @@ async function ensureSecretVariablesTable() {
         DECLARE
             constraint_record record;
         BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'secret_variables'
+                    AND column_name = 'pinned'
+            ) THEN
+                ALTER TABLE secret_variables ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT FALSE;
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'secret_variables'
+                    AND column_name = 'display_order'
+            ) THEN
+                ALTER TABLE secret_variables ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0;
+            END IF;
+
             FOR constraint_record IN
                 SELECT conname
                 FROM pg_constraint
@@ -98,6 +127,20 @@ async function ensureSecretVariablesTable() {
     await dbPool.query(`
         CREATE UNIQUE INDEX IF NOT EXISTS secret_variables_category_name_key
         ON secret_variables (category, lower(name))
+    `);
+
+    await dbPool.query(`
+        WITH ordered AS (
+            SELECT
+                id,
+                ROW_NUMBER() OVER (ORDER BY category ASC, name ASC, id ASC) AS next_order
+            FROM secret_variables
+            WHERE display_order = 0
+        )
+        UPDATE secret_variables variable
+        SET display_order = ordered.next_order
+        FROM ordered
+        WHERE variable.id = ordered.id
     `);
 
     isTableReady = true;
@@ -273,10 +316,12 @@ export async function listSecretVariables() {
             name,
             value,
             description,
+            pinned,
+            display_order,
             created_at,
             updated_at
         FROM secret_variables
-        ORDER BY category ASC, name ASC
+        ORDER BY pinned DESC, display_order ASC, created_at DESC, id DESC
     `);
 
     return result.rows;
@@ -291,16 +336,23 @@ export async function createSecretVariable(input: UpsertSecretVariableInput) {
                 category,
                 name,
                 value,
-                description
+                description,
+                display_order
             )
-            VALUES ($1, $2, $3, $4)
+            VALUES (
+                $1,
+                $2,
+                $3,
+                $4,
+                COALESCE((SELECT MAX(display_order) + 1 FROM secret_variables), 1)
+            )
             RETURNING id
         `,
         [
-            input.category.trim(),
+            (input.category ?? DEFAULT_NOTES_SECRET_CATEGORY).trim() || DEFAULT_NOTES_SECRET_CATEGORY,
             input.name.trim(),
             input.value,
-            normalizeOptional(input.description),
+            normalizeOptional(input.description ?? ''),
         ],
     );
 
@@ -326,14 +378,61 @@ export async function updateSecretVariableById(
         `,
         [
             id,
-            input.category.trim(),
+            (input.category ?? DEFAULT_NOTES_SECRET_CATEGORY).trim() || DEFAULT_NOTES_SECRET_CATEGORY,
             input.name.trim(),
             input.value,
-            normalizeOptional(input.description),
+            normalizeOptional(input.description ?? ''),
         ],
     );
 
     return (result.rowCount ?? 0) > 0;
+}
+
+export async function updateSecretVariablePinnedById(id: number, pinned: boolean) {
+    await ensureSecretVariablesTable();
+
+    const result = await dbPool.query(
+        `
+            UPDATE secret_variables
+            SET
+                pinned = $2,
+                updated_at = NOW()
+            WHERE id = $1
+        `,
+        [id, pinned],
+    );
+
+    return (result.rowCount ?? 0) > 0;
+}
+
+export async function reorderSecretVariables(items: ReorderSecretVariableInput[]) {
+    await ensureSecretVariablesTable();
+
+    const client = await dbPool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        for (const item of items) {
+            await client.query(
+                `
+                    UPDATE secret_variables
+                    SET
+                        display_order = $2,
+                        updated_at = NOW()
+                    WHERE id = $1
+                `,
+                [item.id, item.displayOrder],
+            );
+        }
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
 }
 
 export async function deleteSecretVariableById(id: number) {

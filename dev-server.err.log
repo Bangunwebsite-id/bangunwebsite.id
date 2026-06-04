@@ -18,3 +18,169 @@ module.exports = {
 Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
 [browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
 ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx:8:1
+Module not found: Can't resolve './secret-variable-panel'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mNotulenPanel[0m } [36mfrom[0m [32m'./notulen-panel'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mSecretVariablePanel[0m } [36mfrom[0m [32m'./secret-variable-panel'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36mtype[0m [33mDashboardUser[0m = {
+  [90m11 |[0m     id: number;
+
+
+
+Import trace:
+  Server Component:
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx:8:1
+Module not found: Can't resolve './secret-variable-panel'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mNotulenPanel[0m } [36mfrom[0m [32m'./notulen-panel'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mSecretVariablePanel[0m } [36mfrom[0m [32m'./secret-variable-panel'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36mtype[0m [33mDashboardUser[0m = {
+  [90m11 |[0m     id: number;
+
+
+
+Import trace:
+  Server Component:
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx:8:1
+Module not found: Can't resolve './secret-variable-panel'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mNotulenPanel[0m } [36mfrom[0m [32m'./notulen-panel'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mSecretVariablePanel[0m } [36mfrom[0m [32m'./secret-variable-panel'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36mtype[0m [33mDashboardUser[0m = {
+  [90m11 |[0m     id: number;
+
+
+
+Import trace:
+  Server Component:
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx:8:1
+Module not found: Can't resolve './secret-variable-panel'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mNotulenPanel[0m } [36mfrom[0m [32m'./notulen-panel'[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { [33mSecretVariablePanel[0m } [36mfrom[0m [32m'./secret-variable-panel'[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36mtype[0m [33mDashboardUser[0m = {
+  [90m11 |[0m     id: number;
+
+
+
+Import trace:
+  Server Component:
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/admin-dashboard-client.tsx
+    ./bangunwebsite/bangunwebsite.id/app/admin/dashboard/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+List secret variables error: error: column "pinned" of relation "secret_variables" already exists
+    at async ensureSecretVariablesTable (app\lib\secret-variables.ts:66:5)
+    at async listSecretVariableCategories (app\lib\secret-variables.ts:156:5)
+    at async GET (app\api\admin\secret-variables\route.ts:55:47)
+  64 |     `);
+  65 |
+> 66 |     await dbPool.query(`
+     |     ^
+  67 |         DO $$
+  68 |         DECLARE
+  69 |             constraint_record record; {
+  length: 297,
+  severity: 'ERROR',
+  code: '42701',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: 'SQL statement "ALTER TABLE secret_variables ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT FALSE"\n' +
+    'PL/pgSQL function inline_code_block line 11 at SQL statement',
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'tablecmds.c',
+  line: '7347',
+  routine: 'check_for_column_name_collision'
+}
+Create notes secret error: error: duplicate key value violates unique constraint "secret_variables_category_name_key"
+    at async createSecretVariable (app\lib\secret-variables.ts:333:20)
+    at async POST (app\api\admin\secret-variables\route.ts:100:24)
+  331 |     await ensureSecretVariablesTable();
+  332 |
+> 333 |     const result = await dbPool.query<{ id: number }>(
+      |                    ^
+  334 |         `
+  335 |             INSERT INTO secret_variables (
+  336 |                 category, {
+  length: 280,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (category, lower(name))=(Notes Secret, env lokal) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'secret_variables',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'secret_variables_category_name_key',
+  file: 'nbtinsert.c',
+  line: '666',
+  routine: '_bt_check_unique'
+}
+Create notes secret error: error: duplicate key value violates unique constraint "secret_variables_category_name_key"
+    at async createSecretVariable (app\lib\secret-variables.ts:333:20)
+    at async POST (app\api\admin\secret-variables\route.ts:100:24)
+  331 |     await ensureSecretVariablesTable();
+  332 |
+> 333 |     const result = await dbPool.query<{ id: number }>(
+      |                    ^
+  334 |         `
+  335 |             INSERT INTO secret_variables (
+  336 |                 category, {
+  length: 280,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (category, lower(name))=(Notes Secret, env lokal) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'secret_variables',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'secret_variables_category_name_key',
+  file: 'nbtinsert.c',
+  line: '666',
+  routine: '_bt_check_unique'
+}

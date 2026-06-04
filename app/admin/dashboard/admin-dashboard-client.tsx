@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 
 import { NotulenPanel } from './notulen-panel';
 import { SecretVariablePanel } from './secret-variable-panel';
+import { TodoListPanel } from './todo-list-panel';
 
 type DashboardUser = {
     id: number;
@@ -108,9 +109,14 @@ const dashboardTabs = [
         description: 'CRUD rapat',
     },
     {
+        id: 'todo-list',
+        label: 'To Do List',
+        description: 'Tugas harian',
+    },
+    {
         id: 'secret-variable',
-        label: 'Secret Variable',
-        description: 'Credential & token',
+        label: 'Notes Secret',
+        description: 'Catatan rahasia',
     },
 ] as const;
 
@@ -1838,6 +1844,8 @@ export function AdminDashboardClient({
                         )}
 
                         {activeTab === 'notulen' && <NotulenPanel />}
+
+                        {activeTab === 'todo-list' && <TodoListPanel />}
 
                         {activeTab === 'secret-variable' && <SecretVariablePanel />}
                     </div>
