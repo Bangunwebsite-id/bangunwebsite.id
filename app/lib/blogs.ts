@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import { cache } from 'react';
 
 import { dbPool } from './db';
 
@@ -27,6 +28,8 @@ export type PublicBlogPost = {
     categories: string[];
     published_at: string;
 };
+
+type PublicBlogPostListRecord = Omit<BlogPostRecord, 'content'>;
 
 export type AdminBlogPostListItem = {
     id: number;
@@ -84,6 +87,22 @@ function mapRecordToPublicPost(row: BlogPostRecord): PublicBlogPost {
     };
 }
 
+function mapRecordToPublicPostListItem(
+    row: PublicBlogPostListRecord
+): PublicBlogPost {
+    return {
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        summary: row.summary,
+        content: '',
+        author: row.author,
+        image: row.image ?? '',
+        categories: normalizeCategories(row.categories),
+        published_at: row.published_at.toISOString(),
+    };
+}
+
 export async function listPublishedBlogPosts(limit?: number, offset?: number) {
     noStore();
 
@@ -101,14 +120,13 @@ export async function listPublishedBlogPosts(limit?: number, offset?: number) {
         offsetClause = `OFFSET $${params.length}`;
     }
 
-    const result = await dbPool.query<BlogPostRecord>(
+    const result = await dbPool.query<PublicBlogPostListRecord>(
         `
             SELECT
                 id,
                 title,
                 slug,
                 summary,
-                content,
                 author,
                 image,
                 categories,
@@ -123,7 +141,7 @@ export async function listPublishedBlogPosts(limit?: number, offset?: number) {
         params,
     );
 
-    return result.rows.map(mapRecordToPublicPost);
+    return result.rows.map(mapRecordToPublicPostListItem);
 }
 
 export async function countPublishedBlogPosts() {
@@ -134,7 +152,7 @@ export async function countPublishedBlogPosts() {
     return parseInt(result.rows[0]?.total ?? '0', 10);
 }
 
-export async function getPublishedBlogPostBySlug(slug: string) {
+export const getPublishedBlogPostBySlug = cache(async (slug: string) => {
     noStore();
 
     const result = await dbPool.query<BlogPostRecord>(
@@ -160,7 +178,7 @@ export async function getPublishedBlogPostBySlug(slug: string) {
 
     const row = result.rows[0];
     return row ? mapRecordToPublicPost(row) : null;
-}
+});
 
 export async function listRelatedBlogPosts(
     slug: string,
@@ -170,14 +188,13 @@ export async function listRelatedBlogPosts(
     noStore();
 
     // Prioritize posts that share at least one category, then by date
-    const result = await dbPool.query<BlogPostRecord>(
+    const result = await dbPool.query<PublicBlogPostListRecord>(
         `
             SELECT
                 id,
                 title,
                 slug,
                 summary,
-                content,
                 author,
                 image,
                 categories,
@@ -197,7 +214,7 @@ export async function listRelatedBlogPosts(
         [slug, categories, limit],
     );
 
-    return result.rows.map(mapRecordToPublicPost);
+    return result.rows.map(mapRecordToPublicPostListItem);
 }
 
 export async function listAdminBlogPosts() {

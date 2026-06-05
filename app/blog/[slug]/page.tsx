@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -68,10 +69,55 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
     };
 }
 
-export default async function BlogDetailPage({ params }: BlogDetailProps) {
-    const { slug } = await params;
+export default function BlogDetailPage({ params }: BlogDetailProps) {
+    const { whatsappDefaultUrl } = getPublicSiteConfig();
+
+    return (
+        <main className='min-h-screen bg-slate-50 text-slate-900'>
+            <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
+                <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3'>
+                    <Link href='/' className='flex items-center gap-3'>
+                        <Image
+                            src='/bangun-website.png'
+                            alt='BangunWebsite.id'
+                            width={170}
+                            height={44}
+                            className='h-11 w-auto'
+                            priority
+                        />
+                    </Link>
+
+                    <div className='flex items-center gap-3'>
+                        <LoadingLink
+                            href='/blog'
+                            className='rounded-full border-2 border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
+                        >
+                            Semua Blog
+                        </LoadingLink>
+                        <a
+                            href={whatsappDefaultUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='rounded-full bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
+                        >
+                            Konsultasi Gratis
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <Suspense fallback={<BlogDetailSkeleton />}>
+                {params.then(({ slug }) => (
+                    <BlogDetailContent slug={slug} />
+                ))}
+            </Suspense>
+        </main>
+    );
+}
+
+async function BlogDetailContent({ slug }: { slug: string }) {
     const post = await getPublishedBlogPostBySlug(slug);
-    const { whatsappDefaultUrl, siteUrl } = getPublicSiteConfig();
+    const { siteUrl } = getPublicSiteConfig();
 
     if (!post) {
         notFound();
@@ -109,42 +155,11 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
     };
 
     return (
-        <main className='min-h-screen bg-slate-50 text-slate-900'>
+        <>
             <script
                 type='application/ld+json'
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
-                <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3'>
-                    <Link href='/' className='flex items-center gap-3'>
-                        <Image
-                            src='/bangun-website.png'
-                            alt='BangunWebsite.id'
-                            width={170}
-                            height={44}
-                            className='h-11 w-auto'
-                            priority
-                        />
-                    </Link>
-
-                    <div className='flex items-center gap-3'>
-                        <LoadingLink
-                            href='/blog'
-                            className='rounded-full border-2 border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
-                        >
-                            Semua Blog
-                        </LoadingLink>
-                        <a
-                            href={whatsappDefaultUrl}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='rounded-full bg-cyan-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'
-                        >
-                            Konsultasi Gratis
-                        </a>
-                    </div>
-                </div>
-            </header>
 
             <section className='mx-auto w-full max-w-4xl px-4 py-12 md:py-16'>
                 <div className='mb-6'>
@@ -229,17 +244,32 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
                                         {children}
                                     </p>
                                 ),
-                                ul: ({ children }) => (
-                                    <ul className='mt-4 list-disc space-y-2 pl-6 text-slate-700'>
-                                        {children}
-                                    </ul>
-                                ),
-                                ol: ({ children }) => (
-                                    <ol className='mt-4 list-decimal space-y-2 pl-6 text-slate-700'>
-                                        {children}
-                                    </ol>
-                                ),
-                                li: ({ children }) => <li>{children}</li>,
+                                ul: ({ node, className, children, ...props }) => {
+                                    void node;
+                                    void className;
+
+                                    return (
+                                        <ul {...props} className='mt-4 list-disc space-y-2 pl-6 text-slate-700'>
+                                            {children}
+                                        </ul>
+                                    );
+                                },
+                                ol: ({ node, className, children, ...props }) => {
+                                    void node;
+                                    void className;
+
+                                    return (
+                                        <ol {...props} className='mt-4 list-decimal space-y-2 pl-6 text-slate-700'>
+                                            {children}
+                                        </ol>
+                                    );
+                                },
+                                li: ({ node, className, children, ...props }) => {
+                                    void node;
+                                    void className;
+
+                                    return <li {...props}>{children}</li>;
+                                },
                                 a: ({ href, children }) => (
                                     <a
                                         href={href}
@@ -289,6 +319,61 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
                     ))}
                 </div>
             </section>
-        </main>
+        </>
+    );
+}
+
+function BlogDetailSkeleton() {
+    return (
+        <>
+            <section className='mx-auto w-full max-w-4xl px-4 py-12 md:py-16'>
+                <div className='mb-6'>
+                    <div className='h-5 w-44 rounded bg-slate-200' />
+                </div>
+
+                <div className='h-6 w-24 rounded-full bg-slate-200' />
+                <div className='mt-4 h-10 w-full rounded bg-slate-200 md:h-14' />
+                <div className='mt-3 h-10 w-4/5 rounded bg-slate-200 md:h-12' />
+                <div className='mt-5 h-6 w-full max-w-3xl rounded bg-slate-200' />
+                <div className='mt-2 h-6 w-2/3 rounded bg-slate-200' />
+
+                <div className='mt-5 flex flex-wrap items-center gap-4'>
+                    <div className='h-5 w-36 rounded bg-slate-200' />
+                    <div className='h-5 w-28 rounded bg-slate-200' />
+                </div>
+
+                <div className='mt-8 aspect-[1200/630] overflow-hidden rounded-2xl border border-slate-200 bg-slate-200' />
+
+                <article className='mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8'>
+                    <div className='space-y-4'>
+                        <div className='h-6 w-full rounded bg-slate-200' />
+                        <div className='h-6 w-11/12 rounded bg-slate-200' />
+                        <div className='h-6 w-10/12 rounded bg-slate-200' />
+                        <div className='h-6 w-full rounded bg-slate-200' />
+                        <div className='h-6 w-9/12 rounded bg-slate-200' />
+                        <div className='h-6 w-11/12 rounded bg-slate-200' />
+                    </div>
+                </article>
+            </section>
+
+            <section className='mx-auto w-full max-w-6xl px-4 pb-16'>
+                <div className='h-8 w-48 rounded bg-slate-200' />
+                <div className='mt-6 grid gap-6 md:grid-cols-3'>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <article
+                            key={index}
+                            className='relative flex min-h-[250px] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)]'
+                            aria-hidden='true'
+                        >
+                            <div className='h-6 w-24 rounded-full bg-slate-200' />
+                            <div className='mt-4 h-7 w-11/12 rounded bg-slate-200' />
+                            <div className='mt-3 h-5 w-full rounded bg-slate-200' />
+                            <div className='mt-2 h-5 w-4/5 rounded bg-slate-200' />
+                            <div className='mt-auto h-5 w-32 rounded bg-slate-200' />
+                        </article>
+                    ))}
+                </div>
+            </section>
+        </>
     );
 }

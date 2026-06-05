@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import { ensureAdminSession } from '@/app/lib/admin-guard';
 import {
     deleteSecretVariableById,
-    secretVariableCategoryExists,
     updateSecretVariableById,
+    updateSecretVariablePinnedById,
     UpsertSecretVariableInput,
 } from '@/app/lib/secret-variables';
 
@@ -25,30 +25,20 @@ function getValidatedId(rawId: string) {
 
 function normalizePayload(body: SecretVariablePayload): UpsertSecretVariableInput {
     return {
-        category: (body.category ?? '').trim(),
+        category: (body.category ?? 'Notes Secret').trim(),
         name: (body.name ?? '').trim(),
         value: body.value ?? '',
         description: (body.description ?? '').trim(),
     };
 }
 
-async function validatePayload(payload: UpsertSecretVariableInput) {
-    if (!payload.category) {
-        return 'Kategori secret variable wajib dipilih.';
-    }
-
-    const categoryExists = await secretVariableCategoryExists(payload.category);
-
-    if (!categoryExists) {
-        return 'Kategori secret variable tidak ditemukan.';
-    }
-
+function validatePayload(payload: UpsertSecretVariableInput) {
     if (!payload.name) {
-        return 'Nama variable wajib diisi.';
+        return 'Judul wajib diisi.';
     }
 
     if (payload.name.length > 120) {
-        return 'Nama variable maksimal 120 karakter.';
+        return 'Judul maksimal 120 karakter.';
     }
 
     if (!payload.value) {
@@ -78,7 +68,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     try {
         const body = (await request.json()) as SecretVariablePayload;
         const payload = normalizePayload(body);
-        const validationMessage = await validatePayload(payload);
+        const validationMessage = validatePayload(payload);
 
         if (validationMessage) {
             return NextResponse.json(
@@ -97,12 +87,60 @@ export async function PUT(request: Request, { params }: RouteParams) {
         }
 
         return NextResponse.json({
-            message: 'Secret variable berhasil diperbarui.',
+            message: 'Notes Secret berhasil diperbarui.',
         });
     } catch (error) {
-        console.error('Update secret variable error:', error);
+        console.error('Update notes secret error:', error);
         return NextResponse.json(
-            { message: 'Terjadi kesalahan saat update secret variable.' },
+            { message: 'Terjadi kesalahan saat update Notes Secret.' },
+            { status: 500 },
+        );
+    }
+}
+
+export async function PATCH(request: Request, { params }: RouteParams) {
+    const { unauthorizedResponse } = ensureAdminSession(request);
+
+    if (unauthorizedResponse) {
+        return unauthorizedResponse;
+    }
+
+    const { id: rawId } = await params;
+    const id = getValidatedId(rawId);
+
+    if (!id) {
+        return NextResponse.json(
+            { message: 'ID Notes Secret tidak valid.' },
+            { status: 400 },
+        );
+    }
+
+    try {
+        const body = (await request.json()) as { pinned?: boolean };
+
+        if (typeof body.pinned !== 'boolean') {
+            return NextResponse.json(
+                { message: 'Status pin Notes Secret tidak valid.' },
+                { status: 400 },
+            );
+        }
+
+        const updated = await updateSecretVariablePinnedById(id, body.pinned);
+
+        if (!updated) {
+            return NextResponse.json(
+                { message: 'Notes Secret tidak ditemukan.' },
+                { status: 404 },
+            );
+        }
+
+        return NextResponse.json({
+            message: body.pinned ? 'Notes Secret berhasil disematkan.' : 'Notes Secret berhasil dilepas.',
+        });
+    } catch (error) {
+        console.error('Pin notes secret error:', error);
+        return NextResponse.json(
+            { message: 'Terjadi kesalahan saat mengubah pin Notes Secret.' },
             { status: 500 },
         );
     }
@@ -136,12 +174,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         }
 
         return NextResponse.json({
-            message: 'Secret variable berhasil dihapus.',
+            message: 'Notes Secret berhasil dihapus.',
         });
     } catch (error) {
-        console.error('Delete secret variable error:', error);
+        console.error('Delete notes secret error:', error);
         return NextResponse.json(
-            { message: 'Terjadi kesalahan saat menghapus secret variable.' },
+            { message: 'Terjadi kesalahan saat menghapus Notes Secret.' },
             { status: 500 },
         );
     }

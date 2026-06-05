@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { LoadingLink } from '@/app/components/loading-link';
 import { countPublishedBlogPosts, listPublishedBlogPosts } from '@/app/lib/blogs';
@@ -20,18 +21,7 @@ type BlogPageProps = {
     searchParams: Promise<{ page?: string }>;
 };
 
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-    const { page } = await searchParams;
-    const currentPage = Math.max(1, parseInt(page || '1', 10));
-    const limit = 12;
-    const offset = (currentPage - 1) * limit;
-
-    const [blogPosts, totalPosts] = await Promise.all([
-        listPublishedBlogPosts(limit, offset),
-        countPublishedBlogPosts(),
-    ]);
-
-    const totalPages = Math.ceil(totalPosts / limit);
+export default function BlogPage({ searchParams }: BlogPageProps) {
     const { whatsappDefaultUrl } = getPublicSiteConfig();
 
     return (
@@ -77,6 +67,29 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                     strategi digital untuk UMKM dan bisnis lokal.
                 </p>
 
+                <Suspense fallback={<BlogCardGridSkeleton />}>
+                    <BlogPostGrid searchParams={searchParams} />
+                </Suspense>
+            </section>
+        </main>
+    );
+}
+
+async function BlogPostGrid({ searchParams }: BlogPageProps) {
+    const { page } = await searchParams;
+    const currentPage = Math.max(1, parseInt(page || '1', 10));
+    const limit = 12;
+    const offset = (currentPage - 1) * limit;
+
+    const [blogPosts, totalPosts] = await Promise.all([
+        listPublishedBlogPosts(limit, offset),
+        countPublishedBlogPosts(),
+    ]);
+
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return (
+        <>
                 <div className='mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
                     {blogPosts.length === 0 ? (
                         <article className='rounded-[24px] border border-slate-200 bg-white p-6 text-slate-700'>
@@ -130,7 +143,28 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                         )}
                     </div>
                 )}
-            </section>
-        </main>
+        </>
+    );
+}
+
+function BlogCardGridSkeleton() {
+    return (
+        <div className='mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+            {Array.from({ length: 12 }).map((_, index) => (
+                <article
+                    key={index}
+                    className='relative flex min-h-[280px] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)]'
+                    aria-hidden='true'
+                >
+                    <div className='h-6 w-24 rounded-full bg-slate-200' />
+                    <div className='mt-4 h-7 w-11/12 rounded bg-slate-200' />
+                    <div className='mt-3 h-5 w-full rounded bg-slate-200' />
+                    <div className='mt-2 h-5 w-4/5 rounded bg-slate-200' />
+                    <div className='mt-2 h-5 w-10/12 rounded bg-slate-200' />
+                    <div className='mt-auto h-5 w-32 rounded bg-slate-200' />
+                    <div className='mt-4 h-10 w-36 rounded-full border border-slate-200 bg-slate-100' />
+                </article>
+            ))}
+        </div>
     );
 }

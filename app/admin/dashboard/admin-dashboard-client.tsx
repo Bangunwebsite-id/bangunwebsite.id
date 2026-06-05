@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { FormEvent, useMemo, useState } from 'react';
+import Swal from 'sweetalert2';
 
 import { NotulenPanel } from './notulen-panel';
 import { SecretVariablePanel } from './secret-variable-panel';
+import { TodoListPanel } from './todo-list-panel';
 
 type DashboardUser = {
     id: number;
@@ -107,9 +109,14 @@ const dashboardTabs = [
         description: 'CRUD rapat',
     },
     {
+        id: 'todo-list',
+        label: 'To Do List',
+        description: 'Tugas harian',
+    },
+    {
         id: 'secret-variable',
-        label: 'Secret Variable',
-        description: 'Credential & token',
+        label: 'Notes Secret',
+        description: 'Catatan rahasia',
     },
 ] as const;
 
@@ -214,6 +221,63 @@ function getDefaultBlogFormState(): BlogFormState {
     };
 }
 
+const swalConfirmButtonColor = '#0891b2';
+const swalCancelButtonColor = '#475569';
+const swalDeleteButtonColor = '#dc2626';
+
+function showSuccessAlert(text: string, title = 'Berhasil!') {
+    return Swal.fire({
+        icon: 'success',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function showErrorAlert(text: string, title = 'Gagal!') {
+    return Swal.fire({
+        icon: 'error',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function confirmSaveChanges() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Simpan Perubahan?',
+        text: 'Perubahan yang Anda lakukan akan disimpan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalConfirmButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
+
+function confirmDeleteData() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Hapus Data?',
+        text: 'Data yang dihapus tidak dapat dikembalikan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalDeleteButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
+
+function SkeletonBlock({ className }: { className: string }) {
+    return (
+        <span
+            className={`block animate-pulse rounded bg-slate-200 ${className}`}
+            aria-hidden='true'
+        />
+    );
+}
+
 export function AdminDashboardClient({
     username,
     initialOverviewMetrics,
@@ -230,39 +294,21 @@ export function AdminDashboardClient({
     const [isLoadingTraffic, setIsLoadingTraffic] = useState(false);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [isLoadingBlogs, setIsLoadingBlogs] = useState(false);
-    const [overviewError, setOverviewError] = useState<string | null>(null);
-    const [trafficError, setTrafficError] = useState<string | null>(null);
-    const [usersError, setUsersError] = useState<string | null>(null);
-    const [blogsError, setBlogsError] = useState<string | null>(null);
     const [isUsersLoaded, setIsUsersLoaded] = useState(false);
     const [isBlogsLoaded, setIsBlogsLoaded] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [isSubmittingUser, setIsSubmittingUser] = useState(false);
-    const [userFeedback, setUserFeedback] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
 
     const [blogForm, setBlogForm] = useState<BlogFormState>(
         getDefaultBlogFormState()
     );
     const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
     const [isSubmittingBlog, setIsSubmittingBlog] = useState(false);
-    const [blogFeedback, setBlogFeedback] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
     const [isBlogFormModalOpen, setIsBlogFormModalOpen] = useState(false);
-    const [isDeletingBlogId, setIsDeletingBlogId] = useState<number | null>(null);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    const [imageUploadFeedback, setImageUploadFeedback] = useState<{
-        type: 'success' | 'error';
-        message: string;
-    } | null>(null);
 
     const growthLabel = useMemo(() => {
         if (!overviewMetrics) {
@@ -328,6 +374,8 @@ export function AdminDashboardClient({
         : isLoadingBlogs
           ? '...'
           : '-';
+    const shouldShowBlogSkeleton =
+        activeTab === 'blog' && isLoadingBlogs && !isBlogsLoaded;
     const trafficDaily = trafficSummary?.last7DaysDaily ?? [];
     const trafficTodaySources = trafficSummary?.todayTopSources ?? [];
     const trafficLast7DaysSources = trafficSummary?.last7DaysTopSources ?? [];
@@ -335,7 +383,6 @@ export function AdminDashboardClient({
 
     async function refreshOverview() {
         setIsLoadingOverview(true);
-        setOverviewError(null);
 
         try {
             const response = await fetch('/api/admin/dashboard/overview', {
@@ -356,11 +403,7 @@ export function AdminDashboardClient({
 
             setOverviewMetrics(result.overview);
         } catch (error) {
-            setOverviewError(
-                error instanceof Error
-                    ? error.message
-                    : 'Terjadi kesalahan saat memuat ringkasan dashboard.'
-            );
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat ringkasan dashboard.');
             throw error;
         } finally {
             setIsLoadingOverview(false);
@@ -369,7 +412,6 @@ export function AdminDashboardClient({
 
     async function refreshTrafficSummary() {
         setIsLoadingTraffic(true);
-        setTrafficError(null);
 
         try {
             const response = await fetch('/api/admin/traffic/summary', {
@@ -390,11 +432,7 @@ export function AdminDashboardClient({
 
             setTrafficSummary(result.trafficSummary);
         } catch (error) {
-            setTrafficError(
-                error instanceof Error
-                    ? error.message
-                    : 'Terjadi kesalahan saat memuat data traffic.'
-            );
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat data traffic.');
             throw error;
         } finally {
             setIsLoadingTraffic(false);
@@ -403,7 +441,6 @@ export function AdminDashboardClient({
 
     async function refreshUsers() {
         setIsLoadingUsers(true);
-        setUsersError(null);
 
         try {
             const response = await fetch('/api/admin/users', {
@@ -419,11 +456,7 @@ export function AdminDashboardClient({
             setUsers(result.users);
             setIsUsersLoaded(true);
         } catch (error) {
-            setUsersError(
-                error instanceof Error
-                    ? error.message
-                    : 'Terjadi kesalahan saat memuat user dashboard.'
-            );
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat user dashboard.');
             throw error;
         } finally {
             setIsLoadingUsers(false);
@@ -432,7 +465,6 @@ export function AdminDashboardClient({
 
     async function refreshBlogPosts() {
         setIsLoadingBlogs(true);
-        setBlogsError(null);
 
         try {
             const response = await fetch('/api/admin/blogs', {
@@ -448,11 +480,7 @@ export function AdminDashboardClient({
             setBlogPosts(result.posts);
             setIsBlogsLoaded(true);
         } catch (error) {
-            setBlogsError(
-                error instanceof Error
-                    ? error.message
-                    : 'Terjadi kesalahan saat memuatt data artikel.'
-            );
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat data artikel.');
             throw error;
         } finally {
             setIsLoadingBlogs(false);
@@ -482,7 +510,6 @@ export function AdminDashboardClient({
     async function handleAddUser(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setIsSubmittingUser(true);
-        setUserFeedback(null);
 
         try {
             const response = await fetch('/api/admin/users', {
@@ -499,57 +526,39 @@ export function AdminDashboardClient({
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                setUserFeedback({
-                    type: 'error',
-                    message:
-                        result.message ?? 'Gagal menambahkan user admin baru.',
-                });
+                await showErrorAlert(result.message ?? 'Gagal menambahkan user admin baru.');
                 return;
             }
 
-            setUserFeedback({
-                type: 'success',
-                message: result.message ?? 'User admin berhasil ditambahkan.',
-            });
             setNewUsername('');
             setNewPassword('');
             await refreshUsers();
             void refreshOverview();
+            await showSuccessAlert('User admin berhasil ditambahkan.');
         } catch {
-            setUserFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi. Coba lagi beberapa saat.',
-            });
+            await showErrorAlert('Terjadi masalah koneksi. Coba lagi beberapa saat.');
         } finally {
             setIsSubmittingUser(false);
         }
     }
 
-    function resetBlogForm(clearFeedback = true) {
+    function resetBlogForm() {
         setEditingBlogId(null);
         setBlogForm(getDefaultBlogFormState());
         setSelectedImageFile(null);
-        setImageUploadFeedback(null);
         setIsBlogFormModalOpen(false);
-        if (clearFeedback) {
-            setBlogFeedback(null);
-        }
     }
 
     function handleAddBlog() {
         setEditingBlogId(null);
         setBlogForm(getDefaultBlogFormState());
         setSelectedImageFile(null);
-        setImageUploadFeedback(null);
-        setBlogFeedback(null);
         setIsBlogFormModalOpen(true);
     }
 
     function handleEditBlog(post: DashboardBlogPost) {
         setActiveTab('blog');
         setEditingBlogId(post.id);
-        setBlogFeedback(null);
-        setImageUploadFeedback(null);
         setSelectedImageFile(null);
         setBlogForm({
             title: post.title,
@@ -566,15 +575,11 @@ export function AdminDashboardClient({
 
     async function handleUploadBlogImage() {
         if (!selectedImageFile) {
-            setImageUploadFeedback({
-                type: 'error',
-                message: 'Pilih file gambar terlebih dulu.',
-            });
+            await showErrorAlert('Pilih file gambar terlebih dulu.', 'Gagal!');
             return;
         }
 
         setIsUploadingImage(true);
-        setImageUploadFeedback(null);
 
         try {
             const formData = new FormData();
@@ -591,11 +596,7 @@ export function AdminDashboardClient({
             };
 
             if (!response.ok || !result.imageUrl) {
-                setImageUploadFeedback({
-                    type: 'error',
-                    message:
-                        result.message ?? 'Upload gambar gagal. Silakan coba lagi.',
-                });
+                await showErrorAlert(result.message ?? 'Upload gambar gagal.');
                 return;
             }
 
@@ -603,18 +604,10 @@ export function AdminDashboardClient({
                 ...prev,
                 image: result.imageUrl ?? prev.image,
             }));
-            setImageUploadFeedback({
-                type: 'success',
-                message:
-                    result.message ??
-                    'Gambar berhasil diupload dan URL sudah terisi otomatis.',
-            });
             setSelectedImageFile(null);
+            await showSuccessAlert('Gambar berhasil diupload.', 'Upload Berhasil!');
         } catch {
-            setImageUploadFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi saat upload gambar.',
-            });
+            await showErrorAlert('Upload gambar gagal.');
         } finally {
             setIsUploadingImage(false);
         }
@@ -622,8 +615,17 @@ export function AdminDashboardClient({
 
     async function handleSaveBlog(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        const isEditing = editingBlogId !== null;
+
+        if (isEditing) {
+            const confirmation = await confirmSaveChanges();
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+        }
+
         setIsSubmittingBlog(true);
-        setBlogFeedback(null);
 
         const payload = {
             title: blogForm.title,
@@ -636,10 +638,10 @@ export function AdminDashboardClient({
             publishedAt: blogForm.publishedAt,
         };
 
-        const endpoint = editingBlogId
+        const endpoint = isEditing
             ? `/api/admin/blogs/${editingBlogId}`
             : '/api/admin/blogs';
-        const method = editingBlogId ? 'PUT' : 'POST';
+        const method = isEditing ? 'PUT' : 'POST';
 
         try {
             const response = await fetch(endpoint, {
@@ -650,40 +652,28 @@ export function AdminDashboardClient({
                 body: JSON.stringify(payload),
             });
 
-            const result = (await response.json()) as { message?: string };
-
             if (!response.ok) {
-                setBlogFeedback({
-                    type: 'error',
-                    message: result.message ?? 'Gagal menyimpan artikel.',
-                });
+                await showErrorAlert(isEditing ? 'Artikel gagal diperbarui.' : 'Artikel gagal dibuat.');
                 return;
             }
 
-            setBlogFeedback({
-                type: 'success',
-                message:
-                    result.message ??
-                    (editingBlogId
-                        ? 'Artikel berhasil diperbarui.'
-                        : 'Artikel berhasil dibuat.'),
-            });
             await refreshBlogPosts();
             void refreshOverview();
-            resetBlogForm(false);
+            resetBlogForm();
+            await showSuccessAlert(isEditing ? 'Artikel berhasil diperbarui.' : 'Artikel berhasil dibuat.');
         } catch {
-            setBlogFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi. Coba lagi beberapa saat.',
-            });
+            await showErrorAlert(isEditing ? 'Artikel gagal diperbarui.' : 'Artikel gagal dibuat.');
         } finally {
             setIsSubmittingBlog(false);
         }
     }
 
     async function handleDeleteBlog(postId: number) {
-        setIsDeletingBlogId(postId);
-        setBlogFeedback(null);
+        const confirmation = await confirmDeleteData();
+
+        if (!confirmation.isConfirmed) {
+            return;
+        }
 
         try {
             const response = await fetch(`/api/admin/blogs/${postId}`, {
@@ -693,10 +683,7 @@ export function AdminDashboardClient({
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                setBlogFeedback({
-                    type: 'error',
-                    message: result.message ?? 'Gagal menghapus artikel.',
-                });
+                await showErrorAlert(result.message ?? 'Data gagal dihapus.');
                 return;
             }
 
@@ -704,19 +691,11 @@ export function AdminDashboardClient({
                 resetBlogForm();
             }
 
-            setBlogFeedback({
-                type: 'success',
-                message: result.message ?? 'Artikel berhasil dihapus.',
-            });
             await refreshBlogPosts();
             void refreshOverview();
+            await showSuccessAlert('Data berhasil dihapus.');
         } catch {
-            setBlogFeedback({
-                type: 'error',
-                message: 'Terjadi masalah koneksi. Coba lagi beberapa saat.',
-            });
-        } finally {
-            setIsDeletingBlogId(null);
+            await showErrorAlert('Data gagal dihapus.');
         }
     }
 
@@ -868,12 +847,6 @@ export function AdminDashboardClient({
                                         </div>
                                     </div>
 
-                                    {overviewError && (
-                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
-                                            {overviewError}
-                                        </p>
-                                    )}
-
                                     <div className='mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4'>
                                         <article className='rounded-xl border border-slate-200 bg-white p-4'>
                                             <p className='text-xs font-bold uppercase tracking-[0.1em] text-slate-500'>
@@ -997,12 +970,6 @@ export function AdminDashboardClient({
                                         Data traffic dedupe harian berdasarkan
                                         visitor/IP.
                                     </p>
-                                    {trafficError && (
-                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
-                                            {trafficError}
-                                        </p>
-                                    )}
-
                                     <div className='mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4'>
                                         <div className='mb-4 flex items-center justify-between gap-3'>
                                             <p className='text-sm font-bold text-slate-700'>
@@ -1233,11 +1200,6 @@ export function AdminDashboardClient({
                                         Menambahkan akun admin baru yang bisa login
                                         ke dashboard.
                                     </p>
-                                    {usersError && (
-                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
-                                            {usersError}
-                                        </p>
-                                    )}
                                 </div>
 
                                 <div className='grid gap-4 xl:grid-cols-2'>
@@ -1293,19 +1255,6 @@ export function AdminDashboardClient({
                                                     required
                                                 />
                                             </div>
-
-                                            {userFeedback && (
-                                                <p
-                                                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
-                                                        userFeedback.type ===
-                                                        'success'
-                                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                            : 'border-red-200 bg-red-50 text-red-700'
-                                                    }`}
-                                                >
-                                                    {userFeedback.message}
-                                                </p>
-                                            )}
 
                                             <button
                                                 type='submit'
@@ -1407,14 +1356,8 @@ export function AdminDashboardClient({
                                                 type='button'
                                                 onClick={() => {
                                                     void refreshBlogPosts()
-                                                        .then(() => {
-                                                            setBlogFeedback({
-                                                                type: 'success',
-                                                                message:
-                                                                    'Daftar artikel diperbarui.',
-                                                            });
-                                                        })
-                                                        .catch(() => null);
+                                                        .then(() => showSuccessAlert('Daftar artikel diperbarui.'))
+                                                        .catch(() => showErrorAlert('Gagal memuat daftar artikel terbaru.'));
                                                 }}
                                                 disabled={isLoadingBlogs}
                                                 className='rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
@@ -1425,11 +1368,6 @@ export function AdminDashboardClient({
                                             </button>
                                         </div>
                                     </div>
-                                    {blogsError && (
-                                        <p className='mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700'>
-                                            {blogsError}
-                                        </p>
-                                    )}
 
                                     <div className='mt-5 grid gap-3 md:grid-cols-3'>
                                         <article className='rounded-xl border border-slate-200 bg-slate-50 p-4'>
@@ -1437,7 +1375,11 @@ export function AdminDashboardClient({
                                                 Total Artikel
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {blogTotalValue}
+                                                {shouldShowBlogSkeleton ? (
+                                                    <SkeletonBlock className='h-8 w-24' />
+                                                ) : (
+                                                    blogTotalValue
+                                                )}
                                             </p>
                                         </article>
 
@@ -1446,7 +1388,11 @@ export function AdminDashboardClient({
                                                 Total Kategori
                                             </p>
                                             <p className='mt-1 text-2xl font-bold text-slate-900'>
-                                                {totalBlogCategories}
+                                                {shouldShowBlogSkeleton ? (
+                                                    <SkeletonBlock className='h-8 w-24' />
+                                                ) : (
+                                                    totalBlogCategories
+                                                )}
                                             </p>
                                         </article>
 
@@ -1454,16 +1400,26 @@ export function AdminDashboardClient({
                                             <p className='text-xs font-bold uppercase tracking-[0.1em] text-slate-500'>
                                                 Artikel Terbaru
                                             </p>
-                                            <p className='mt-1 text-base font-bold text-slate-900'>
-                                                {latestBlog
-                                                    ? formatDateShort(
-                                                          latestBlog.published_at
-                                                      )
-                                                    : '-'}
-                                            </p>
-                                            <p className='mt-1 truncate text-sm text-slate-600'>
-                                                {latestBlog?.title ?? 'Belum ada'}
-                                            </p>
+                                            {shouldShowBlogSkeleton ? (
+                                                <div className='mt-2 space-y-2'>
+                                                    <SkeletonBlock className='h-5 w-28' />
+                                                    <SkeletonBlock className='h-4 w-44 max-w-full' />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <p className='mt-1 text-base font-bold text-slate-900'>
+                                                        {latestBlog
+                                                            ? formatDateShort(
+                                                                  latestBlog.published_at
+                                                              )
+                                                            : '-'}
+                                                    </p>
+                                                    <p className='mt-1 truncate text-sm text-slate-600'>
+                                                        {latestBlog?.title ??
+                                                            'Belum ada'}
+                                                    </p>
+                                                </>
+                                            )}
                                         </article>
                                     </div>
                                 </div>
@@ -1618,7 +1574,6 @@ export function AdminDashboardClient({
                                                                 event.target.files?.[0] ??
                                                                 null;
                                                             setSelectedImageFile(file);
-                                                            setImageUploadFeedback(null);
                                                         }}
                                                         className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-slate-700 hover:file:bg-slate-200'
                                                     />
@@ -1636,18 +1591,6 @@ export function AdminDashboardClient({
                                                             : 'Upload Gambar'}
                                                     </button>
                                                 </div>
-                                                {imageUploadFeedback && (
-                                                    <p
-                                                        className={`mb-2 rounded-lg border px-3 py-2 text-xs font-semibold ${
-                                                            imageUploadFeedback.type ===
-                                                            'success'
-                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                                : 'border-red-200 bg-red-50 text-red-700'
-                                                        }`}
-                                                    >
-                                                        {imageUploadFeedback.message}
-                                                    </p>
-                                                )}
                                                 <input
                                                     id='blog-image'
                                                     type='text'
@@ -1737,19 +1680,6 @@ export function AdminDashboardClient({
                                                 />
                                             </div>
 
-                                            {blogFeedback && (
-                                                <p
-                                                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
-                                                        blogFeedback.type ===
-                                                        'success'
-                                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                            : 'border-red-200 bg-red-50 text-red-700'
-                                                    }`}
-                                                >
-                                                    {blogFeedback.message}
-                                                </p>
-                                            )}
-
                                             <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
                                                 <button
                                                     type='button'
@@ -1804,15 +1734,43 @@ export function AdminDashboardClient({
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {blogPosts.length === 0 ? (
+                                                    {shouldShowBlogSkeleton ? (
+                                                        Array.from({ length: 5 }).map(
+                                                            (_, index) => (
+                                                                <tr
+                                                                    key={index}
+                                                                    className='border-b border-slate-100'
+                                                                    aria-hidden='true'
+                                                                >
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-5 w-64 max-w-full' />
+                                                                        <SkeletonBlock className='mt-2 h-4 w-48 max-w-full' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-36' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-24' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <SkeletonBlock className='h-4 w-40' />
+                                                                    </td>
+                                                                    <td className='px-2 py-3'>
+                                                                        <div className='flex justify-end gap-2'>
+                                                                            <SkeletonBlock className='h-8 w-14' />
+                                                                            <SkeletonBlock className='h-8 w-8' />
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )
+                                                    ) : blogPosts.length === 0 ? (
                                                         <tr>
                                                             <td
                                                                 colSpan={5}
                                                                 className='px-2 py-4 text-sm font-medium text-slate-500'
                                                             >
-                                                                {isLoadingBlogs
-                                                                    ? 'Memuat daftar artikel blog...'
-                                                                    : 'Belum ada artikel blog di database.'}
+                                                                Belum ada artikel blog di database.
                                                             </td>
                                                         </tr>
                                                     ) : (
@@ -1915,11 +1873,11 @@ export function AdminDashboardClient({
                                                                                     <button
                                                                                         type='button'
                                                                                         onClick={() => {
-                                                                                            setDeleteConfirmId(
-                                                                                                post.id
-                                                                                            );
                                                                                             setOpenMenuId(
                                                                                                 null
+                                                                                            );
+                                                                                            void handleDeleteBlog(
+                                                                                                post.id
                                                                                             );
                                                                                         }}
                                                                                         className='flex w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-slate-50'
@@ -1944,42 +1902,13 @@ export function AdminDashboardClient({
 
                         {activeTab === 'notulen' && <NotulenPanel />}
 
+                        {activeTab === 'todo-list' && <TodoListPanel />}
+
                         {activeTab === 'secret-variable' && <SecretVariablePanel />}
                     </div>
                 </div>
             </div>
 
-            {deleteConfirmId && (
-                <div className='fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm'>
-                    <div className='w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl'>
-                        <h3 className='text-lg font-bold text-slate-900'>Konfirmasi Hapus</h3>
-                        <p className='mt-2 text-sm font-medium text-slate-600'>
-                            Yakin ingin menghapus artikel ini? Tindakan ini tidak bisa dibatalkan.
-                        </p>
-                        <div className='mt-6 flex justify-end gap-3'>
-                            <button
-                                type='button'
-                                onClick={() => setDeleteConfirmId(null)}
-                                className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => {
-                                    const id = deleteConfirmId;
-                                    setDeleteConfirmId(null);
-                                    void handleDeleteBlog(id);
-                                }}
-                                disabled={isDeletingBlogId !== null}
-                                className='rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-50'
-                            >
-                                {isDeletingBlogId !== null ? 'Menghapus...' : 'Ya, Hapus'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </main>
     );
 }

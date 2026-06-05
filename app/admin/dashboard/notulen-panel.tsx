@@ -21,6 +21,11 @@ type DashboardNotulen = {
     updated_at: string;
 };
 
+type SaveNotulenResponse = {
+    message?: string;
+    notulen?: DashboardNotulen;
+};
+
 type NotulenFormState = {
     meetingDate: string;
     startTime: string;
@@ -45,6 +50,53 @@ const dateFormatter = new Intl.DateTimeFormat('id-ID', {
     year: 'numeric',
 });
 const statuses: NotulenStatus[] = ['Draft', 'Final', 'Arsip'];
+const swalConfirmButtonColor = '#0891b2';
+const swalCancelButtonColor = '#475569';
+const swalDeleteButtonColor = '#dc2626';
+
+function showSuccessAlert(text: string, title = 'Berhasil!') {
+    return Swal.fire({
+        icon: 'success',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function showErrorAlert(text: string, title = 'Gagal!') {
+    return Swal.fire({
+        icon: 'error',
+        title,
+        text,
+        confirmButtonColor: swalConfirmButtonColor,
+    });
+}
+
+function confirmSaveChanges() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Simpan Perubahan?',
+        text: 'Perubahan yang Anda lakukan akan disimpan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Simpan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalConfirmButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
+
+function confirmDeleteData() {
+    return Swal.fire({
+        icon: 'warning',
+        title: 'Hapus Data?',
+        text: 'Data yang dihapus tidak dapat dikembalikan.',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: swalDeleteButtonColor,
+        cancelButtonColor: swalCancelButtonColor,
+    });
+}
 
 function getTodayDateInput() {
     const today = new Date();
@@ -119,6 +171,58 @@ function renderMultiline(value: string | null) {
     );
 }
 
+function stripBulletPrefix(value: string) {
+    return value.replace(/^\s*(?:[•*-]|\d+[.)])\s+/, '').trim();
+}
+
+function parsePointLines(value: string | null) {
+    return (value ?? '')
+        .split('\n')
+        .map(stripBulletPrefix)
+        .filter(Boolean);
+}
+
+function normalizePointListInput(value: string) {
+    const hasTrailingPoint = /(?:\r?\n\s*|^)\u2022?\s*$/.test(value);
+    const normalized = value
+        .split(/\r?\n/)
+        .map(stripBulletPrefix)
+        .filter((line, index, lines) => line || (hasTrailingPoint && index === lines.length - 1))
+        .join('\n');
+
+    return normalized;
+}
+
+function formatPointListForEdit(value: string) {
+    const lines = value.split('\n').map(stripBulletPrefix);
+
+    if (lines.length === 0 || (lines.length === 1 && !lines[0])) {
+        return '';
+    }
+
+    return lines.map((line) => `• ${line}`).join('\n');
+}
+
+function normalizePointListForStorage(value: string) {
+    return parsePointLines(value).join('\n');
+}
+
+function renderBulletList(value: string | null) {
+    const lines = parsePointLines(value);
+
+    if (lines.length === 0) {
+        return <p className='text-sm font-medium text-slate-400'>-</p>;
+    }
+
+    return (
+        <ul className='list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700'>
+            {lines.map((line, index) => (
+                <li key={`${line}-${index}`}>{line}</li>
+            ))}
+        </ul>
+    );
+}
+
 function buildCalendarDays(monthDate: Date) {
     const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
     const start = new Date(firstDay);
@@ -148,6 +252,7 @@ function escapeHtml(value: string | null) {
 
 function buildPrintDocument(item: DashboardNotulen) {
     const photos = photoGallery(item);
+    const decisionItems = parsePointLines(item.decisions);
     const logoSrc = `${window.location.origin}/bangun-website.png`;
     const photoHtml =
         photos.length > 0
@@ -160,6 +265,12 @@ function buildPrintDocument(item: DashboardNotulen) {
                     `,
                   )
                   .join('')
+            : '<p>-</p>';
+    const decisionsHtml =
+        decisionItems.length > 0
+            ? `<ul>${decisionItems
+                  .map((line) => `<li>${escapeHtml(line)}</li>`)
+                  .join('')}</ul>`
             : '<p>-</p>';
 
     return `
@@ -179,6 +290,8 @@ function buildPrintDocument(item: DashboardNotulen) {
                     section { margin-top: 24px; page-break-inside: avoid; }
                     h2 { border-bottom: 1px solid #cbd5e1; font-size: 13px; letter-spacing: 0.08em; padding-bottom: 8px; }
                     p { line-height: 1.65; }
+                    ul { line-height: 1.65; margin: 0; padding-left: 22px; }
+                    li { margin-bottom: 8px; }
                     .gallery { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
                     figure { border: 1px solid #e2e8f0; margin: 0; padding: 8px; }
                     figure img { display: block; max-height: 260px; object-fit: contain; width: 100%; }
@@ -200,7 +313,7 @@ function buildPrintDocument(item: DashboardNotulen) {
                     <tr><td>Foto Dokumentasi</td><td>${escapeHtml(item.documentation_photo_url)}</td></tr>
                 </table>
                 <section><h2>DAFTAR HADIR</h2><p>${escapeHtml(item.attendees)}</p></section>
-                <section><h2>HASIL RAPAT</h2><p>${escapeHtml(item.decisions)}</p></section>
+                <section><h2>HASIL RAPAT</h2>${decisionsHtml}</section>
                 <section><h2>FOTO DOKUMENTASI</h2><div class="gallery">${photoHtml}</div></section>
                 <footer>© BangunWebsite</footer>
             </body>
@@ -250,8 +363,6 @@ export function NotulenPanel() {
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-    const [imageUploadFeedback, setImageUploadFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const selectedNotulen = notulen.find((item) => item.id === selectedId) ?? null;
     const visibleDays = useMemo(() => buildCalendarDays(monthDate), [monthDate]);
@@ -281,17 +392,13 @@ export function NotulenPanel() {
 
     const refreshNotulen = useCallback(async () => {
         setIsLoading(true);
-        setFeedback(null);
 
         try {
             const nextNotulen = await fetchNotulen();
             setNotulen(nextNotulen);
             setIsLoaded(true);
         } catch (error) {
-            setFeedback({
-                type: 'error',
-                message: error instanceof Error ? error.message : 'Terjadi masalah koneksi saat memuat notulen.',
-            });
+            await showErrorAlert(error instanceof Error ? error.message : 'Terjadi masalah koneksi saat memuat notulen.');
         } finally {
             setIsLoading(false);
         }
@@ -306,7 +413,6 @@ export function NotulenPanel() {
         setModalMode(null);
         setEditingId(null);
         setSelectedImageFile(null);
-        setImageUploadFeedback(null);
         setForm(getDefaultFormState());
     }
 
@@ -314,7 +420,6 @@ export function NotulenPanel() {
         setForm(getDefaultFormState());
         setEditingId(null);
         setSelectedImageFile(null);
-        setImageUploadFeedback(null);
         setModalMode('create');
     }
 
@@ -326,7 +431,6 @@ export function NotulenPanel() {
     function openEditModal(item: DashboardNotulen) {
         setSelectedId(item.id);
         setEditingId(item.id);
-        setImageUploadFeedback(null);
         setSelectedImageFile(null);
         setForm({
             meetingDate: item.meeting_date,
@@ -342,44 +446,48 @@ export function NotulenPanel() {
         setModalMode('edit');
     }
 
+    async function uploadDocumentationPhoto(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/admin/blogs/upload', {
+            method: 'POST',
+            body: formData,
+        });
+        const result = (await response.json()) as { message?: string; imageUrl?: string };
+        const imageUrl = result.imageUrl?.trim() ?? '';
+
+        console.info('Upload foto dokumentasi notulen:', {
+            ok: response.ok,
+            hasImageUrl: imageUrl.length > 0,
+            imageUrl: imageUrl || null,
+        });
+
+        if (!response.ok || !imageUrl) {
+            throw new Error(result.message ?? 'Upload gambar gagal. Silakan coba lagi.');
+        }
+
+        return imageUrl;
+    }
+
     async function handleUploadDocumentationPhoto() {
         if (!selectedImageFile) {
-            setImageUploadFeedback({ type: 'error', message: 'Pilih file gambar terlebih dulu.' });
+            await showErrorAlert('Pilih file gambar terlebih dulu.');
             return;
         }
 
         setIsUploadingImage(true);
-        setImageUploadFeedback(null);
 
         try {
-            const formData = new FormData();
-            formData.append('file', selectedImageFile);
-
-            const response = await fetch('/api/admin/blogs/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const result = (await response.json()) as { message?: string; imageUrl?: string };
-
-            if (!response.ok || !result.imageUrl) {
-                setImageUploadFeedback({
-                    type: 'error',
-                    message: result.message ?? 'Upload gambar gagal. Silakan coba lagi.',
-                });
-                return;
-            }
-
+            const imageUrl = await uploadDocumentationPhoto(selectedImageFile);
             setForm((prev) => ({
                 ...prev,
-                documentationPhotoUrl: result.imageUrl ?? prev.documentationPhotoUrl,
+                documentationPhotoUrl: imageUrl,
             }));
             setSelectedImageFile(null);
-            setImageUploadFeedback({
-                type: 'success',
-                message: 'Gambar berhasil diupload.',
-            });
-        } catch {
-            setImageUploadFeedback({ type: 'error', message: 'Terjadi masalah koneksi saat upload gambar.' });
+            await showSuccessAlert('Gambar berhasil diupload.', 'Upload Berhasil!');
+        } catch (error) {
+            await showErrorAlert(error instanceof Error ? error.message : 'Upload gambar gagal.');
         } finally {
             setIsUploadingImage(false);
         }
@@ -387,49 +495,104 @@ export function NotulenPanel() {
 
     async function handleSave(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setIsSubmitting(true);
-        setFeedback(null);
-
         const endpoint = editingId ? `/api/admin/notulen/${editingId}` : '/api/admin/notulen';
         const method = editingId ? 'PUT' : 'POST';
+        const isEditing = editingId !== null;
+
+        if (isEditing) {
+            const confirmation = await confirmSaveChanges();
+
+            if (!confirmation.isConfirmed) {
+                return;
+            }
+        }
+
+        setIsSubmitting(true);
 
         try {
+            let payload: NotulenFormState = {
+                ...form,
+                decisions: normalizePointListForStorage(form.decisions),
+                documentationPhotoUrl: form.documentationPhotoUrl.trim(),
+            };
+
+            if (selectedImageFile) {
+                setIsUploadingImage(true);
+
+                const imageUrl = await uploadDocumentationPhoto(selectedImageFile);
+                payload = {
+                    ...payload,
+                    documentationPhotoUrl: imageUrl,
+                };
+                setForm((prev) => ({
+                    ...prev,
+                    documentationPhotoUrl: imageUrl,
+                }));
+                setSelectedImageFile(null);
+                await showSuccessAlert('Gambar berhasil diupload.', 'Upload Berhasil!');
+            }
+
+            if (!payload.documentationPhotoUrl) {
+                console.warn('Payload notulen dikirim tanpa foto dokumentasi.', {
+                    endpoint,
+                    method,
+                    isEditing,
+                });
+            } else {
+                console.info('Payload notulen membawa foto dokumentasi.', {
+                    endpoint,
+                    method,
+                    isEditing,
+                    documentationPhotoUrl: payload.documentationPhotoUrl,
+                });
+            }
+
             const response = await fetch(endpoint, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify(payload),
             });
-            const result = (await response.json()) as { message?: string };
+            const result = (await response.json()) as SaveNotulenResponse;
 
             if (!response.ok) {
-                setFeedback({ type: 'error', message: result.message ?? 'Gagal menyimpan notulen.' });
+                await showErrorAlert(isEditing ? 'Notulen gagal diperbarui.' : 'Notulen gagal dibuat.');
                 return;
+            }
+
+            const savedNotulen = result.notulen;
+
+            if (savedNotulen) {
+                console.info('Response update notulen membawa foto dokumentasi.', {
+                    id: savedNotulen.id,
+                    documentationPhotoUrl: savedNotulen.documentation_photo_url,
+                });
+                setSelectedId(savedNotulen.id);
+                setNotulen((prev) => {
+                    const exists = prev.some((item) => item.id === savedNotulen.id);
+
+                    if (!exists) {
+                        return [savedNotulen, ...prev];
+                    }
+
+                    return prev.map((item) =>
+                        item.id === savedNotulen.id ? savedNotulen : item,
+                    );
+                });
             }
 
             await refreshNotulen();
             closeModal();
-            setFeedback({
-                type: 'success',
-                message: result.message ?? (editingId ? 'Notulen berhasil diperbarui.' : 'Notulen berhasil dibuat.'),
-            });
-        } catch {
-            setFeedback({ type: 'error', message: 'Terjadi masalah koneksi. Coba lagi beberapa saat.' });
+            await showSuccessAlert(isEditing ? 'Notulen berhasil diperbarui.' : 'Notulen berhasil dibuat.');
+        } catch (error) {
+            await showErrorAlert(error instanceof Error ? error.message : isEditing ? 'Notulen gagal diperbarui.' : 'Notulen gagal dibuat.');
         } finally {
             setIsSubmitting(false);
+            setIsUploadingImage(false);
         }
     }
 
     async function handleDelete(id: number) {
-        const confirmation = await Swal.fire({
-            title: 'Hapus Notulen?',
-            text: 'Data notulen yang dihapus tidak dapat dikembalikan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#475569',
-        });
+        const confirmation = await confirmDeleteData();
 
         if (!confirmation.isConfirmed) {
             return;
@@ -442,15 +605,15 @@ export function NotulenPanel() {
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                await Swal.fire('Gagal', result.message ?? 'Gagal menghapus notulen.', 'error');
+                await showErrorAlert(result.message ?? 'Data gagal dihapus.');
                 return;
             }
 
             await refreshNotulen();
             closeModal();
-            await Swal.fire('Berhasil', result.message ?? 'Notulen berhasil dihapus.', 'success');
+            await showSuccessAlert('Data berhasil dihapus.');
         } catch {
-            await Swal.fire('Gagal', 'Terjadi masalah koneksi saat menghapus notulen.', 'error');
+            await showErrorAlert('Data gagal dihapus.');
         } finally {
             setDeletingId(null);
         }
@@ -459,7 +622,7 @@ export function NotulenPanel() {
     function handleExportPdf(item: DashboardNotulen) {
         const printWindow = window.open('', '_blank', 'width=900,height=1200');
         if (!printWindow) {
-            setFeedback({ type: 'error', message: 'Popup print diblokir browser. Izinkan popup lalu coba lagi.' });
+            void showErrorAlert('Popup print diblokir browser. Izinkan popup lalu coba lagi.');
             return;
         }
 
@@ -493,12 +656,6 @@ export function NotulenPanel() {
                         </button>
                     </div>
                 </div>
-
-                {feedback && (
-                    <p className={`mt-3 rounded-xl border px-3 py-2 text-sm font-semibold ${feedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                        {feedback.message}
-                    </p>
-                )}
 
                 <div className='mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4'>
                     {[
@@ -599,7 +756,7 @@ export function NotulenPanel() {
                                 <textarea id='notulen-attendees' value={form.attendees} onChange={(event) => setForm((prev) => ({ ...prev, attendees: event.target.value }))} rows={5} className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2' />
                             </Field>
                             <Field label='Hasil Rapat' id='notulen-decisions'>
-                                <textarea id='notulen-decisions' value={form.decisions} onChange={(event) => setForm((prev) => ({ ...prev, decisions: event.target.value }))} rows={5} className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2' />
+                                <textarea id='notulen-decisions' value={formatPointListForEdit(form.decisions)} onChange={(event) => setForm((prev) => ({ ...prev, decisions: normalizePointListInput(event.target.value) }))} rows={5} className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2' />
                             </Field>
                         </div>
 
@@ -622,7 +779,6 @@ export function NotulenPanel() {
                                     accept='image/png,image/jpeg,image/webp,image/gif,image/svg+xml'
                                     onChange={(event) => {
                                         setSelectedImageFile(event.target.files?.[0] ?? null);
-                                        setImageUploadFeedback(null);
                                     }}
                                     className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-slate-700 hover:file:bg-slate-200'
                                 />
@@ -635,11 +791,6 @@ export function NotulenPanel() {
                                     {isUploadingImage ? 'Upload...' : 'Upload Gambar'}
                                 </button>
                             </div>
-                            {imageUploadFeedback && (
-                                <p className={`mb-2 rounded-lg border px-3 py-2 text-xs font-semibold ${imageUploadFeedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
-                                    {imageUploadFeedback.message}
-                                </p>
-                            )}
                             <input
                                 id='notulen-photo-url'
                                 type='text'
@@ -690,7 +841,7 @@ export function NotulenPanel() {
                         </div>
 
                         <DetailSection title='DAFTAR HADIR'>{renderMultiline(selectedNotulen.attendees)}</DetailSection>
-                        <DetailSection title='HASIL RAPAT'>{renderMultiline(selectedNotulen.decisions)}</DetailSection>
+                        <DetailSection title='HASIL RAPAT'>{renderBulletList(selectedNotulen.decisions)}</DetailSection>
                         <DetailSection title='FOTO DOKUMENTASI'>
                             {photoGallery(selectedNotulen).length > 0 ? (
                                 <div className='grid gap-3 sm:grid-cols-2'>
