@@ -27,6 +27,7 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
         noteTaker: (body.noteTaker ?? '').trim(),
         attendees: (body.attendees ?? '').trim(),
         decisions: (body.decisions ?? '').trim(),
+        followUps: (body.followUps ?? '').trim(),
         documentationPhotoUrl: (body.documentationPhotoUrl ?? '').trim(),
         status: isNotulenStatus(status) ? status : 'Draft',
     };
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
             message: 'Notulen berhasil dibuat.',
             id: result.id,
+            todoSync: result.todoSync,
         });
     } catch (error) {
         console.error('Create notulen error:', error);

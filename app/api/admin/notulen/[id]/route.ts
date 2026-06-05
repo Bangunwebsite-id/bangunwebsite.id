@@ -41,6 +41,7 @@ function normalizePayload(body: NotulenPayload): UpsertNotulenInput {
         noteTaker: (body.noteTaker ?? '').trim(),
         attendees: (body.attendees ?? '').trim(),
         decisions: (body.decisions ?? '').trim(),
+        followUps: (body.followUps ?? '').trim(),
         documentationPhotoUrl: (body.documentationPhotoUrl ?? '').trim(),
         status: isNotulenStatus(status) ? status : 'Draft',
     };
@@ -142,6 +143,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
         return NextResponse.json({
             message: 'Notulen berhasil diperbarui.',
             notulen: serializeNotulen(updated),
+            todoSync: updated.todoSync,
         });
     } catch (error) {
         console.error('Update notulen error:', error);

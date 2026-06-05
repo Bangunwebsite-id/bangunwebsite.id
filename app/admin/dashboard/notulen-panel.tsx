@@ -15,15 +15,30 @@ type DashboardNotulen = {
     note_taker: string;
     attendees: string | null;
     decisions: string | null;
+    follow_ups: string | null;
     documentation_photo_url: string | null;
     status: NotulenStatus;
+    related_todos?: DashboardNotulenRelatedTodo[];
     created_at: string;
     updated_at: string;
+};
+
+type DashboardNotulenRelatedTodo = {
+    id: number;
+    title: string;
+    status: 'todo' | 'done';
+    source_notulen_id: number;
+    source_notulen_point_index: number | null;
 };
 
 type SaveNotulenResponse = {
     message?: string;
     notulen?: DashboardNotulen;
+    todoSync?: {
+        created: number;
+        updated: number;
+        unlinked: number;
+    };
 };
 
 type NotulenFormState = {
@@ -34,6 +49,7 @@ type NotulenFormState = {
     noteTaker: string;
     attendees: string;
     decisions: string;
+    followUps: string;
     documentationPhotoUrl: string;
     status: NotulenStatus;
 };
@@ -112,6 +128,7 @@ function getDefaultFormState(): NotulenFormState {
         noteTaker: '',
         attendees: '',
         decisions: '',
+        followUps: '',
         documentationPhotoUrl: '',
         status: 'Draft',
     };
@@ -440,6 +457,7 @@ export function NotulenPanel() {
             noteTaker: item.note_taker,
             attendees: item.attendees ?? '',
             decisions: item.decisions ?? '',
+            followUps: item.follow_ups ?? '',
             documentationPhotoUrl: item.documentation_photo_url ?? '',
             status: item.status,
         });
@@ -513,6 +531,7 @@ export function NotulenPanel() {
             let payload: NotulenFormState = {
                 ...form,
                 decisions: normalizePointListForStorage(form.decisions),
+                followUps: normalizePointListForStorage(form.followUps),
                 documentationPhotoUrl: form.documentationPhotoUrl.trim(),
             };
 
@@ -582,7 +601,17 @@ export function NotulenPanel() {
 
             await refreshNotulen();
             closeModal();
-            await showSuccessAlert(isEditing ? 'Notulen berhasil diperbarui.' : 'Notulen berhasil dibuat.');
+
+            if (result.todoSync) {
+                const totalSynced = result.todoSync.created + result.todoSync.updated;
+                const syncText = result.todoSync.created > 0
+                    ? `${result.todoSync.created} tugas berhasil dibuat dari Hasil Rapat.`
+                    : `${totalSynced} tugas berhasil disinkronkan dari Hasil Rapat.`;
+
+                await showSuccessAlert(syncText);
+            } else {
+                await showSuccessAlert(isEditing ? 'Notulen berhasil diperbarui.' : 'Notulen berhasil dibuat.');
+            }
         } catch (error) {
             await showErrorAlert(error instanceof Error ? error.message : isEditing ? 'Notulen gagal diperbarui.' : 'Notulen gagal dibuat.');
         } finally {
@@ -842,6 +871,20 @@ export function NotulenPanel() {
 
                         <DetailSection title='DAFTAR HADIR'>{renderMultiline(selectedNotulen.attendees)}</DetailSection>
                         <DetailSection title='HASIL RAPAT'>{renderBulletList(selectedNotulen.decisions)}</DetailSection>
+                        <DetailSection title='STATUS PEKERJAAN'>
+                            {(selectedNotulen.related_todos ?? []).length > 0 ? (
+                                <ul className='space-y-2 text-sm leading-6 text-slate-700'>
+                                    {(selectedNotulen.related_todos ?? []).map((todo) => (
+                                        <li key={todo.id} className='flex items-start gap-2'>
+                                            <span className='mt-0.5 font-bold text-slate-900'>{todo.status === 'done' ? '✓' : '□'}</span>
+                                            <span>{todo.title}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className='text-sm font-medium text-slate-400'>-</p>
+                            )}
+                        </DetailSection>
                         <DetailSection title='FOTO DOKUMENTASI'>
                             {photoGallery(selectedNotulen).length > 0 ? (
                                 <div className='grid gap-3 sm:grid-cols-2'>

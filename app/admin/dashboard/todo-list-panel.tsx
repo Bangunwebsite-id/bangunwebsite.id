@@ -5,7 +5,8 @@ import Swal from 'sweetalert2';
 
 type TodoPriority = 'Tinggi' | 'Sedang' | 'Rendah';
 type TodoStatus = 'todo' | 'done';
-type ModalMode = 'create' | 'edit' | 'history' | 'share';
+type NotulenStatus = 'Draft' | 'Final' | 'Arsip';
+type ModalMode = 'create' | 'edit' | 'detail' | 'history' | 'share' | 'notulen-detail';
 
 type DashboardTodo = {
     id: number;
@@ -13,6 +14,27 @@ type DashboardTodo = {
     title: string;
     priority: TodoPriority;
     status: TodoStatus;
+    source_type: 'notulen' | null;
+    source_notulen_id: number | null;
+    source_notulen_point_index: number | null;
+    source_notulen_title: string | null;
+    source_meeting_date: string | null;
+    created_at: string;
+    updated_at: string;
+};
+
+type DashboardNotulen = {
+    id: number;
+    meeting_date: string;
+    start_time: string | null;
+    end_time: string | null;
+    place: string | null;
+    note_taker: string;
+    attendees: string | null;
+    decisions: string | null;
+    follow_ups: string | null;
+    documentation_photo_url: string | null;
+    status: NotulenStatus;
     created_at: string;
     updated_at: string;
 };
@@ -125,6 +147,29 @@ function formatTime(value: string) {
     return timeFormatter.format(new Date(value));
 }
 
+function parsePointLines(value: string | null) {
+    return (value ?? '')
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function renderBulletList(value: string | null) {
+    const lines = parsePointLines(value);
+
+    if (lines.length === 0) {
+        return <p className='text-sm font-medium text-slate-400'>-</p>;
+    }
+
+    return (
+        <ul className='list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700'>
+            {lines.map((line, index) => (
+                <li key={`${line}-${index}`}>{line}</li>
+            ))}
+        </ul>
+    );
+}
+
 function buildCalendarDays(monthDate: Date) {
     const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
     const start = new Date(firstDay);
@@ -209,7 +254,9 @@ export function TodoListPanel() {
     const [monthDate, setMonthDate] = useState(() => toLocalDate(getTodayDateInput()));
     const [modalMode, setModalMode] = useState<ModalMode | null>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(null);
+    const [sourceNotulen, setSourceNotulen] = useState<DashboardNotulen | null>(null);
     const [search, setSearch] = useState('');
     const [dailyNote, setDailyNote] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -258,6 +305,7 @@ export function TodoListPanel() {
         query ? item.title.toLowerCase().includes(query) : true,
     );
     const historyNote = notesByDate.get(historyDate)?.note ?? '';
+    const selectedTodo = todos.find((item) => item.id === selectedTodoId) ?? null;
 
     const fetchTodos = useCallback(async () => {
         const response = await fetch('/api/admin/todos', { method: 'GET', cache: 'no-store' });
@@ -305,7 +353,9 @@ export function TodoListPanel() {
     function closeModal() {
         setModalMode(null);
         setEditingId(null);
+        setSelectedTodoId(null);
         setSelectedHistoryDate(null);
+        setSourceNotulen(null);
         setShareLink('');
         setForm(getDefaultFormState());
     }
@@ -323,6 +373,38 @@ export function TodoListPanel() {
             priority: item.priority,
         });
         setModalMode('edit');
+    }
+
+    function openDetailModal(item: DashboardTodo) {
+        setSelectedTodoId(item.id);
+        setModalMode('detail');
+    }
+
+    async function openSourceNotulenModal(item: DashboardTodo) {
+        if (!item.source_notulen_id) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/notulen', { method: 'GET', cache: 'no-store' });
+            const result = (await response.json()) as { message?: string; notulen?: DashboardNotulen[] };
+
+            if (!response.ok || !result.notulen) {
+                throw new Error(result.message ?? 'Gagal memuat detail notulen.');
+            }
+
+            const found = result.notulen.find((notulen) => notulen.id === item.source_notulen_id);
+
+            if (!found) {
+                throw new Error('Notulen sumber tidak ditemukan.');
+            }
+
+            setSelectedTodoId(item.id);
+            setSourceNotulen(found);
+            setModalMode('notulen-detail');
+        } catch (error) {
+            await showErrorAlert(error instanceof Error ? error.message : 'Gagal memuat detail notulen.');
+        }
     }
 
     async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -592,6 +674,7 @@ export function TodoListPanel() {
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragStart={handleDragStart}
+                    onDetail={openDetailModal}
                     onEdit={openEditModal}
                     onDelete={handleDelete}
                     onMoveTomorrow={moveToTomorrow}
@@ -605,6 +688,7 @@ export function TodoListPanel() {
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragStart={handleDragStart}
+                    onDetail={openDetailModal}
                     onEdit={openEditModal}
                     onDelete={handleDelete}
                     onMoveTomorrow={moveToTomorrow}
@@ -722,6 +806,49 @@ export function TodoListPanel() {
                 </Modal>
             )}
 
+            {modalMode === 'detail' && selectedTodo && (
+                <Modal title='Detail Tugas' onClose={closeModal}>
+                    <div className='space-y-5'>
+                        <div className='flex flex-wrap items-start justify-between gap-3'>
+                            <div>
+                                <p className='text-sm font-bold uppercase tracking-[0.16em] text-slate-500'>JUDUL TUGAS</p>
+                                <h4 className='mt-2 text-lg font-bold text-slate-900'>{selectedTodo.title}</h4>
+                            </div>
+                            <span className={`rounded-full border px-3 py-1 text-xs font-bold ${getPriorityClass(selectedTodo.priority)}`}>{selectedTodo.priority}</span>
+                        </div>
+
+                        <div className='grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2'>
+                            <p><span className='font-bold text-slate-900'>Status:</span> {selectedTodo.status === 'done' ? 'Selesai' : 'To Do'}</p>
+                            <p><span className='font-bold text-slate-900'>Prioritas:</span> {selectedTodo.priority}</p>
+                            <p><span className='font-bold text-slate-900'>Tanggal Dibuat:</span> {formatDateShort(selectedTodo.task_date)}</p>
+                            <p><span className='font-bold text-slate-900'>Waktu Dibuat:</span> {formatTime(selectedTodo.created_at)}</p>
+                        </div>
+
+                        <section>
+                            <h5 className='border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500'>Sumber</h5>
+                            {selectedTodo.source_type === 'notulen' ? (
+                                <div className='mt-3 space-y-3 text-sm text-slate-700'>
+                                    <span className='inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700'>Dari Notulen</span>
+                                    <p><span className='font-bold text-slate-900'>Nama Notulen:</span> {selectedTodo.source_notulen_title ?? '-'}</p>
+                                    <p><span className='font-bold text-slate-900'>Tanggal Notulen:</span> {selectedTodo.source_meeting_date ? formatDateShort(selectedTodo.source_meeting_date) : '-'}</p>
+                                </div>
+                            ) : (
+                                <p className='mt-3 text-sm font-medium text-slate-400'>-</p>
+                            )}
+                        </section>
+
+                        <div className='flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-4'>
+                            {selectedTodo.source_type === 'notulen' && (
+                                <button type='button' onClick={() => void openSourceNotulenModal(selectedTodo)} className='rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100'>
+                                    Lihat Notulen
+                                </button>
+                            )}
+                            <button type='button' onClick={() => openEditModal(selectedTodo)} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>Edit</button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
             {modalMode === 'history' && (
                 <Modal title='Riwayat Tugas' onClose={closeModal}>
                     <div className='space-y-5'>
@@ -737,6 +864,29 @@ export function TodoListPanel() {
                             <h5 className='border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500'>Catatan</h5>
                             <p className='mt-3 whitespace-pre-line text-sm leading-6 text-slate-700'>{historyNote || '-'}</p>
                         </section>
+                    </div>
+                </Modal>
+            )}
+
+            {modalMode === 'notulen-detail' && sourceNotulen && (
+                <Modal title='Detail Notulen' onClose={closeModal}>
+                    <div className='space-y-5'>
+                        <div className='flex flex-wrap items-start justify-between gap-3'>
+                            <div>
+                                <p className='text-sm font-bold uppercase tracking-[0.16em] text-slate-500'>NOTULEN RAPAT</p>
+                                <p className='mt-2 text-lg font-bold text-slate-900'>{formatDateShort(sourceNotulen.meeting_date)}</p>
+                            </div>
+                            <span className='inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700'>Dari Notulen</span>
+                        </div>
+
+                        <div className='grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2'>
+                            <p><span className='font-bold text-slate-900'>Tanggal Notulen:</span> {formatDateShort(sourceNotulen.meeting_date)}</p>
+                            <p><span className='font-bold text-slate-900'>Waktu:</span> {sourceNotulen.start_time ?? '-'} - {sourceNotulen.end_time ?? '-'}</p>
+                            <p><span className='font-bold text-slate-900'>Tempat:</span> {sourceNotulen.place ?? '-'}</p>
+                            <p><span className='font-bold text-slate-900'>Notulis:</span> {sourceNotulen.note_taker}</p>
+                        </div>
+
+                        <DetailSection title='HASIL RAPAT'>{renderBulletList(sourceNotulen.decisions)}</DetailSection>
                     </div>
                 </Modal>
             )}
@@ -777,6 +927,7 @@ function TaskColumn({
     onDrop,
     onDragOver,
     onDragStart,
+    onDetail,
     onEdit,
     onDelete,
     onMoveTomorrow,
@@ -789,6 +940,7 @@ function TaskColumn({
     onDrop: (status: TodoStatus) => Promise<void>;
     onDragOver: (event: DragEvent<HTMLElement>) => void;
     onDragStart: (item: DashboardTodo) => void;
+    onDetail: (item: DashboardTodo) => void;
     onEdit: (item: DashboardTodo) => void;
     onDelete: (item: DashboardTodo) => Promise<void>;
     onMoveTomorrow: (item: DashboardTodo) => Promise<void>;
@@ -808,11 +960,15 @@ function TaskColumn({
                             <div className='flex items-start justify-between gap-3'>
                                 <div>
                                     <h5 className='font-bold text-slate-900'>{item.title}</h5>
+                                    {item.source_type === 'notulen' && (
+                                        <span className='mt-2 inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700'>Dari Notulen</span>
+                                    )}
                                     <p className='mt-2 text-xs font-semibold text-slate-500'>Dibuat {formatTime(item.created_at)}</p>
                                 </div>
                                 <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getPriorityClass(item.priority)}`}>{item.priority}</span>
                             </div>
                             <div className='mt-4 flex flex-wrap gap-2'>
+                                <button type='button' onClick={() => onDetail(item)} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Detail</button>
                                 <button type='button' onClick={() => onEdit(item)} className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-white'>Edit</button>
                                 <button type='button' onClick={() => void onMoveTomorrow(item)} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Pindah ke Besok</button>
                                 <button type='button' onClick={() => void onDelete(item)} className='rounded-lg border border-red-200 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-50'>Hapus</button>
@@ -822,6 +978,15 @@ function TaskColumn({
                 )}
             </div>
         </article>
+    );
+}
+
+function DetailSection({ title, children }: { title: string; children: ReactNode }) {
+    return (
+        <section>
+            <h5 className='border-b border-slate-200 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500'>{title}</h5>
+            <div className='mt-3'>{children}</div>
+        </section>
     );
 }
 

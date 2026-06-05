@@ -12,6 +12,11 @@ export type TodoRecord = {
     title: string;
     priority: TodoPriority;
     status: TodoStatus;
+    source_type: 'notulen' | null;
+    source_notulen_id: number | null;
+    source_notulen_point_index: number | null;
+    source_notulen_title: string | null;
+    source_meeting_date: string | null;
     created_at: Date;
     updated_at: Date;
 };
@@ -38,7 +43,7 @@ export type UpsertTodoInput = {
 
 let isTableReady = false;
 
-async function ensureTodoTables() {
+export async function ensureTodoTables() {
     if (isTableReady) {
         return;
     }
@@ -73,6 +78,64 @@ async function ensureTodoTables() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+    `);
+
+    await dbPool.query(`
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'admin_todos'
+                    AND column_name = 'source_type'
+            ) THEN
+                ALTER TABLE admin_todos ADD COLUMN source_type TEXT;
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'admin_todos'
+                    AND column_name = 'source_notulen_id'
+            ) THEN
+                ALTER TABLE admin_todos ADD COLUMN source_notulen_id INTEGER;
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'admin_todos'
+                    AND column_name = 'source_notulen_point_index'
+            ) THEN
+                ALTER TABLE admin_todos ADD COLUMN source_notulen_point_index INTEGER;
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'admin_todos'
+                    AND column_name = 'source_notulen_title'
+            ) THEN
+                ALTER TABLE admin_todos ADD COLUMN source_notulen_title TEXT;
+            END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'admin_todos'
+                    AND column_name = 'source_meeting_date'
+            ) THEN
+                ALTER TABLE admin_todos ADD COLUMN source_meeting_date DATE;
+            END IF;
+        END $$;
+    `);
+
+    await dbPool.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS admin_todos_notulen_point_unique
+        ON admin_todos (source_notulen_id, source_notulen_point_index)
+        WHERE source_type = 'notulen'
+            AND source_notulen_id IS NOT NULL
+            AND source_notulen_point_index IS NOT NULL
     `);
 
     isTableReady = true;
@@ -166,6 +229,11 @@ export async function listTodos() {
                 title,
                 priority,
                 status,
+                source_type,
+                source_notulen_id,
+                source_notulen_point_index,
+                source_notulen_title,
+                source_meeting_date::text AS source_meeting_date,
                 created_at,
                 updated_at
             FROM admin_todos
@@ -186,6 +254,165 @@ export async function listTodos() {
         todos: todosResult.rows,
         notes: notesResult.rows,
     };
+}
+
+export type NotulenTodoSyncInput = {
+    notulenId: number;
+    meetingDate: string;
+    sourceTitle: string;
+    workItems: string[];
+};
+
+export type NotulenTodoSyncResult = {
+    created: number;
+    updated: number;
+    unlinked: number;
+};
+
+export async function syncTodosFromNotulenWorkItems(input: NotulenTodoSyncInput) {
+    await ensureTodoTables();
+
+    const client = await dbPool.connect();
+    const syncResult: NotulenTodoSyncResult = {
+        created: 0,
+        updated: 0,
+        unlinked: 0,
+    };
+
+    try {
+        await client.query('BEGIN');
+
+        const activeIndexes = input.workItems.map((_, index) => index);
+        const activeTitles = input.workItems;
+
+        if (activeIndexes.length > 0) {
+            await client.query(
+                `
+                    UPDATE admin_todos
+                    SET
+                        source_notulen_point_index = NULL,
+                        updated_at = NOW()
+                    WHERE source_type = 'notulen'
+                        AND source_notulen_id = $1
+                        AND status = 'done'
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM unnest($2::int[], $3::text[]) AS active(point_index, title)
+                            WHERE active.point_index = admin_todos.source_notulen_point_index
+                                AND active.title = admin_todos.title
+                        )
+                `,
+                [input.notulenId, activeIndexes, activeTitles],
+            );
+        } else {
+            await client.query(
+                `
+                    UPDATE admin_todos
+                    SET
+                        source_notulen_point_index = NULL,
+                        updated_at = NOW()
+                    WHERE source_type = 'notulen'
+                        AND source_notulen_id = $1
+                        AND status = 'done'
+                `,
+                [input.notulenId],
+            );
+        }
+
+        for (const [index, title] of input.workItems.entries()) {
+            const result = await client.query<{ inserted: boolean }>(
+                `
+                    INSERT INTO admin_todos (
+                        task_date,
+                        title,
+                        priority,
+                        source_type,
+                        source_notulen_id,
+                        source_notulen_point_index,
+                        source_notulen_title,
+                        source_meeting_date
+                    )
+                    VALUES ($1::date, $2, 'Sedang', 'notulen', $3, $4, $5, $1::date)
+                    ON CONFLICT (source_notulen_id, source_notulen_point_index)
+                    WHERE source_type = 'notulen'
+                        AND source_notulen_id IS NOT NULL
+                        AND source_notulen_point_index IS NOT NULL
+                    DO UPDATE SET
+                        task_date = EXCLUDED.task_date,
+                        title = EXCLUDED.title,
+                        source_notulen_title = EXCLUDED.source_notulen_title,
+                        source_meeting_date = EXCLUDED.source_meeting_date,
+                        updated_at = NOW()
+                    RETURNING (xmax = 0) AS inserted
+                `,
+                [
+                    input.meetingDate,
+                    title,
+                    input.notulenId,
+                    index,
+                    input.sourceTitle,
+                ],
+            );
+
+            if (result.rows[0]?.inserted) {
+                syncResult.created += 1;
+            } else {
+                syncResult.updated += 1;
+            }
+        }
+
+        const unlinkResult =
+            activeIndexes.length > 0
+                ? await client.query(
+                      `
+                        DELETE FROM admin_todos
+                        WHERE source_type = 'notulen'
+                            AND source_notulen_id = $1
+                            AND source_notulen_point_index <> ALL($2::int[])
+                            AND status = 'todo'
+                    `,
+                      [input.notulenId, activeIndexes],
+                  )
+                : await client.query(
+                      `
+                        DELETE FROM admin_todos
+                        WHERE source_type = 'notulen'
+                            AND source_notulen_id = $1
+                            AND status = 'todo'
+                    `,
+                      [input.notulenId],
+                  );
+
+        syncResult.unlinked = unlinkResult.rowCount ?? 0;
+
+        await client.query('COMMIT');
+        return syncResult;
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+export async function unlinkTodosFromNotulen(notulenId: number) {
+    await ensureTodoTables();
+
+    await dbPool.query(
+        `
+            UPDATE admin_todos
+            SET
+                source_type = NULL,
+                source_notulen_id = NULL,
+                source_notulen_point_index = NULL,
+                source_notulen_title = NULL,
+                source_meeting_date = NULL,
+                updated_at = NOW()
+            WHERE source_type = 'notulen'
+                AND source_notulen_id = $1
+        `,
+        [notulenId],
+    );
 }
 
 export async function createTodo(input: UpsertTodoInput) {

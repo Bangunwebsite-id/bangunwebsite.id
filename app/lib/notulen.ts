@@ -1,6 +1,12 @@
 import { unstable_noStore as noStore } from 'next/cache';
 
 import { dbPool } from './db';
+import {
+    ensureTodoTables,
+    syncTodosFromNotulenWorkItems,
+    unlinkTodosFromNotulen,
+    NotulenTodoSyncResult,
+} from './todos';
 
 export type NotulenStatus = 'Draft' | 'Final' | 'Arsip';
 
@@ -13,10 +19,20 @@ export type NotulenRecord = {
     note_taker: string;
     attendees: string | null;
     decisions: string | null;
+    follow_ups: string | null;
     documentation_photo_url: string | null;
     status: NotulenStatus;
+    related_todos?: NotulenRelatedTodoRecord[];
     created_at: Date;
     updated_at: Date;
+};
+
+export type NotulenRelatedTodoRecord = {
+    id: number;
+    title: string;
+    status: 'todo' | 'done';
+    source_notulen_id: number;
+    source_notulen_point_index: number | null;
 };
 
 export type UpsertNotulenInput = {
@@ -27,6 +43,7 @@ export type UpsertNotulenInput = {
     noteTaker: string;
     attendees: string;
     decisions: string;
+    followUps: string;
     documentationPhotoUrl: string;
     status: NotulenStatus;
 };
@@ -48,6 +65,7 @@ async function ensureNotulenTable() {
             note_taker TEXT NOT NULL,
             attendees TEXT,
             decisions TEXT,
+            follow_ups TEXT,
             status TEXT NOT NULL DEFAULT 'Draft'
                 CHECK (status IN ('Draft', 'Final', 'Arsip')),
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -84,6 +102,15 @@ async function ensureNotulenTable() {
             ) THEN
                 ALTER TABLE meeting_minutes ALTER COLUMN leader DROP NOT NULL;
             END IF;
+
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = 'meeting_minutes'
+                    AND column_name = 'follow_ups'
+            ) THEN
+                ALTER TABLE meeting_minutes ADD COLUMN follow_ups TEXT;
+            END IF;
         END $$;
     `);
 
@@ -95,11 +122,44 @@ function normalizeOptional(value: string) {
     return cleaned || null;
 }
 
+function parsePointLines(value: string) {
+    return value
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function buildNotulenSourceTitle(input: UpsertNotulenInput) {
+    const place = input.place.trim();
+    return place ? `Notulen Rapat ${place}` : `Notulen Rapat ${input.meetingDate}`;
+}
+
+function attachRelatedTodos(
+    notulen: NotulenRecord[],
+    todos: NotulenRelatedTodoRecord[],
+) {
+    const todoMap = new Map<number, NotulenRelatedTodoRecord[]>();
+
+    for (const todo of todos) {
+        todoMap.set(todo.source_notulen_id, [
+            ...(todoMap.get(todo.source_notulen_id) ?? []),
+            todo,
+        ]);
+    }
+
+    return notulen.map((item) => ({
+        ...item,
+        related_todos: todoMap.get(item.id) ?? [],
+    }));
+}
+
 export async function listAdminNotulen() {
     noStore();
     await ensureNotulenTable();
+    await ensureTodoTables();
 
-    const result = await dbPool.query<NotulenRecord>(`
+    const [result, relatedTodosResult] = await Promise.all([
+        dbPool.query<NotulenRecord>(`
         SELECT
             id,
             meeting_date::text AS meeting_date,
@@ -109,15 +169,29 @@ export async function listAdminNotulen() {
             note_taker,
             attendees,
             decisions,
+            follow_ups,
             documentation_photo_url,
             status,
             created_at,
             updated_at
         FROM meeting_minutes
         ORDER BY meeting_date DESC, id DESC
-    `);
+    `),
+        dbPool.query<NotulenRelatedTodoRecord>(`
+            SELECT
+                id,
+                title,
+                status,
+                source_notulen_id,
+                source_notulen_point_index
+            FROM admin_todos
+            WHERE source_type = 'notulen'
+                AND source_notulen_id IS NOT NULL
+            ORDER BY source_notulen_id ASC, source_notulen_point_index ASC, id ASC
+        `),
+    ]);
 
-    return result.rows;
+    return attachRelatedTodos(result.rows, relatedTodosResult.rows);
 }
 
 export async function createNotulen(input: UpsertNotulenInput) {
@@ -133,6 +207,7 @@ export async function createNotulen(input: UpsertNotulenInput) {
                 note_taker,
                 attendees,
                 decisions,
+                follow_ups,
                 documentation_photo_url,
                 status
             )
@@ -145,7 +220,8 @@ export async function createNotulen(input: UpsertNotulenInput) {
                 $6,
                 $7,
                 $8,
-                $9
+                $9,
+                $10
             )
             RETURNING id
         `,
@@ -157,18 +233,27 @@ export async function createNotulen(input: UpsertNotulenInput) {
             input.noteTaker,
             normalizeOptional(input.attendees),
             normalizeOptional(input.decisions),
+            normalizeOptional(input.followUps),
             normalizeOptional(input.documentationPhotoUrl),
             input.status,
         ],
     );
 
-    return { id: result.rows[0]?.id ?? 0 };
+    const id = result.rows[0]?.id ?? 0;
+    const todoSync = await syncTodosFromNotulenWorkItems({
+        notulenId: id,
+        meetingDate: input.meetingDate,
+        sourceTitle: buildNotulenSourceTitle(input),
+        workItems: parsePointLines(input.decisions),
+    });
+
+    return { id, todoSync };
 }
 
 export async function updateNotulenById(
     id: number,
     input: UpsertNotulenInput,
-) {
+): Promise<(NotulenRecord & { todoSync: NotulenTodoSyncResult }) | null> {
     await ensureNotulenTable();
 
     const result = await dbPool.query<NotulenRecord>(
@@ -182,8 +267,9 @@ export async function updateNotulenById(
                 note_taker = $6,
                 attendees = $7,
                 decisions = $8,
-                documentation_photo_url = $9,
-                status = $10,
+                follow_ups = $9,
+                documentation_photo_url = $10,
+                status = $11,
                 updated_at = NOW()
             WHERE id = $1
             RETURNING
@@ -195,6 +281,7 @@ export async function updateNotulenById(
                 note_taker,
                 attendees,
                 decisions,
+                follow_ups,
                 documentation_photo_url,
                 status,
                 created_at,
@@ -209,12 +296,26 @@ export async function updateNotulenById(
             input.noteTaker,
             normalizeOptional(input.attendees),
             normalizeOptional(input.decisions),
+            normalizeOptional(input.followUps),
             normalizeOptional(input.documentationPhotoUrl),
             input.status,
         ],
     );
 
-    return result.rows[0] ?? null;
+    const updated = result.rows[0] ?? null;
+
+    if (!updated) {
+        return null;
+    }
+
+    const todoSync = await syncTodosFromNotulenWorkItems({
+        notulenId: id,
+        meetingDate: input.meetingDate,
+        sourceTitle: buildNotulenSourceTitle(input),
+        workItems: parsePointLines(input.decisions),
+    });
+
+    return { ...updated, todoSync };
 }
 
 export async function deleteNotulenById(id: number) {
@@ -228,5 +329,11 @@ export async function deleteNotulenById(id: number) {
         [id],
     );
 
-    return (result.rowCount ?? 0) > 0;
+    const deleted = (result.rowCount ?? 0) > 0;
+
+    if (deleted) {
+        await unlinkTodosFromNotulen(id);
+    }
+
+    return deleted;
 }
