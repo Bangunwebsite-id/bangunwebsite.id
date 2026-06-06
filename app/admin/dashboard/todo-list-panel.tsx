@@ -51,6 +51,8 @@ type TodoFormState = {
     priority: TodoPriority;
 };
 
+type MutationStatus = 'pending' | 'success' | 'error';
+
 const priorities: TodoPriority[] = ['Tinggi', 'Sedang', 'Rendah'];
 const monthFormatter = new Intl.DateTimeFormat('id-ID', {
     month: 'long',
@@ -120,6 +122,18 @@ function getDefaultFormState(): TodoFormState {
         title: '',
         priority: 'Sedang',
     };
+}
+
+function useDebouncedValue(value: string, delay = 180) {
+    const [debounced, setDebounced] = useState(value);
+
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => setDebounced(value), delay);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [delay, value]);
+
+    return debounced;
 }
 
 function toDateInputValue(date: Date) {
@@ -257,14 +271,18 @@ export function TodoListPanel() {
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(null);
     const [sourceNotulen, setSourceNotulen] = useState<DashboardNotulen | null>(null);
-    const [search, setSearch] = useState('');
+    const [todoSearch, setTodoSearch] = useState('');
+    const [doneSearch, setDoneSearch] = useState('');
     const [dailyNote, setDailyNote] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGeneratingShareLink, setIsGeneratingShareLink] = useState(false);
     const [shareLink, setShareLink] = useState('');
     const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [mutationStatuses, setMutationStatuses] = useState<Record<number, MutationStatus>>({});
 
+    const debouncedTodoSearch = useDebouncedValue(todoSearch);
+    const debouncedDoneSearch = useDebouncedValue(doneSearch);
     const visibleDays = useMemo(() => buildCalendarDays(monthDate), [monthDate]);
     const notesByDate = useMemo(() => {
         const map = new Map<string, DashboardTodoNote>();
@@ -286,24 +304,32 @@ export function TodoListPanel() {
         return map;
     }, [todos]);
 
-    const query = search.trim().toLowerCase();
+    const todoQuery = debouncedTodoSearch.trim().toLowerCase();
+    const doneQuery = debouncedDoneSearch.trim().toLowerCase();
     const activeTodos = useMemo(
-        () =>
-            (todosByDate.get(activeDate) ?? []).filter((item) =>
-                query ? item.title.toLowerCase().includes(query) : true,
-            ),
-        [activeDate, query, todosByDate],
+        () => todosByDate.get(activeDate) ?? [],
+        [activeDate, todosByDate],
     );
-    const todoItems = activeTodos.filter((item) => item.status === 'todo');
-    const doneItems = activeTodos.filter((item) => item.status === 'done');
+    const todoItems = useMemo(
+        () =>
+            activeTodos.filter((item) =>
+                item.status === 'todo' && (todoQuery ? item.title.toLowerCase().includes(todoQuery) : true),
+            ),
+        [activeTodos, todoQuery],
+    );
+    const doneItems = useMemo(
+        () =>
+            activeTodos.filter((item) =>
+                item.status === 'done' && (doneQuery ? item.title.toLowerCase().includes(doneQuery) : true),
+            ),
+        [activeTodos, doneQuery],
+    );
     const totalToday = (todosByDate.get(activeDate) ?? []).length;
     const doneToday = (todosByDate.get(activeDate) ?? []).filter((item) => item.status === 'done').length;
     const todoToday = totalToday - doneToday;
     const progress = totalToday > 0 ? Math.round((doneToday / totalToday) * 100) : 0;
     const historyDate = selectedHistoryDate ?? activeDate;
-    const historyTodos = (todosByDate.get(historyDate) ?? []).filter((item) =>
-        query ? item.title.toLowerCase().includes(query) : true,
-    );
+    const historyTodos = todosByDate.get(historyDate) ?? [];
     const historyNote = notesByDate.get(historyDate)?.note ?? '';
     const selectedTodo = todos.find((item) => item.id === selectedTodoId) ?? null;
 
@@ -452,28 +478,59 @@ export function TodoListPanel() {
         }
     }
 
+    function setItemMutationStatus(id: number, status: MutationStatus) {
+        setMutationStatuses((prev) => ({ ...prev, [id]: status }));
+
+        if (status === 'success') {
+            window.setTimeout(() => {
+                setMutationStatuses((prev) => {
+                    if (prev[id] !== 'success') {
+                        return prev;
+                    }
+
+                    const next = { ...prev };
+                    delete next[id];
+                    return next;
+                });
+            }, 1800);
+        }
+    }
+
     async function updateStatus(item: DashboardTodo, status: TodoStatus) {
         if (item.status === status) {
             return;
         }
 
+        const previousTodos = todos;
+        const now = new Date().toISOString();
+
+        setItemMutationStatus(item.id, 'pending');
+        setTodos((prev) =>
+            prev.map((todo) =>
+                todo.id === item.id ? { ...todo, status, updated_at: now } : todo,
+            ),
+        );
+
         try {
             const response = await fetch(`/api/admin/todos/${item.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
                 body: JSON.stringify({ status }),
             });
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                await showErrorAlert(result.message ?? 'Data gagal disimpan. Silakan coba lagi.');
+                console.error(result.message ?? 'Data gagal disimpan. Silakan coba lagi.');
+                setTodos(previousTodos);
+                setItemMutationStatus(item.id, 'error');
                 return;
             }
 
-            await refreshTodos();
-            await showSuccessAlert(status === 'done' ? 'To Do berhasil dipindahkan ke Done.' : 'To Do berhasil dipindahkan kembali.');
+            setItemMutationStatus(item.id, 'success');
         } catch {
-            await showErrorAlert('Data gagal disimpan. Silakan coba lagi.');
+            setTodos(previousTodos);
+            setItemMutationStatus(item.id, 'error');
         }
     }
 
@@ -497,30 +554,6 @@ export function TodoListPanel() {
             await showSuccessAlert('Data berhasil dihapus.');
         } catch {
             await showErrorAlert('Data gagal dihapus.');
-        }
-    }
-
-    async function moveToTomorrow(item: DashboardTodo) {
-        const nextDate = toLocalDate(item.task_date);
-        nextDate.setDate(nextDate.getDate() + 1);
-
-        try {
-            const response = await fetch(`/api/admin/todos/${item.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ taskDate: toDateInputValue(nextDate) }),
-            });
-            const result = (await response.json()) as { message?: string };
-
-            if (!response.ok) {
-                await showErrorAlert(result.message ?? 'Data gagal disimpan. Silakan coba lagi.');
-                return;
-            }
-
-            await refreshTodos();
-            await showSuccessAlert('To Do berhasil dipindahkan ke besok.');
-        } catch {
-            await showErrorAlert('Data gagal disimpan. Silakan coba lagi.');
         }
     }
 
@@ -565,6 +598,11 @@ export function TodoListPanel() {
         }
 
         await updateStatus(item, status);
+    }
+
+    function selectCalendarDate(dateKey: string) {
+        setActiveDate(dateKey);
+        setMonthDate(toLocalDate(dateKey));
     }
 
     function changeMonth(offset: number) {
@@ -674,10 +712,13 @@ export function TodoListPanel() {
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragStart={handleDragStart}
+                    onDragEnd={() => setDraggedId(null)}
                     onDetail={openDetailModal}
-                    onEdit={openEditModal}
-                    onDelete={handleDelete}
-                    onMoveTomorrow={moveToTomorrow}
+                    onComplete={updateStatus}
+                    search={todoSearch}
+                    onSearchChange={setTodoSearch}
+                    searchPlaceholder='Cari tugas di To Do...'
+                    mutationStatuses={mutationStatuses}
                 />
                 <TaskColumn
                     title='DONE'
@@ -688,25 +729,21 @@ export function TodoListPanel() {
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragStart={handleDragStart}
+                    onDragEnd={() => setDraggedId(null)}
                     onDetail={openDetailModal}
-                    onEdit={openEditModal}
-                    onDelete={handleDelete}
-                    onMoveTomorrow={moveToTomorrow}
+                    onComplete={updateStatus}
+                    search={doneSearch}
+                    onSearchChange={setDoneSearch}
+                    searchPlaceholder='Cari tugas di Done...'
+                    mutationStatuses={mutationStatuses}
                 />
 
                 <article className='rounded-2xl border border-slate-200 bg-white p-5'>
                     <div className='flex flex-wrap items-center justify-between gap-3'>
                         <div>
                             <h4 className='text-lg font-bold text-slate-900'>RIWAYAT KALENDER</h4>
-                            <p className='mt-1 text-sm text-slate-600'>Klik tanggal untuk membuka riwayat tugas.</p>
+                            <p className='mt-1 text-sm text-slate-600'>Klik tanggal untuk menampilkan tugas pada hari tersebut.</p>
                         </div>
-                        <input
-                            type='search'
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder='Cari Tugas'
-                            className='w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2 sm:w-56'
-                        />
                     </div>
 
                     <div className='mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4'>
@@ -715,7 +752,7 @@ export function TodoListPanel() {
                             <input
                                 type='date'
                                 value={activeDate}
-                                onChange={(event) => setActiveDate(event.target.value)}
+                                onChange={(event) => selectCalendarDate(event.target.value)}
                                 className='rounded-lg border border-slate-300 px-2 py-1.5 text-sm text-slate-900 outline-none ring-cyan-400 focus:border-cyan-500 focus:ring-2'
                             />
                         </div>
@@ -731,13 +768,16 @@ export function TodoListPanel() {
                         <button type='button' onClick={() => void saveDailyNote()} className='mt-3 rounded-xl bg-cyan-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-cyan-800'>
                             Simpan Catatan
                         </button>
+                        <button type='button' onClick={() => openHistoryModal(activeDate)} className='ml-2 mt-3 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-100'>
+                            Riwayat Tanggal Ini
+                        </button>
                     </div>
 
                     <div className='mt-5 flex flex-wrap items-center justify-between gap-3'>
                         <h5 className='text-sm font-bold capitalize text-slate-900'>{monthFormatter.format(monthDate)}</h5>
                         <div className='flex items-center gap-2'>
                             <button type='button' onClick={() => changeMonth(-1)} className='rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100'>Sebelumnya</button>
-                            <button type='button' onClick={() => setMonthDate(toLocalDate(getTodayDateInput()))} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Bulan Ini</button>
+                            <button type='button' onClick={() => selectCalendarDate(getTodayDateInput())} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Bulan Ini</button>
                             <button type='button' onClick={() => changeMonth(1)} className='rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100'>Berikutnya</button>
                         </div>
                     </div>
@@ -757,8 +797,8 @@ export function TodoListPanel() {
                                 <button
                                     key={key}
                                     type='button'
-                                    onClick={() => openHistoryModal(key)}
-                                    className={`min-h-16 border-b border-r border-slate-200 p-1.5 text-left transition hover:ring-2 hover:ring-cyan-300 ${isOutsideMonth ? 'opacity-60' : ''} ${getCalendarDayClass(key, dayTodos)}`}
+                                    onClick={() => selectCalendarDate(key)}
+                                    className={`min-h-16 border-b border-r border-slate-200 p-1.5 text-left transition hover:ring-2 hover:ring-cyan-300 ${key === activeDate ? 'ring-2 ring-cyan-500' : ''} ${isOutsideMonth ? 'opacity-60' : ''} ${getCalendarDayClass(key, dayTodos)}`}
                                 >
                                     <span className='block text-xs font-bold'>{date.getDate()}</span>
                                     {dayTodos.length > 0 && <span className='mt-1 block text-[11px] font-bold'>{dayTodos.filter((item) => item.status === 'done').length}/{dayTodos.length}</span>}
@@ -844,6 +884,7 @@ export function TodoListPanel() {
                                 </button>
                             )}
                             <button type='button' onClick={() => openEditModal(selectedTodo)} className='rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'>Edit</button>
+                            <button type='button' onClick={() => void handleDelete(selectedTodo)} className='rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700'>Hapus</button>
                         </div>
                     </div>
                 </Modal>
@@ -924,26 +965,32 @@ function TaskColumn({
     items,
     status,
     draggedId,
+    search,
+    searchPlaceholder,
+    mutationStatuses,
     onDrop,
     onDragOver,
     onDragStart,
+    onDragEnd,
     onDetail,
-    onEdit,
-    onDelete,
-    onMoveTomorrow,
+    onComplete,
+    onSearchChange,
 }: {
     title: string;
     emptyText: string;
     items: DashboardTodo[];
     status: TodoStatus;
     draggedId: number | null;
+    search: string;
+    searchPlaceholder: string;
+    mutationStatuses: Record<number, MutationStatus>;
     onDrop: (status: TodoStatus) => Promise<void>;
     onDragOver: (event: DragEvent<HTMLElement>) => void;
     onDragStart: (item: DashboardTodo) => void;
+    onDragEnd: () => void;
     onDetail: (item: DashboardTodo) => void;
-    onEdit: (item: DashboardTodo) => void;
-    onDelete: (item: DashboardTodo) => Promise<void>;
-    onMoveTomorrow: (item: DashboardTodo) => Promise<void>;
+    onComplete: (item: DashboardTodo, status: TodoStatus) => Promise<void>;
+    onSearchChange: (value: string) => void;
 }) {
     return (
         <article className='rounded-2xl border border-slate-200 bg-white p-5' onDragOver={onDragOver} onDrop={() => void onDrop(status)}>
@@ -951,12 +998,27 @@ function TaskColumn({
                 <h4 className='text-lg font-bold text-slate-900'>{title}</h4>
                 <span className='rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600'>{items.length}</span>
             </div>
+            <input
+                type='search'
+                value={search}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={searchPlaceholder}
+                className='mt-4 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none ring-cyan-400 transition focus:border-cyan-500 focus:ring-2'
+            />
             <div className='mt-4 min-h-80 space-y-3'>
                 {items.length === 0 ? (
                     <p className='rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm font-medium text-slate-500'>{emptyText}</p>
                 ) : (
                     items.map((item) => (
-                        <article key={item.id} draggable onDragStart={() => onDragStart(item)} className={`rounded-xl border border-slate-200 bg-slate-50 p-4 transition ${draggedId === item.id ? 'opacity-60' : ''}`}>
+                        <article
+                            key={item.id}
+                            draggable
+                            onDragStart={() => onDragStart(item)}
+                            onDragEnd={onDragEnd}
+                            onDoubleClick={() => onDetail(item)}
+                            className={`relative rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:cursor-grab active:cursor-grabbing ${draggedId === item.id ? 'opacity-60 cursor-grabbing' : ''}`}
+                        >
+                            <MutationIndicator status={mutationStatuses[item.id]} />
                             <div className='flex items-start justify-between gap-3'>
                                 <div>
                                     <h5 className='font-bold text-slate-900'>{item.title}</h5>
@@ -967,18 +1029,43 @@ function TaskColumn({
                                 </div>
                                 <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${getPriorityClass(item.priority)}`}>{item.priority}</span>
                             </div>
-                            <div className='mt-4 flex flex-wrap gap-2'>
-                                <button type='button' onClick={() => onDetail(item)} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Detail</button>
-                                <button type='button' onClick={() => onEdit(item)} className='rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-white'>Edit</button>
-                                <button type='button' onClick={() => void onMoveTomorrow(item)} className='rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100'>Pindah ke Besok</button>
-                                <button type='button' onClick={() => void onDelete(item)} className='rounded-lg border border-red-200 px-2.5 py-1 text-xs font-bold text-red-600 transition hover:bg-red-50'>Hapus</button>
-                            </div>
+                            {status === 'todo' && (
+                                <div className='mt-4 flex justify-end'>
+                                    <button
+                                        type='button'
+                                        onClick={() => void onComplete(item, 'done')}
+                                        className='rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100'
+                                    >
+                                        Selesai
+                                    </button>
+                                </div>
+                            )}
                         </article>
                     ))
                 )}
             </div>
         </article>
     );
+}
+
+function MutationIndicator({ status }: { status?: MutationStatus }) {
+    if (!status) {
+        return null;
+    }
+
+    if (status === 'success') {
+        return (
+            <span className='absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white' title='Tersimpan'>
+                ✓
+            </span>
+        );
+    }
+
+    if (status === 'error') {
+        return <span className='absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500' title='Gagal tersimpan' />;
+    }
+
+    return <span className='absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500' title='Belum tersimpan' />;
 }
 
 function DetailSection({ title, children }: { title: string; children: ReactNode }) {

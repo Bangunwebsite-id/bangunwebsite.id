@@ -11,6 +11,9 @@ import {
 type NotulenPayload = Partial<UpsertNotulenInput>;
 
 const statuses = new Set<NotulenStatus>(['Draft', 'Final', 'Arsip']);
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
 
 function isNotulenStatus(value: string): value is NotulenStatus {
     return statuses.has(value as NotulenStatus);
@@ -74,13 +77,16 @@ export async function GET(request: Request) {
     try {
         const notulen = await listAdminNotulen();
 
-        return NextResponse.json({
-            notulen: notulen.map((item) => ({
-                ...item,
-                created_at: item.created_at.toISOString(),
-                updated_at: item.updated_at.toISOString(),
-            })),
-        });
+        return NextResponse.json(
+            {
+                notulen: notulen.map((item) => ({
+                    ...item,
+                    created_at: item.created_at.toISOString(),
+                    updated_at: item.updated_at.toISOString(),
+                })),
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('List notulen error:', error);
         return NextResponse.json(
@@ -111,11 +117,14 @@ export async function POST(request: Request) {
 
         const result = await createNotulen(payload);
 
-        return NextResponse.json({
-            message: 'Notulen berhasil dibuat.',
-            id: result.id,
-            todoSync: result.todoSync,
-        });
+        return NextResponse.json(
+            {
+                message: 'Notulen berhasil dibuat.',
+                id: result.id,
+                todoSync: result.todoSync,
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Create notulen error:', error);
         return NextResponse.json(

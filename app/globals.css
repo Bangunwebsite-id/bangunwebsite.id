@@ -42,3 +42,66 @@ body {
 .reveal-delay-200 { transition-delay: 200ms; }
 .reveal-delay-300 { transition-delay: 300ms; }
 .reveal-delay-400 { transition-delay: 400ms; }
+
+.blog-article-content > ul,
+.blog-article-content li > ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.blog-article-content > ul > li,
+.blog-article-content li > ul > li {
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.blog-article-content > ul > li::before,
+.blog-article-content li > ul > li::before {
+    background: #0891b2;
+    border-radius: 9999px;
+    content: '';
+    height: 0.45rem;
+    left: 0.35rem;
+    position: absolute;
+    top: 0.75rem;
+    width: 0.45rem;
+}
+
+.blog-article-content > ol,
+.blog-article-content li > ol {
+    counter-reset: blog-list;
+    list-style: none;
+    padding-left: 0;
+}
+
+.blog-article-content > ol > li,
+.blog-article-content li > ol > li {
+    counter-increment: blog-list;
+    padding-left: 2.65rem;
+    position: relative;
+}
+
+.blog-article-content > ol > li::before,
+.blog-article-content li > ol > li::before {
+    align-items: center;
+    background: #ecfeff;
+    border: 1px solid #a5f3fc;
+    border-radius: 9999px;
+    color: #0e7490;
+    content: counter(blog-list);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 800;
+    height: 1.7rem;
+    justify-content: center;
+    left: 0;
+    line-height: 1;
+    position: absolute;
+    top: 0.25rem;
+    width: 1.7rem;
+}
+
+.blog-article-content blockquote p {
+    margin-bottom: 0;
+    margin-top: 0;
+}

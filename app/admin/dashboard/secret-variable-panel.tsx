@@ -22,6 +22,8 @@ type NotesSecretFormState = {
     value: string;
 };
 
+type MutationStatus = 'pending' | 'success' | 'error';
+
 function getDefaultFormState(): NotesSecretFormState {
     return {
         name: '',
@@ -154,6 +156,7 @@ export function SecretVariablePanel() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [draggedId, setDraggedId] = useState<number | null>(null);
+    const [mutationStatuses, setMutationStatuses] = useState<Record<number, MutationStatus>>({});
 
     const selectedNotesSecret = notesSecrets.find((item) => item.id === selectedId) ?? null;
     const sortedNotesSecrets = useMemo(
@@ -169,7 +172,7 @@ export function SecretVariablePanel() {
     );
 
     const fetchNotesSecrets = useCallback(async () => {
-        const response = await fetch('/api/admin/secret-variables', {
+        const response = await fetch('/api/admin/secret-variables?includeCategories=0', {
             method: 'GET',
             cache: 'no-store',
         });
@@ -316,26 +319,55 @@ export function SecretVariablePanel() {
         }
     }
 
+    function setItemMutationStatus(id: number, status: MutationStatus) {
+        setMutationStatuses((prev) => ({ ...prev, [id]: status }));
+
+        if (status === 'success') {
+            window.setTimeout(() => {
+                setMutationStatuses((prev) => {
+                    if (prev[id] !== 'success') {
+                        return prev;
+                    }
+
+                    const next = { ...prev };
+                    delete next[id];
+                    return next;
+                });
+            }, 1800);
+        }
+    }
+
     async function handleTogglePin(item: DashboardNotesSecret) {
         const nextPinned = !item.pinned;
+        const previousItems = notesSecrets;
+
+        setItemMutationStatus(item.id, 'pending');
+        setNotesSecrets((prev) =>
+            prev.map((secret) =>
+                secret.id === item.id ? { ...secret, pinned: nextPinned, updated_at: new Date().toISOString() } : secret,
+            ),
+        );
 
         try {
             const response = await fetch(`/api/admin/secret-variables/${item.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
                 body: JSON.stringify({ pinned: nextPinned }),
             });
             const result = (await response.json()) as { message?: string };
 
             if (!response.ok) {
-                await showErrorAlert(result.message ?? 'Gagal mengubah pin Notes Secret.');
+                console.error(result.message ?? 'Gagal mengubah pin Notes Secret.');
+                setNotesSecrets(previousItems);
+                setItemMutationStatus(item.id, 'error');
                 return;
             }
 
-            await refreshNotesSecrets();
-            await showSuccessAlert(nextPinned ? 'Notes Secret berhasil disematkan.' : 'Notes Secret berhasil dilepas.');
+            setItemMutationStatus(item.id, 'success');
         } catch {
-            await showErrorAlert('Gagal mengubah pin Notes Secret.');
+            setNotesSecrets(previousItems);
+            setItemMutationStatus(item.id, 'error');
         }
     }
 
@@ -343,6 +375,7 @@ export function SecretVariablePanel() {
         const response = await fetch('/api/admin/secret-variables', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
             body: JSON.stringify({
                 order: items.map((item, index) => ({
                     id: item.id,
@@ -382,15 +415,17 @@ export function SecretVariablePanel() {
         const targetIndex = nextItems.findIndex((item) => item.id === target.id);
         nextItems.splice(targetIndex, 0, dragged);
 
+        setItemMutationStatus(dragged.id, 'pending');
         setNotesSecrets(nextItems.map((item, index) => ({ ...item, display_order: index + 1 })));
         setDraggedId(null);
 
         try {
             await persistOrder(nextItems);
-            await showSuccessAlert('Urutan Notes Secret berhasil disimpan.');
+            setItemMutationStatus(dragged.id, 'success');
         } catch (error) {
+            setItemMutationStatus(dragged.id, 'error');
             await refreshNotesSecrets();
-            await showErrorAlert(error instanceof Error ? error.message : 'Gagal menyimpan urutan Notes Secret.');
+            console.error(error instanceof Error ? error.message : 'Gagal menyimpan urutan Notes Secret.');
         }
     }
 
@@ -451,11 +486,13 @@ export function SecretVariablePanel() {
                             key={item.id}
                             draggable
                             onDragStart={() => handleDragStart(item)}
+                            onDragEnd={() => setDraggedId(null)}
                             onDragOver={handleDragOver}
                             onDrop={() => void handleDrop(item)}
                             onClick={() => openDetailModal(item)}
-                            className={`cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition hover:border-cyan-200 hover:shadow-md ${draggedId === item.id ? 'border-cyan-300 opacity-60' : 'border-slate-200'}`}
+                            className={`relative rounded-2xl border bg-white p-5 shadow-sm transition hover:border-cyan-200 hover:cursor-grab hover:shadow-md active:cursor-grabbing ${item.pinned ? 'border-cyan-300 ring-1 ring-cyan-100' : 'border-slate-200'} ${draggedId === item.id ? 'opacity-60 cursor-grabbing' : ''}`}
                         >
+                            <MutationIndicator status={mutationStatuses[item.id]} />
                             <div className='flex items-start justify-between gap-3'>
                                 <div className='min-w-0'>
                                     <h4 className='truncate text-lg font-bold text-slate-900'>{item.name}</h4>
@@ -473,8 +510,13 @@ export function SecretVariablePanel() {
                                     aria-label={item.pinned ? 'Lepas sematan' : 'Sematkan'}
                                     title={item.pinned ? 'Lepas sematan' : 'Sematkan'}
                                 >
-                                    📌
+                                    {item.pinned ? 'PIN' : 'pin'}
                                 </button>
+                            </div>
+                            <div className='mt-3'>
+                                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${item.pinned ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                                    {item.pinned ? 'Pinned' : 'Unpinned'}
+                                </span>
                             </div>
                             <div className='mt-5 grid gap-3 text-sm text-slate-600'>
                                 <p>
@@ -545,7 +587,7 @@ export function SecretVariablePanel() {
                                 onClick={() => void handleTogglePin(selectedNotesSecret)}
                                 className={`rounded-xl border px-3 py-2 text-sm font-bold transition ${selectedNotesSecret.pinned ? 'border-cyan-200 bg-cyan-50 text-cyan-700' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
                             >
-                                📌 {selectedNotesSecret.pinned ? 'Unpin' : 'Pin'}
+                                {selectedNotesSecret.pinned ? 'Unpin' : 'Pin'}
                             </button>
                         </div>
 
@@ -599,4 +641,24 @@ function Field({ label, id, children }: { label: string; id: string; children: R
             {children}
         </div>
     );
+}
+
+function MutationIndicator({ status }: { status?: MutationStatus }) {
+    if (!status) {
+        return null;
+    }
+
+    if (status === 'success') {
+        return (
+            <span className='absolute bottom-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white' title='Tersimpan'>
+                ✓
+            </span>
+        );
+    }
+
+    if (status === 'error') {
+        return <span className='absolute bottom-3 right-3 h-2.5 w-2.5 rounded-full bg-red-500' title='Gagal tersimpan' />;
+    }
+
+    return <span className='absolute bottom-3 right-3 h-2.5 w-2.5 rounded-full bg-red-500' title='Belum tersimpan' />;
 }
