@@ -168,6 +168,13 @@ function parsePointLines(value: string | null) {
         .filter(Boolean);
 }
 
+function photoGallery(item: DashboardNotulen | null) {
+    return (item?.documentation_photo_url ?? '')
+        .split('\n')
+        .map((url) => url.trim())
+        .filter(Boolean);
+}
+
 function renderBulletList(value: string | null) {
     const lines = parsePointLines(value);
 
@@ -928,6 +935,17 @@ export function TodoListPanel() {
                         </div>
 
                         <DetailSection title='HASIL RAPAT'>{renderBulletList(sourceNotulen.decisions)}</DetailSection>
+                        <DetailSection title='FOTO RAPAT'>
+                            {photoGallery(sourceNotulen).length > 0 ? (
+                                <div className='grid gap-3 sm:grid-cols-2'>
+                                    {photoGallery(sourceNotulen).map((url) => (
+                                        <img key={url} src={url} alt='Foto dokumentasi notulen' className='max-h-72 w-full rounded-xl border border-slate-200 bg-slate-50 object-contain' />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className='text-sm font-medium text-slate-400'>-</p>
+                            )}
+                        </DetailSection>
                     </div>
                 </Modal>
             )}

@@ -18,17 +18,8 @@ type DashboardNotulen = {
     follow_ups: string | null;
     documentation_photo_url: string | null;
     status: NotulenStatus;
-    related_todos?: DashboardNotulenRelatedTodo[];
     created_at: string;
     updated_at: string;
-};
-
-type DashboardNotulenRelatedTodo = {
-    id: number;
-    title: string;
-    status: 'todo' | 'done';
-    source_notulen_id: number;
-    source_notulen_point_index: number | null;
 };
 
 type SaveNotulenResponse = {
@@ -165,27 +156,6 @@ function getStatusClass(status: NotulenStatus) {
     }
 
     return 'border-amber-200 bg-amber-50 text-amber-700';
-}
-
-function renderMultiline(value: string | null) {
-    const lines = (value ?? '')
-        .split('\n')
-        .map((item) => item.trim())
-        .filter(Boolean);
-
-    if (lines.length === 0) {
-        return <p className='text-sm font-medium text-slate-400'>-</p>;
-    }
-
-    return (
-        <div className='space-y-1'>
-            {lines.map((line, index) => (
-                <p key={`${line}-${index}`} className='text-sm leading-6 text-slate-700'>
-                    {line}
-                </p>
-            ))}
-        </div>
-    );
 }
 
 function stripBulletPrefix(value: string) {
@@ -329,7 +299,6 @@ function buildPrintDocument(item: DashboardNotulen) {
                     <tr><td>Notulis</td><td>${escapeHtml(item.note_taker)}</td></tr>
                     <tr><td>Foto Dokumentasi</td><td>${escapeHtml(item.documentation_photo_url)}</td></tr>
                 </table>
-                <section><h2>DAFTAR HADIR</h2><p>${escapeHtml(item.attendees)}</p></section>
                 <section><h2>HASIL RAPAT</h2>${decisionsHtml}</section>
                 <section><h2>FOTO DOKUMENTASI</h2><div class="gallery">${photoHtml}</div></section>
                 <footer>© BangunWebsite</footer>
@@ -603,7 +572,7 @@ export function NotulenPanel() {
                     }
 
                     return prev.map((item) =>
-                        item.id === savedNotulen.id ? { ...savedNotulen, related_todos: savedNotulen.related_todos ?? item.related_todos } : item,
+                        item.id === savedNotulen.id ? savedNotulen : item,
                     );
                 });
             }
@@ -614,12 +583,7 @@ export function NotulenPanel() {
             closeModal();
 
             if (result.todoSync) {
-                const totalSynced = result.todoSync.created + result.todoSync.updated;
-                const syncText = result.todoSync.created > 0
-                    ? `${result.todoSync.created} tugas berhasil dibuat dari Hasil Rapat.`
-                    : `${totalSynced} tugas berhasil disinkronkan dari Hasil Rapat.`;
-
-                await showSuccessAlert(syncText);
+                await showSuccessAlert('Notulen berhasil disimpan. Poin Hasil Rapat otomatis masuk ke To Do List.');
             } else {
                 await showSuccessAlert(isEditing ? 'Notulen berhasil diperbarui.' : 'Notulen berhasil dibuat.');
             }
@@ -880,22 +844,7 @@ export function NotulenPanel() {
                             <p className='break-all sm:col-span-2'><span className='font-bold text-slate-900'>Foto Dokumentasi:</span> {selectedNotulen.documentation_photo_url ?? '-'}</p>
                         </div>
 
-                        <DetailSection title='DAFTAR HADIR'>{renderMultiline(selectedNotulen.attendees)}</DetailSection>
                         <DetailSection title='HASIL RAPAT'>{renderBulletList(selectedNotulen.decisions)}</DetailSection>
-                        <DetailSection title='STATUS PEKERJAAN'>
-                            {(selectedNotulen.related_todos ?? []).length > 0 ? (
-                                <ul className='space-y-2 text-sm leading-6 text-slate-700'>
-                                    {(selectedNotulen.related_todos ?? []).map((todo) => (
-                                        <li key={todo.id} className='flex items-start gap-2'>
-                                            <span className='mt-0.5 font-bold text-slate-900'>{todo.status === 'done' ? '✓' : '□'}</span>
-                                            <span>{todo.title}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className='text-sm font-medium text-slate-400'>-</p>
-                            )}
-                        </DetailSection>
                         <DetailSection title='FOTO DOKUMENTASI'>
                             {photoGallery(selectedNotulen).length > 0 ? (
                                 <div className='grid gap-3 sm:grid-cols-2'>
