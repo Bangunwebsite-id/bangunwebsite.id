@@ -16,6 +16,9 @@ type NotePayload = {
 };
 
 const priorities = new Set<TodoPriority>(['Tinggi', 'Sedang', 'Rendah']);
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
 
 function isTodoPriority(value: string): value is TodoPriority {
     return priorities.has(value as TodoPriority);
@@ -76,18 +79,21 @@ export async function GET(request: Request) {
     try {
         const result = await listTodos();
 
-        return NextResponse.json({
-            todos: result.todos.map((item) => ({
-                ...item,
-                created_at: serializeDate(item.created_at),
-                updated_at: serializeDate(item.updated_at),
-            })),
-            notes: result.notes.map((item) => ({
-                ...item,
-                created_at: serializeDate(item.created_at),
-                updated_at: serializeDate(item.updated_at),
-            })),
-        });
+        return NextResponse.json(
+            {
+                todos: result.todos.map((item) => ({
+                    ...item,
+                    created_at: serializeDate(item.created_at),
+                    updated_at: serializeDate(item.updated_at),
+                })),
+                notes: result.notes.map((item) => ({
+                    ...item,
+                    created_at: serializeDate(item.created_at),
+                    updated_at: serializeDate(item.updated_at),
+                })),
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('List todos error:', error);
         return NextResponse.json(
@@ -118,10 +124,13 @@ export async function POST(request: Request) {
 
         const result = await createTodo(payload);
 
-        return NextResponse.json({
-            message: 'To Do berhasil disimpan.',
-            id: result.id,
-        });
+        return NextResponse.json(
+            {
+                message: 'To Do berhasil disimpan.',
+                id: result.id,
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Create todo error:', error);
         return NextResponse.json(
@@ -151,9 +160,12 @@ export async function PATCH(request: Request) {
 
         await upsertTodoNote(noteDate, body.note ?? '');
 
-        return NextResponse.json({
-            message: 'Catatan hari ini berhasil disimpan.',
-        });
+        return NextResponse.json(
+            {
+                message: 'Catatan hari ini berhasil disimpan.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Save todo note error:', error);
         return NextResponse.json(

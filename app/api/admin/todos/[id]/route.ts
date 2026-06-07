@@ -23,6 +23,9 @@ type TodoPatchPayload = {
 
 const priorities = new Set<TodoPriority>(['Tinggi', 'Sedang', 'Rendah']);
 const statuses = new Set<TodoStatus>(['todo', 'done']);
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
 
 function getValidatedId(rawId: string) {
     const id = Number(rawId);
@@ -120,9 +123,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: 'To Do berhasil diperbarui.',
-        });
+        return NextResponse.json(
+            {
+                message: 'To Do berhasil diperbarui.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Update todo error:', error);
         return NextResponse.json(
@@ -171,9 +177,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: 'To Do berhasil diperbarui.',
-        });
+        return NextResponse.json(
+            {
+                message: 'To Do berhasil diperbarui.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Patch todo error:', error);
         return NextResponse.json(
@@ -210,9 +219,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: 'Data berhasil dihapus.',
-        });
+        return NextResponse.json(
+            {
+                message: 'Data berhasil dihapus.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Delete todo error:', error);
         return NextResponse.json(

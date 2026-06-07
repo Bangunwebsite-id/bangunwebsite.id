@@ -15,6 +15,10 @@ type ReorderPayload = {
     order?: Array<Partial<ReorderSecretVariableInput>>;
 };
 
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
+
 function normalizePayload(body: SecretVariablePayload): UpsertSecretVariableInput {
     return {
         category: (body.category ?? 'Notes Secret').trim(),
@@ -52,23 +56,27 @@ export async function GET(request: Request) {
     }
 
     try {
+        const includeCategories = new URL(request.url).searchParams.get('includeCategories') !== '0';
         const [secretVariables, categories] = await Promise.all([
             listSecretVariables(),
-            listSecretVariableCategories(),
+            includeCategories ? listSecretVariableCategories() : Promise.resolve([]),
         ]);
 
-        return NextResponse.json({
-            categories: categories.map((item) => ({
-                ...item,
-                created_at: serializeDate(item.created_at),
-                updated_at: serializeDate(item.updated_at),
-            })),
-            secretVariables: secretVariables.map((item) => ({
-                ...item,
-                created_at: serializeDate(item.created_at),
-                updated_at: serializeDate(item.updated_at),
-            })),
-        });
+        return NextResponse.json(
+            {
+                categories: categories.map((item) => ({
+                    ...item,
+                    created_at: serializeDate(item.created_at),
+                    updated_at: serializeDate(item.updated_at),
+                })),
+                secretVariables: secretVariables.map((item) => ({
+                    ...item,
+                    created_at: serializeDate(item.created_at),
+                    updated_at: serializeDate(item.updated_at),
+                })),
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('List secret variables error:', error);
         return NextResponse.json(
@@ -99,10 +107,13 @@ export async function POST(request: Request) {
 
         const result = await createSecretVariable(payload);
 
-        return NextResponse.json({
-            message: 'Notes Secret berhasil dibuat.',
-            id: result.id,
-        });
+        return NextResponse.json(
+            {
+                message: 'Notes Secret berhasil dibuat.',
+                id: result.id,
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Create notes secret error:', error);
         return NextResponse.json(
@@ -138,9 +149,12 @@ export async function PATCH(request: Request) {
 
         await reorderSecretVariables(normalized);
 
-        return NextResponse.json({
-            message: 'Urutan Notes Secret berhasil disimpan.',
-        });
+        return NextResponse.json(
+            {
+                message: 'Urutan Notes Secret berhasil disimpan.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Reorder notes secret error:', error);
         return NextResponse.json(

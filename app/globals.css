@@ -42,3 +42,8 @@ body {
 .reveal-delay-200 { transition-delay: 200ms; }
 .reveal-delay-300 { transition-delay: 300ms; }
 .reveal-delay-400 { transition-delay: 400ms; }
+
+.blog-article-content blockquote p {
+    margin-bottom: 0;
+    margin-top: 0;
+}

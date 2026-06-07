@@ -16,6 +16,9 @@ type RouteParams = {
 type NotulenPayload = Partial<UpsertNotulenInput>;
 
 const statuses = new Set<NotulenStatus>(['Draft', 'Final', 'Arsip']);
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
 
 function isNotulenStatus(value: string): value is NotulenStatus {
     return statuses.has(value as NotulenStatus);
@@ -140,11 +143,14 @@ export async function PUT(request: Request, { params }: RouteParams) {
             documentationPhotoUrl: updated.documentation_photo_url,
         });
 
-        return NextResponse.json({
-            message: 'Notulen berhasil diperbarui.',
-            notulen: serializeNotulen(updated),
-            todoSync: updated.todoSync,
-        });
+        return NextResponse.json(
+            {
+                message: 'Notulen berhasil diperbarui.',
+                notulen: serializeNotulen(updated),
+                todoSync: updated.todoSync,
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Update notulen error:', error);
         return NextResponse.json(
@@ -181,7 +187,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({ message: 'Notulen berhasil dihapus.' });
+        return NextResponse.json(
+            { message: 'Notulen berhasil dihapus.' },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Delete notulen error:', error);
         return NextResponse.json(

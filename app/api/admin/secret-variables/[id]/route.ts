@@ -13,6 +13,9 @@ type RouteParams = {
 };
 
 type SecretVariablePayload = Partial<UpsertSecretVariableInput>;
+const noStoreHeaders = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
+
+export const dynamic = 'force-dynamic';
 
 function getValidatedId(rawId: string) {
     const id = Number(rawId);
@@ -86,9 +89,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: 'Notes Secret berhasil diperbarui.',
-        });
+        return NextResponse.json(
+            {
+                message: 'Notes Secret berhasil diperbarui.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Update notes secret error:', error);
         return NextResponse.json(
@@ -134,9 +140,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: body.pinned ? 'Notes Secret berhasil disematkan.' : 'Notes Secret berhasil dilepas.',
-        });
+        return NextResponse.json(
+            {
+                message: body.pinned ? 'Notes Secret berhasil disematkan.' : 'Notes Secret berhasil dilepas.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Pin notes secret error:', error);
         return NextResponse.json(
@@ -173,9 +182,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({
-            message: 'Notes Secret berhasil dihapus.',
-        });
+        return NextResponse.json(
+            {
+                message: 'Notes Secret berhasil dihapus.',
+            },
+            { headers: noStoreHeaders },
+        );
     } catch (error) {
         console.error('Delete notes secret error:', error);
         return NextResponse.json(

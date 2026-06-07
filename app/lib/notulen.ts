@@ -2,7 +2,6 @@ import { unstable_noStore as noStore } from 'next/cache';
 
 import { dbPool } from './db';
 import {
-    ensureTodoTables,
     syncTodosFromNotulenWorkItems,
     unlinkTodosFromNotulen,
     NotulenTodoSyncResult,
@@ -22,17 +21,8 @@ export type NotulenRecord = {
     follow_ups: string | null;
     documentation_photo_url: string | null;
     status: NotulenStatus;
-    related_todos?: NotulenRelatedTodoRecord[];
     created_at: Date;
     updated_at: Date;
-};
-
-export type NotulenRelatedTodoRecord = {
-    id: number;
-    title: string;
-    status: 'todo' | 'done';
-    source_notulen_id: number;
-    source_notulen_point_index: number | null;
 };
 
 export type UpsertNotulenInput = {
@@ -134,32 +124,11 @@ function buildNotulenSourceTitle(input: UpsertNotulenInput) {
     return place ? `Notulen Rapat ${place}` : `Notulen Rapat ${input.meetingDate}`;
 }
 
-function attachRelatedTodos(
-    notulen: NotulenRecord[],
-    todos: NotulenRelatedTodoRecord[],
-) {
-    const todoMap = new Map<number, NotulenRelatedTodoRecord[]>();
-
-    for (const todo of todos) {
-        todoMap.set(todo.source_notulen_id, [
-            ...(todoMap.get(todo.source_notulen_id) ?? []),
-            todo,
-        ]);
-    }
-
-    return notulen.map((item) => ({
-        ...item,
-        related_todos: todoMap.get(item.id) ?? [],
-    }));
-}
-
 export async function listAdminNotulen() {
     noStore();
     await ensureNotulenTable();
-    await ensureTodoTables();
 
-    const [result, relatedTodosResult] = await Promise.all([
-        dbPool.query<NotulenRecord>(`
+    const result = await dbPool.query<NotulenRecord>(`
         SELECT
             id,
             meeting_date::text AS meeting_date,
@@ -176,22 +145,9 @@ export async function listAdminNotulen() {
             updated_at
         FROM meeting_minutes
         ORDER BY meeting_date DESC, id DESC
-    `),
-        dbPool.query<NotulenRelatedTodoRecord>(`
-            SELECT
-                id,
-                title,
-                status,
-                source_notulen_id,
-                source_notulen_point_index
-            FROM admin_todos
-            WHERE source_type = 'notulen'
-                AND source_notulen_id IS NOT NULL
-            ORDER BY source_notulen_id ASC, source_notulen_point_index ASC, id ASC
-        `),
-    ]);
+    `);
 
-    return attachRelatedTodos(result.rows, relatedTodosResult.rows);
+    return result.rows;
 }
 
 export async function createNotulen(input: UpsertNotulenInput) {
