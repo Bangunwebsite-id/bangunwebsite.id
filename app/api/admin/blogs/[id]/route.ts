@@ -1,17 +1,28 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 import { ensureAdminSession } from '@/app/lib/admin-guard';
-import { deleteBlogPostById, updateBlogPostById } from '@/app/lib/blogs';
+import {
+    deleteBlogPostById,
+    getAdminBlogPostById,
+    updateBlogPostById,
+} from '@/app/lib/blogs';
 
 type BlogPayload = {
+    id?: number | string;
     title?: string;
     slug?: string;
     summary?: string;
+    excerpt?: string;
     content?: string;
     author?: string;
     image?: string;
+    imagePath?: string;
     categories?: string[] | string;
+    category?: string[] | string;
     publishedAt?: string;
+    publishedDate?: string;
+    status?: string;
 };
 
 type RouteParams = {
@@ -48,15 +59,22 @@ function isValidSlug(slug: string) {
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 }
 
-function normalizePayload(body: BlogPayload) {
-    const title = (body.title ?? '').trim();
-    const summary = (body.summary ?? '').trim();
-    const content = (body.content ?? '').trim();
-    const author = (body.author ?? 'Tim Bangunwebsite.id').trim();
-    const image = (body.image ?? '').trim();
-    const categories = normalizeCategories(body.categories);
-    const slug = slugify((body.slug ?? '').trim()) || slugify(title);
-    const publishedAt = (body.publishedAt ?? '').trim() || new Date().toISOString();
+function normalizePayload(
+    body: BlogPayload,
+    existing: NonNullable<Awaited<ReturnType<typeof getAdminBlogPostById>>>,
+) {
+    const title = (body.title ?? existing.title).trim();
+    const summary = (body.summary ?? body.excerpt ?? existing.summary).trim();
+    const content = (body.content ?? existing.content).trim();
+    const author = (body.author ?? existing.author).trim();
+    const image = (body.image ?? body.imagePath ?? existing.image).trim();
+    const categories = normalizeCategories(
+        body.categories ?? body.category ?? existing.categories
+    );
+    const slug = slugify((body.slug ?? existing.slug).trim()) || existing.slug;
+    const publishedAt =
+        (body.publishedAt ?? body.publishedDate ?? '').trim() ||
+        existing.published_at.toISOString();
 
     return {
         title,
@@ -79,6 +97,17 @@ function getValidatedId(rawId: string) {
     return id;
 }
 
+function serializeAdminPost(
+    post: NonNullable<Awaited<ReturnType<typeof getAdminBlogPostById>>>
+) {
+    return {
+        ...post,
+        published_at: post.published_at.toISOString(),
+        created_at: post.created_at.toISOString(),
+        updated_at: post.updated_at.toISOString(),
+    };
+}
+
 export async function PUT(request: Request, { params }: RouteParams) {
     const { unauthorizedResponse } = ensureAdminSession(request);
 
@@ -98,7 +127,50 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
     try {
         const body = (await request.json()) as BlogPayload;
-        const payload = normalizePayload(body);
+        console.info('[BlogAdmin][API] update request', {
+            routeId: id,
+            payloadId: body.id,
+            title: body.title,
+            slug: body.slug,
+            excerpt: body.excerpt ?? body.summary,
+            contentLength: body.content?.length,
+            category: body.category ?? body.categories,
+            image: body.imagePath ?? body.image,
+            publishedAt: body.publishedDate ?? body.publishedAt,
+            status: body.status,
+        });
+
+        if (body.id !== undefined && Number(body.id) !== id) {
+            return NextResponse.json(
+                { message: 'ID artikel pada payload tidak sesuai URL.' },
+                { status: 400 }
+            );
+        }
+
+        const existing = await getAdminBlogPostById(id);
+
+        if (!existing) {
+            return NextResponse.json(
+                { message: 'Artikel tidak ditemukan.' },
+                { status: 404 }
+            );
+        }
+
+        const previousSlug = existing.slug;
+        const payload = normalizePayload(body, existing);
+
+        console.info('[BlogAdmin][API] normalized update payload', {
+            id,
+            title: payload.title,
+            slug: payload.slug,
+            summaryLength: payload.summary.length,
+            contentLength: payload.content.length,
+            author: payload.author,
+            image: payload.image,
+            categories: payload.categories,
+            publishedAt: payload.publishedAt,
+            previousSlug,
+        });
 
         if (payload.title.length < 8) {
             return NextResponse.json(
@@ -154,7 +226,33 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        return NextResponse.json({ message: 'Artikel berhasil diperbarui.' });
+        if (!result.post) {
+            return NextResponse.json(
+                { message: 'Artikel berhasil diperbarui, tetapi data terbaru gagal dimuat.' },
+                { status: 500 }
+            );
+        }
+
+        revalidatePath('/blog');
+        revalidatePath(`/blog/${previousSlug}`);
+        revalidatePath(`/blog/${result.post.slug}`);
+
+        console.info('[BlogAdmin][API] update response', {
+            id,
+            status: result.status,
+            returnedId: result.post.id,
+            returnedTitle: result.post.title,
+            returnedSlug: result.post.slug,
+            returnedSummaryLength: result.post.summary.length,
+            returnedContentLength: result.post.content.length,
+            returnedCategories: result.post.categories,
+            returnedImage: result.post.image,
+        });
+
+        return NextResponse.json({
+            message: 'Artikel berhasil diperbarui.',
+            post: serializeAdminPost(result.post),
+        });
     } catch (error) {
         console.error('Update blog post error:', error);
         return NextResponse.json(
