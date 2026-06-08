@@ -161,7 +161,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
 
-            <section className='mx-auto w-full max-w-4xl px-5 py-12 md:py-16'>
+            <section className='mx-auto w-full max-w-5xl px-4 py-12 md:py-16'>
                 <div className='mb-6'>
                     <LoadingLink
                         href='/blog'
@@ -185,14 +185,15 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                     </LoadingLink>
                 </div>
 
-                <div className='mx-auto max-w-[820px]'>
-                    <p className='text-sm font-bold uppercase text-cyan-700'>
+                <div className='mx-auto max-w-3xl'>
+                    <p className='inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-extrabold uppercase text-cyan-800'>
                         {post.categories[0] ?? 'Blog'}
                     </p>
-                    <h1 className='mt-5 max-w-[820px] text-4xl font-extrabold leading-[1.08] text-slate-950 md:text-6xl md:leading-[1.04]'>
+                    <h1 className='mt-5 max-w-3xl text-4xl font-extrabold leading-[1.08] text-slate-950 md:text-6xl md:leading-[1.03]'>
                         {post.title}
                     </h1>
-                    <p className='mt-7 max-w-[760px] text-lg font-medium leading-8 text-slate-700 md:text-xl md:leading-9'>
+                    <div className='mt-6 h-px w-28 bg-cyan-600' />
+                    <p className='mt-6 max-w-2xl text-lg font-medium leading-8 text-slate-700 md:text-xl md:leading-9'>
                         {post.summary}
                     </p>
 
@@ -210,7 +211,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                 </div>
 
                 {post.image && (
-                    <div className='mx-auto mt-10 max-w-[860px] overflow-hidden rounded-2xl bg-white'>
+                    <div className='mx-auto mt-10 max-w-4xl overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_-45px_rgba(15,23,42,0.45)]'>
                         <Image
                             src={post.image}
                             alt={post.title}
@@ -222,18 +223,18 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                     </div>
                 )}
 
-                <article className='mx-auto mt-12 max-w-[820px]'>
-                    <div className='blog-article-content text-[18px] leading-9 text-slate-800 md:text-[19px] md:leading-10'>
+                <article className='mx-auto mt-12 max-w-3xl rounded-[28px] border border-slate-200 bg-white px-5 py-8 shadow-[0_22px_80px_-60px_rgba(15,23,42,0.5)] md:px-10 md:py-12'>
+                    <div className='blog-article-content text-[17px] leading-8 text-slate-800 md:text-[18px] md:leading-9'>
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
                                 h1: ({ children }) => (
-                                    <h1 className='mb-9 mt-4 border-b border-slate-200 pb-7 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl'>
+                                    <h1 className='mb-8 mt-4 border-b border-slate-200 pb-6 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl'>
                                         {children}
                                     </h1>
                                 ),
                                 h2: ({ children }) => (
-                                    <h2 className='mb-5 mt-14 text-2xl font-extrabold leading-tight text-slate-950 md:text-[32px] md:leading-tight'>
+                                    <h2 className='mb-5 mt-12 border-l-4 border-cyan-600 pl-4 text-2xl font-extrabold leading-tight text-slate-950 md:text-3xl'>
                                         <span className='block min-w-0'>{children}</span>
                                     </h2>
                                 ),
@@ -243,7 +244,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     </h3>
                                 ),
                                 p: ({ children }) => (
-                                    <p className='my-7 max-w-none text-slate-700'>
+                                    <p className='my-6 max-w-none text-slate-700'>
                                         {children}
                                     </p>
                                 ),
@@ -252,7 +253,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     void className;
 
                                     return (
-                                        <ul {...props} className='my-8 list-disc space-y-4 pl-7 text-slate-700 marker:text-slate-500'>
+                                        <ul {...props} className='my-7 space-y-3 text-slate-700'>
                                             {children}
                                         </ul>
                                     );
@@ -262,7 +263,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     void className;
 
                                     return (
-                                        <ol {...props} className='my-8 list-decimal space-y-4 pl-7 text-slate-700 marker:font-semibold marker:text-slate-700'>
+                                        <ol {...props} className='my-7 space-y-3 text-slate-700'>
                                             {children}
                                         </ol>
                                     );
@@ -284,8 +285,9 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     </a>
                                 ),
                                 blockquote: ({ children }) => (
-                                    <blockquote className='my-10 border-l-4 border-cyan-600 pl-6 text-xl font-semibold italic leading-9 text-slate-800'>
-                                        {children}
+                                    <blockquote className='my-10 rounded-3xl border border-cyan-100 bg-cyan-50 px-6 py-5 text-lg font-semibold italic leading-8 text-slate-800 shadow-sm md:px-7 md:py-6'>
+                                        <div className='mb-3 h-1 w-12 rounded-full bg-cyan-600' />
+                                        <div>{children}</div>
                                     </blockquote>
                                 ),
                                 code: ({ children }) => (
@@ -299,7 +301,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     </pre>
                                 ),
                                 table: ({ children }) => (
-                                    <div className='my-10 overflow-x-auto border-y border-slate-200'>
+                                    <div className='my-9 overflow-x-auto rounded-2xl border border-slate-200'>
                                         <table className='min-w-full border-collapse bg-white text-left text-sm leading-6'>
                                             {children}
                                         </table>
@@ -324,7 +326,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     <img
                                         src={src ?? ''}
                                         alt={alt ?? ''}
-                                        className='my-12 h-auto w-full rounded-2xl object-contain'
+                                        className='my-10 h-auto w-full rounded-[22px] border border-slate-200 object-contain shadow-sm'
                                         loading='lazy'
                                     />
                                 ),

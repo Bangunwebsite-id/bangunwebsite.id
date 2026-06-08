@@ -82,6 +82,12 @@ type BlogFormState = {
     publishedAt: string;
 };
 
+type BlogSaveResponse = {
+    message?: string;
+    id?: number;
+    post?: DashboardBlogPost;
+};
+
 const dashboardTabs = [
     {
         id: 'overview',
@@ -472,11 +478,17 @@ export function AdminDashboardClient({
                 cache: 'no-store',
             });
 
-            if (!response.ok) {
-                throw new Error('Gagal memuat daftar artikel terbaru.');
+            const result = (await response.json()) as {
+                message?: string;
+                posts?: DashboardBlogPost[];
+            };
+
+            if (!response.ok || !Array.isArray(result.posts)) {
+                throw new Error(
+                    result.message ?? 'Gagal memuat daftar artikel terbaru.'
+                );
             }
 
-            const result = (await response.json()) as { posts: DashboardBlogPost[] };
             setBlogPosts(result.posts);
             setIsBlogsLoaded(true);
         } catch (error) {
@@ -556,6 +568,23 @@ export function AdminDashboardClient({
         setIsBlogFormModalOpen(true);
     }
 
+    function upsertBlogPostInState(updatedPost: DashboardBlogPost) {
+        setBlogPosts((currentPosts) => {
+            const existingIndex = currentPosts.findIndex(
+                (post) => Number(post.id) === Number(updatedPost.id)
+            );
+
+            if (existingIndex === -1) {
+                return [updatedPost, ...currentPosts];
+            }
+
+            return currentPosts.map((post) =>
+                Number(post.id) === Number(updatedPost.id) ? updatedPost : post
+            );
+        });
+        setIsBlogsLoaded(true);
+    }
+
     function handleEditBlog(post: DashboardBlogPost) {
         setActiveTab('blog');
         setEditingBlogId(post.id);
@@ -628,12 +657,16 @@ export function AdminDashboardClient({
         setIsSubmittingBlog(true);
 
         const payload = {
+            id: editingBlogId,
             title: blogForm.title,
             slug: blogForm.slug,
+            excerpt: blogForm.summary,
             summary: blogForm.summary,
             content: blogForm.content,
             author: blogForm.author,
             image: blogForm.image,
+            imagePath: blogForm.image,
+            category: blogForm.categories,
             categories: blogForm.categories,
             publishedAt: blogForm.publishedAt,
         };
@@ -644,6 +677,20 @@ export function AdminDashboardClient({
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
+            console.info('[BlogAdmin][Client] save payload', {
+                mode: isEditing ? 'edit' : 'create',
+                endpoint,
+                method,
+                id: payload.id,
+                title: payload.title,
+                slug: payload.slug,
+                excerpt: payload.excerpt,
+                contentLength: payload.content.length,
+                category: payload.category,
+                image: payload.image,
+                publishedAt: payload.publishedAt,
+            });
+
             const response = await fetch(endpoint, {
                 method,
                 headers: {
@@ -651,18 +698,60 @@ export function AdminDashboardClient({
                 },
                 body: JSON.stringify(payload),
             });
+            const result = (await response.json()) as BlogSaveResponse;
+
+            console.info('[BlogAdmin][Client] save response', {
+                status: response.status,
+                ok: response.ok,
+                message: result.message,
+                returnedId: result.post?.id ?? result.id,
+                returnedTitle: result.post?.title,
+                returnedSlug: result.post?.slug,
+                returnedExcerpt: result.post?.summary,
+                returnedContentLength: result.post?.content.length,
+                returnedCategory: result.post?.categories,
+                returnedImage: result.post?.image,
+            });
 
             if (!response.ok) {
-                await showErrorAlert(isEditing ? 'Artikel gagal diperbarui.' : 'Artikel gagal dibuat.');
+                await showErrorAlert(
+                    result.message ??
+                        (isEditing
+                            ? 'Artikel gagal diperbarui.'
+                            : 'Artikel gagal dibuat.')
+                );
                 return;
+            }
+
+            if (isEditing && !result.post) {
+                await showErrorAlert(
+                    result.message ??
+                        'Artikel diperbarui, tetapi data terbaru tidak dikembalikan API.'
+                );
+                return;
+            }
+
+            if (result.post) {
+                upsertBlogPostInState(result.post);
             }
 
             await refreshBlogPosts();
             void refreshOverview();
             resetBlogForm();
-            await showSuccessAlert(isEditing ? 'Artikel berhasil diperbarui.' : 'Artikel berhasil dibuat.');
-        } catch {
-            await showErrorAlert(isEditing ? 'Artikel gagal diperbarui.' : 'Artikel gagal dibuat.');
+            await showSuccessAlert(
+                result.message ??
+                    (isEditing
+                        ? 'Artikel berhasil diperbarui.'
+                        : 'Artikel berhasil dibuat.')
+            );
+        } catch (error) {
+            await showErrorAlert(
+                error instanceof Error
+                    ? error.message
+                    : isEditing
+                      ? 'Artikel gagal diperbarui.'
+                      : 'Artikel gagal dibuat.'
+            );
         } finally {
             setIsSubmittingBlog(false);
         }

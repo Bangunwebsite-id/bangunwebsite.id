@@ -75,7 +75,7 @@ function normalizeCategories(categories: string[] | null | undefined) {
 
 function mapRecordToPublicPost(row: BlogPostRecord): PublicBlogPost {
     return {
-        id: row.id,
+        id: Number(row.id),
         title: row.title,
         slug: row.slug,
         summary: row.summary,
@@ -91,7 +91,7 @@ function mapRecordToPublicPostListItem(
     row: PublicBlogPostListRecord
 ): PublicBlogPost {
     return {
-        id: row.id,
+        id: Number(row.id),
         title: row.title,
         slug: row.slug,
         summary: row.summary,
@@ -100,6 +100,15 @@ function mapRecordToPublicPostListItem(
         image: row.image ?? '',
         categories: normalizeCategories(row.categories),
         published_at: row.published_at.toISOString(),
+    };
+}
+
+function mapRecordToAdminPost(row: AdminBlogPostListItem): AdminBlogPostListItem {
+    return {
+        ...row,
+        id: Number(row.id),
+        image: row.image ?? '',
+        categories: normalizeCategories(row.categories),
     };
 }
 
@@ -237,10 +246,38 @@ export async function listAdminBlogPosts() {
         `,
     );
 
-    return result.rows.map((item) => ({
-        ...item,
-        categories: normalizeCategories(item.categories),
-    }));
+    return result.rows.map(mapRecordToAdminPost);
+}
+
+export async function getAdminBlogPostById(id: number) {
+    const result = await dbPool.query<AdminBlogPostListItem>(
+        `
+            SELECT
+                id,
+                title,
+                slug,
+                summary,
+                content,
+                author,
+                COALESCE(image, '') AS image,
+                COALESCE(categories, ARRAY[]::text[]) AS categories,
+                published_at,
+                created_at,
+                updated_at
+            FROM blog_posts
+            WHERE id = $1
+            LIMIT 1
+        `,
+        [id],
+    );
+
+    const row = result.rows[0];
+
+    if (!row) {
+        return null;
+    }
+
+    return mapRecordToAdminPost(row);
 }
 
 export async function createBlogPost(input: UpsertBlogPostInput) {
@@ -292,7 +329,18 @@ export async function updateBlogPostById(
     input: UpsertBlogPostInput,
 ) {
     try {
-        const result = await dbPool.query<{ id: number }>(
+        console.info('[BlogAdmin][DB] update start', {
+            id,
+            title: input.title,
+            slug: input.slug,
+            summaryLength: input.summary.length,
+            contentLength: input.content.length,
+            image: input.image,
+            categories: normalizeCategories(input.categories),
+            publishedAt: input.publishedAt,
+        });
+
+        const result = await dbPool.query<AdminBlogPostListItem>(
             `
                 UPDATE blog_posts
                 SET
@@ -306,7 +354,18 @@ export async function updateBlogPostById(
                     published_at = $9::timestamptz,
                     updated_at = NOW()
                 WHERE id = $1
-                RETURNING id
+                RETURNING
+                    id,
+                    title,
+                    slug,
+                    summary,
+                    content,
+                    author,
+                    COALESCE(image, '') AS image,
+                    COALESCE(categories, ARRAY[]::text[]) AS categories,
+                    published_at,
+                    created_at,
+                    updated_at
             `,
             [
                 id,
@@ -321,11 +380,23 @@ export async function updateBlogPostById(
             ],
         );
 
-        if ((result.rowCount ?? 0) === 0) {
+        const rowCount = result.rowCount ?? 0;
+
+        console.info('[BlogAdmin][DB] update result', {
+            id,
+            rowCount,
+            returnedId: result.rows[0]?.id,
+            returnedTitle: result.rows[0]?.title,
+            returnedSlug: result.rows[0]?.slug,
+            returnedSummaryLength: result.rows[0]?.summary.length,
+            returnedContentLength: result.rows[0]?.content.length,
+        });
+
+        if (rowCount === 0 || !result.rows[0]) {
             return { status: 'not_found' as const };
         }
 
-        return { status: 'updated' as const };
+        return { status: 'updated' as const, post: mapRecordToAdminPost(result.rows[0]) };
     } catch (error) {
         if (
             typeof error === 'object' &&
