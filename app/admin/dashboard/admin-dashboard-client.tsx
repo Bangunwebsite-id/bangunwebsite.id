@@ -230,6 +230,9 @@ function getDefaultBlogFormState(): BlogFormState {
 const swalConfirmButtonColor = '#0891b2';
 const swalCancelButtonColor = '#475569';
 const swalDeleteButtonColor = '#dc2626';
+const publicSiteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bangunwebsite.id'
+).replace(/\/$/, '');
 
 function showSuccessAlert(text: string, title = 'Berhasil!') {
     return Swal.fire({
@@ -247,6 +250,46 @@ function showErrorAlert(text: string, title = 'Gagal!') {
         text,
         confirmButtonColor: swalConfirmButtonColor,
     });
+}
+
+function showCopySuccessToast(url: string) {
+    return Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Tautan berhasil disalin!',
+        text: url,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+    });
+}
+
+async function copyTextToClipboard(text: string) {
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        const isCopied = document.execCommand('copy');
+
+        if (!isCopied) {
+            throw new Error('Browser tidak dapat menyalin tautan otomatis.');
+        }
+    } finally {
+        document.body.removeChild(textArea);
+    }
 }
 
 function confirmSaveChanges() {
@@ -313,6 +356,8 @@ export function AdminDashboardClient({
     const [isSubmittingBlog, setIsSubmittingBlog] = useState(false);
     const [isBlogFormModalOpen, setIsBlogFormModalOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const [copyingBlogId, setCopyingBlogId] = useState<number | null>(null);
+    const [copiedBlogId, setCopiedBlogId] = useState<number | null>(null);
     const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
 
@@ -600,6 +645,35 @@ export function AdminDashboardClient({
             publishedAt: toDateInputValue(post.published_at),
         });
         setIsBlogFormModalOpen(true);
+    }
+
+    async function copyLink(post: DashboardBlogPost) {
+        const articleUrl = `${publicSiteUrl}/blog/${post.slug}`;
+        setCopyingBlogId(post.id);
+        setCopiedBlogId(null);
+
+        try {
+            await copyTextToClipboard(articleUrl);
+            setCopiedBlogId(post.id);
+            void showCopySuccessToast(articleUrl);
+
+            window.setTimeout(() => {
+                setCopiedBlogId((currentId) =>
+                    currentId === post.id ? null : currentId
+                );
+                setOpenMenuId((currentId) =>
+                    currentId === post.id ? null : currentId
+                );
+            }, 2000);
+        } catch (error) {
+            await showErrorAlert(
+                error instanceof Error
+                    ? error.message
+                    : 'Tautan gagal disalin. Silakan coba lagi.'
+            );
+        } finally {
+            setCopyingBlogId(null);
+        }
     }
 
     async function handleUploadBlogImage() {
@@ -1944,7 +2018,7 @@ export function AdminDashboardClient({
 
                                                                             {openMenuId ===
                                                                                 post.id && (
-                                                                                <div className='absolute right-0 top-full z-50 mt-1 w-32 rounded-xl border border-slate-200 bg-white py-1 shadow-lg'>
+                                                                                <div className='absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-slate-200 bg-white py-1 shadow-lg'>
                                                                                     <button
                                                                                         type='button'
                                                                                         onClick={() => {
@@ -1955,9 +2029,55 @@ export function AdminDashboardClient({
                                                                                                 null
                                                                                             );
                                                                                         }}
-                                                                                        className='flex w-full px-4 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50'
+                                                                                        className='flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50'
                                                                                     >
                                                                                         Edit
+                                                                                    </button>
+                                                                                    <button
+                                                                                        type='button'
+                                                                                        onClick={() => {
+                                                                                            void copyLink(
+                                                                                                post
+                                                                                            );
+                                                                                        }}
+                                                                                        disabled={
+                                                                                            copyingBlogId ===
+                                                                                            post.id
+                                                                                        }
+                                                                                        className='flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70'
+                                                                                    >
+                                                                                        {copiedBlogId ===
+                                                                                        post.id ? (
+                                                                                            <span
+                                                                                                aria-hidden='true'
+                                                                                                className='text-emerald-600'
+                                                                                            >
+                                                                                                &#10003;
+                                                                                            </span>
+                                                                                        ) : (
+                                                                                            <svg
+                                                                                                xmlns='http://www.w3.org/2000/svg'
+                                                                                                width='16'
+                                                                                                height='16'
+                                                                                                viewBox='0 0 24 24'
+                                                                                                fill='none'
+                                                                                                stroke='currentColor'
+                                                                                                strokeWidth='2'
+                                                                                                strokeLinecap='round'
+                                                                                                strokeLinejoin='round'
+                                                                                                aria-hidden='true'
+                                                                                            >
+                                                                                                <path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71' />
+                                                                                                <path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' />
+                                                                                            </svg>
+                                                                                        )}
+                                                                                        {copyingBlogId ===
+                                                                                        post.id
+                                                                                            ? 'Menyalin...'
+                                                                                            : copiedBlogId ===
+                                                                                                post.id
+                                                                                              ? 'Tautan Disalin'
+                                                                                              : 'Salin Tautan'}
                                                                                     </button>
                                                                                     <button
                                                                                         type='button'
@@ -1969,7 +2089,7 @@ export function AdminDashboardClient({
                                                                                                 post.id
                                                                                             );
                                                                                         }}
-                                                                                        className='flex w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-slate-50'
+                                                                                        className='flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-slate-50'
                                                                                     >
                                                                                         Hapus
                                                                                     </button>
