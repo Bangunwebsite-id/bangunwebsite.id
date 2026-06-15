@@ -22,7 +22,7 @@ Website, UMKM, Bisnis Digital
 Ringkasan:
 Banyak UMKM sudah sadar pentingnya website, tapi masih bingung memilih jenis website yang sesuai tujuan bisnis. Artikel ini membantu menentukan pilihan paling tepat agar biaya lebih efisien dan hasil lebih maksimal.
 
-Konten (Markdown):
+Konten (wajib Markdown):
 # Cara UMKM Memilih Website yang Tepat di 2026
 
 Banyak pemilik UMKM ingin punya website, tapi sering bingung harus mulai dari mana. Ada yang langsung ingin fitur lengkap, padahal kebutuhan awal belum tentu sejauh itu.
