@@ -8,10 +8,11 @@ import { getPublicSiteConfig } from '@/app/lib/site-config';
 export const revalidate = 3600; // Cache for 1 hour (ISR) piu
 
 const navItems = [
+    { label: 'Maintenance', href: '#maintenance' },
     { label: 'Layanan', href: '#layanan' },
     { label: 'Produk', href: '#produk' },
     { label: 'Portfolio', href: '#portfolio' },
-    { label: 'Harga', href: '#harga' },
+    { label: 'Paket', href: '#harga' },
     { label: 'Blog', href: '/blog' },
     { label: 'Kontak', href: '#kontak' },
 ];
@@ -26,77 +27,6 @@ const issues = [
     'Ingin bisnis terlihat lebih dipercaya',
 ];
 
-function getServicePillars(whatsappUrl: string) {
-    return [
-        {
-            number: '01',
-            title: 'Pembuatan Website',
-            description: 'Website baru yang rapi, cepat, dan siap jualan.',
-            points: [
-                'Company profile',
-                'Website UMKM',
-                'Landing page promosi',
-                'Toko online sederhana',
-                'Website custom system',
-                'Website rental/event booking',
-            ],
-            cta: 'Lihat Paket Website',
-            href: '#harga',
-            tone: 'from-cyan-600 to-blue-600',
-        },
-        {
-            number: '02',
-            title: 'Maintenance Website',
-            description:
-                'Website lama diperbaiki, dirawat, dan dipantau rutin.',
-            points: [
-                'Perbaikan error',
-                'Update konten & backup',
-                'Optimasi kecepatan',
-                'Update plugin/theme',
-                'Monitoring keamanan dasar',
-                'Support WhatsApp',
-            ],
-            cta: 'Cek Website Saya',
-            href: whatsappUrl,
-            tone: 'from-amber-500 to-orange-500',
-        },
-        {
-            number: '03',
-            title: 'Konsultasi IT',
-            description:
-                'Arah digital yang jelas sebelum eksekusi biaya besar.',
-            points: [
-                'Pemetaan kebutuhan website/sistem',
-                'Audit alur kerja digital',
-                'Rekomendasi tools bisnis',
-                'Pendampingan hosting/domain',
-                'Integrasi WhatsApp, form, invoice, CRM sederhana',
-            ],
-            cta: 'Konsultasi Kebutuhan',
-            href: whatsappUrl,
-            tone: 'from-slate-700 to-slate-900',
-        },
-    ];
-}
-
-const solutions = [
-    {
-        title: 'Belum Punya Website',
-        description: 'Mulai dari website yang langsung siap dipakai jualan.',
-        action: 'Buat Website Baru',
-    },
-    {
-        title: 'Website Bermasalah',
-        description: 'Perbaiki error, percepat performa, dan amankan sistem.',
-        action: 'Cek Kondisi Website',
-    },
-    {
-        title: 'Butuh Arahan IT',
-        description: 'Petakan prioritas digital agar investasi lebih tepat.',
-        action: 'Konsultasi Kebutuhan IT',
-    },
-];
 
 const portfolioProjects = [
     {
@@ -288,7 +218,6 @@ export default async function Home() {
         whatsappPortfolioUrl,
         instagramUrl,
     } = getPublicSiteConfig();
-    const servicePillars = getServicePillars(whatsappUrl);
 
     return (
         <main className='min-h-screen bg-slate-50 text-slate-900'>
@@ -341,11 +270,12 @@ export default async function Home() {
                             Bisnis Lokal
                         </p>
                         <h1 className='animate-on-scroll reveal-delay-100 text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl'>
-                            Jasa Website, Maintenance, dan Konsultasi IT
+                            Website Anda Masih Jalan? Atau Cuma Ada?
                         </h1>
                         <p className='animate-on-scroll reveal-delay-200 mt-6 max-w-3xl text-lg text-slate-200 md:text-2xl'>
-                            Kami bantu bisnis lokal punya website yang jalan,
-                            stabil, dan menghasilkan.
+                            Banyak bisnis punya website tapi tidak terawat —
+                            lemot, error, dan tidak menghasilkan. Kami bantu
+                            perbaiki, rawat, dan kembangkan.
                         </p>
                         <div className='animate-on-scroll reveal-delay-300 mt-9 flex flex-wrap gap-3'>
                             <a
@@ -354,13 +284,13 @@ export default async function Home() {
                                 rel='noopener noreferrer'
                                 className='rounded-full bg-amber-400 px-7 py-3 text-base font-bold text-slate-900 transition hover:bg-amber-300 md:text-lg'
                             >
-                                Konsultasi Gratis via WhatsApp
+                                Konsultasi Sekarang via WhatsApp
                             </a>
                             <a
-                                href='#layanan'
+                                href='#maintenance'
                                 className='rounded-full border border-white/40 px-7 py-3 text-base font-bold text-white transition hover:bg-white/10 md:text-lg'
                             >
-                                Lihat Layanan
+                                Cek Layanan Maintenance
                             </a>
                         </div>
                     </div>
@@ -389,100 +319,184 @@ export default async function Home() {
                 </div>
             </section>
 
-            <section id='layanan' className='bg-slate-100 py-20 md:py-24'>
+            {/* Maintenance — Section Utama */}
+            <section id='maintenance' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
                     <div className='animate-on-scroll max-w-3xl'>
-                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
-                            3 Layanan Utama
+                        <span className='inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-bold text-amber-700'>
+                            Layanan Unggulan
+                        </span>
+                        <h2 className='mt-3 text-4xl font-bold leading-tight md:text-5xl'>
+                            Maintenance Website
                         </h2>
-                        <p className='mt-3 text-lg text-slate-700 md:text-xl'>
-                            Fokus, ringkas, dan langsung ke kebutuhan bisnis.
+                        <p className='mt-4 text-lg font-medium text-slate-700 md:text-xl'>
+                            Website yang tidak dirawat akan lambat, rentan
+                            diretas, dan ditinggal pengunjung. Kami jaga website
+                            Anda tetap sehat, cepat, dan aman setiap bulan.
                         </p>
                     </div>
 
-                    <div className='mt-10 grid gap-6 lg:grid-cols-3'>
-                        {servicePillars.map((service, index) => (
+                    <div className='mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+                        {[
+                            {
+                                title: 'Keamanan Website',
+                                desc: 'Cek celah keamanan, pastikan SSL aktif, dan lindungi dari akses tidak sah.',
+                            },
+                            {
+                                title: 'Optimasi Kecepatan',
+                                desc: 'Kompres gambar, aktifkan cache, dan pastikan loading cepat di semua perangkat.',
+                            },
+                            {
+                                title: 'Update Plugin & Theme',
+                                desc: 'Semua komponen website selalu versi terbaru agar tidak ada celah bug.',
+                            },
+                            {
+                                title: 'Backup Berkala',
+                                desc: 'Data website dicadangkan rutin sehingga bisa dipulihkan kapan pun dibutuhkan.',
+                            },
+                            {
+                                title: 'Perbaikan Error',
+                                desc: 'Formulir tidak jalan, halaman error, atau tampilan rusak — langsung ditangani.',
+                            },
+                            {
+                                title: 'Laporan Bulanan',
+                                desc: 'Anda terima laporan kondisi website setiap bulan, transparan dan mudah dipahami.',
+                            },
+                        ].map((item, idx) => (
                             <article
-                                key={service.title}
+                                key={item.title}
                                 className={`${panelBase} animate-on-scroll`}
-                                style={{ transitionDelay: `${index * 100}ms` }}
+                                style={{ transitionDelay: `${idx * 80}ms` }}
                             >
-                                <div
-                                    className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${service.tone}`}
-                                />
-                                <div className='mb-4 flex items-center justify-between'>
-                                    <span className='text-sm font-bold tracking-[0.2em] text-slate-500'>
-                                        {service.number}
-                                    </span>
-                                    <span
-                                        className={`rounded-full bg-gradient-to-r px-3 py-1 text-xs font-bold text-white ${service.tone}`}
-                                    >
-                                        Service
-                                    </span>
-                                </div>
-                                <h3 className='text-2xl font-bold leading-tight md:text-3xl'>
-                                    {service.title}
+                                <div className='absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-500 to-orange-500' />
+                                <h3 className='text-lg font-bold md:text-xl'>
+                                    {item.title}
                                 </h3>
-                                <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
-                                    {service.description}
+                                <p className='mt-2 text-sm font-medium text-slate-700 md:text-base'>
+                                    {item.desc}
                                 </p>
-                                <ul className='mt-5 space-y-2 text-sm font-medium text-slate-700 md:text-base'>
-                                    {service.points.map((point) => (
-                                        <li key={point}>- {point}</li>
-                                    ))}
-                                </ul>
-                                <a
-                                    href={service.href}
-                                    target={
-                                        service.href.startsWith('http')
-                                            ? '_blank'
-                                            : undefined
-                                    }
-                                    rel={
-                                        service.href.startsWith('http')
-                                            ? 'noopener noreferrer'
-                                            : undefined
-                                    }
-                                    className='mt-6 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 md:text-base'
-                                >
-                                    {service.cta}
-                                </a>
                             </article>
                         ))}
+                    </div>
+
+                    <div className='animate-on-scroll mt-10 flex flex-wrap gap-3'>
+                        <a
+                            href={whatsappUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='rounded-full bg-amber-500 px-7 py-3 text-base font-bold text-white transition hover:bg-amber-600 md:text-lg'
+                        >
+                            Konsultasi Maintenance Sekarang
+                        </a>
+                        <a
+                            href='#harga'
+                            className='rounded-full border-2 border-slate-900 px-7 py-3 text-base font-bold text-slate-900 transition hover:bg-slate-100 md:text-lg'
+                        >
+                            Lihat Paket
+                        </a>
                     </div>
                 </div>
             </section>
 
-            <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
-                    Solusi Berdasarkan Kebutuhan
-                </h2>
-                <div className='mt-8 grid gap-6 md:grid-cols-3'>
-                    {solutions.map((solution, idx) => (
-                        <article
-                            key={solution.title}
-                            className={`${panelBase} animate-on-scroll`}
-                            style={{ transitionDelay: `${idx * 100}ms` }}
+            {/* Mid-page CTA */}
+            <section className='bg-gradient-to-r from-cyan-800 to-slate-900 py-14 md:py-16'>
+                <div className='mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-4 text-center md:flex-row md:justify-between md:text-left'>
+                    <div className='animate-on-scroll'>
+                        <h2 className='text-3xl font-bold text-white md:text-4xl'>
+                            Tidak Tahu Kondisi Website Anda?
+                        </h2>
+                        <p className='mt-2 text-base font-medium text-slate-300 md:text-lg'>
+                            Konsultasikan sekarang — gratis, tanpa komitmen.
+                        </p>
+                    </div>
+                    <a
+                        href={whatsappUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='animate-on-scroll flex-none rounded-full bg-amber-400 px-8 py-3.5 text-base font-bold text-slate-900 transition hover:bg-amber-300 md:text-lg'
+                    >
+                        Konsultasi Sekarang
+                    </a>
+                </div>
+            </section>
+
+            {/* Layanan Lainnya */}
+            <section id='layanan' className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
+                <div className='animate-on-scroll max-w-2xl'>
+                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                        Layanan Lainnya
+                    </h2>
+                    <p className='mt-3 text-lg text-slate-700 md:text-xl'>
+                        Butuh website baru atau arahan strategi digital? Kami
+                        juga siap bantu.
+                    </p>
+                </div>
+                <div className='mt-8 grid gap-6 md:grid-cols-2'>
+                    <article className={`${panelBase} animate-on-scroll`}>
+                        <div className='absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-cyan-600 to-blue-600' />
+                        <span className='text-sm font-bold tracking-[0.2em] text-slate-500'>
+                            01
+                        </span>
+                        <h3 className='mt-3 text-2xl font-bold leading-tight md:text-3xl'>
+                            Pembuatan Website
+                        </h3>
+                        <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                            Website baru yang rapi, cepat, dan siap jualan.
+                            Company profile, landing page, toko online, hingga
+                            sistem custom.
+                        </p>
+                        <ul className='mt-4 space-y-1.5 text-sm font-medium text-slate-600 md:text-base'>
+                            {[
+                                'Company profile',
+                                'Landing page promosi',
+                                'Toko online sederhana',
+                                'Website custom system',
+                            ].map((p) => (
+                                <li key={p}>- {p}</li>
+                            ))}
+                        </ul>
+                        <a
+                            href={whatsappUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='mt-6 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 md:text-base'
                         >
-                            <div className='mb-4 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold text-cyan-800'>
-                                Solusi {idx + 1}
-                            </div>
-                            <h3 className='text-2xl font-bold leading-tight md:text-3xl'>
-                                {solution.title}
-                            </h3>
-                            <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
-                                {solution.description}
-                            </p>
-                            <a
-                                href={whatsappUrl}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='mt-5 inline-flex rounded-full border-2 border-cyan-700 px-4 py-2 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50 md:text-base'
-                            >
-                                {solution.action}
-                            </a>
-                        </article>
-                    ))}
+                            Diskusi Kebutuhan Website
+                        </a>
+                    </article>
+
+                    <article className={`${panelBase} animate-on-scroll reveal-delay-100`}>
+                        <div className='absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-slate-700 to-slate-900' />
+                        <span className='text-sm font-bold tracking-[0.2em] text-slate-500'>
+                            02
+                        </span>
+                        <h3 className='mt-3 text-2xl font-bold leading-tight md:text-3xl'>
+                            Konsultasi IT
+                        </h3>
+                        <p className='mt-3 text-base font-medium text-slate-700 md:text-lg'>
+                            Arah digital yang jelas sebelum eksekusi biaya
+                            besar. Audit kebutuhan, rekomendasi tools, dan
+                            pendampingan implementasi.
+                        </p>
+                        <ul className='mt-4 space-y-1.5 text-sm font-medium text-slate-600 md:text-base'>
+                            {[
+                                'Pemetaan kebutuhan website/sistem',
+                                'Rekomendasi tools bisnis',
+                                'Integrasi WhatsApp, form, CRM',
+                                'Pendampingan hosting/domain',
+                            ].map((p) => (
+                                <li key={p}>- {p}</li>
+                            ))}
+                        </ul>
+                        <a
+                            href={whatsappUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='mt-6 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 md:text-base'
+                        >
+                            Konsultasi Kebutuhan IT
+                        </a>
+                    </article>
                 </div>
             </section>
 
@@ -623,9 +637,6 @@ export default async function Home() {
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
-                                    <p className='mt-2 text-lg font-bold'>
-                                        {item.price}
-                                    </p>
                                     <p
                                         className={`mt-3 text-base font-medium ${idx === 1 ? 'text-cyan-50' : 'text-slate-700'}`}
                                     >
@@ -652,9 +663,6 @@ export default async function Home() {
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
-                                    <p className='mt-2 text-lg font-bold text-cyan-800'>
-                                        {item.price}
-                                    </p>
                                     <ul className='mt-4 space-y-2 text-base font-medium text-slate-700'>
                                         {item.points.map((point) => (
                                             <li key={point}>- {point}</li>
@@ -685,9 +693,6 @@ export default async function Home() {
                                     <h4 className='text-2xl font-bold'>
                                         {item.name}
                                     </h4>
-                                    <p className='mt-2 text-lg font-bold text-cyan-800'>
-                                        {item.price}
-                                    </p>
                                     <p className='mt-3 text-base font-medium text-slate-700'>
                                         {item.detail}
                                     </p>
