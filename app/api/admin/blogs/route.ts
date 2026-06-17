@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 import { ensureAdminSession } from '@/app/lib/admin-guard';
@@ -141,6 +142,9 @@ export async function POST(request: Request) {
                 { status: 409 }
             );
         }
+
+        revalidatePath('/blog');
+        revalidatePath(`/blog/${payload.slug}`);
 
         return NextResponse.json({
             message: 'Artikel blog berhasil dibuat.',

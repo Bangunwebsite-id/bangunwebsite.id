@@ -280,6 +280,15 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     try {
+        const existing = await getAdminBlogPostById(id);
+
+        if (!existing) {
+            return NextResponse.json(
+                { message: 'Artikel tidak ditemukan.' },
+                { status: 404 }
+            );
+        }
+
         const deleted = await deleteBlogPostById(id);
 
         if (!deleted) {
@@ -288,6 +297,9 @@ export async function DELETE(request: Request, { params }: RouteParams) {
                 { status: 404 }
             );
         }
+
+        revalidatePath('/blog');
+        revalidatePath(`/blog/${existing.slug}`);
 
         return NextResponse.json({ message: 'Artikel berhasil dihapus.' });
     } catch (error) {
