@@ -13,7 +13,12 @@ import {
     listAllBlogPostSlugs,
     listRelatedBlogPosts,
 } from '@/app/lib/blogs';
-import { getPublicSiteConfig } from '@/app/lib/site-config';
+import {
+    SITE_NAME,
+    getAbsoluteUrl,
+    getDefaultSocialImageUrl,
+    getPublicSiteConfig,
+} from '@/app/lib/site-config';
 
 import { BlogCard } from '../blog-card';
 
@@ -22,6 +27,24 @@ export const revalidate = 3600; // Cache for 1 hour
 type BlogDetailProps = {
     params: Promise<{ slug: string }>;
 };
+
+function createMetadataDescription(summary: string, content: string) {
+    const normalizedSummary = summary.trim();
+
+    if (normalizedSummary) {
+        return normalizedSummary;
+    }
+
+    const plainContent = content
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/[#*_>`~\-[\]()]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return plainContent
+        ? plainContent.slice(0, 160)
+        : 'Baca artikel terbaru dari BangunWebsite.id.';
+}
 
 export async function generateStaticParams() {
     const slugs = await listAllBlogPostSlugs();
@@ -36,35 +59,75 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
     const { siteUrl } = getPublicSiteConfig();
 
     if (!post) {
+        const pageUrl = `${siteUrl}/blog/${slug}`;
+        const fallbackImageUrl = getDefaultSocialImageUrl(siteUrl);
+
         return {
             title: 'Artikel Tidak Ditemukan',
+            description: 'Artikel yang kamu cari tidak tersedia.',
+            alternates: {
+                canonical: pageUrl,
+            },
+            openGraph: {
+                title: 'Artikel Tidak Ditemukan',
+                description: 'Artikel yang kamu cari tidak tersedia.',
+                url: pageUrl,
+                siteName: SITE_NAME,
+                images: [
+                    {
+                        url: fallbackImageUrl,
+                        width: 1200,
+                        height: 630,
+                        alt: SITE_NAME,
+                    },
+                ],
+                locale: 'id_ID',
+                type: 'website',
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: 'Artikel Tidak Ditemukan',
+                description: 'Artikel yang kamu cari tidak tersedia.',
+                images: [fallbackImageUrl],
+            },
         };
     }
 
-    const fullUrl = `${siteUrl}/blog/${post.slug}`;
+    const pageUrl = `${siteUrl}/blog/${post.slug}`;
+    const description = createMetadataDescription(post.summary, post.content);
+    const imageUrl = post.image
+        ? getAbsoluteUrl(post.image, siteUrl)
+        : getDefaultSocialImageUrl(siteUrl);
 
     return {
         title: post.title,
-        description: post.summary,
+        description,
         alternates: {
-            canonical: fullUrl,
+            canonical: pageUrl,
         },
         openGraph: {
             title: post.title,
-            description: post.summary,
-            url: fullUrl,
-            siteName: 'BangunWebsite.id',
+            description,
+            url: pageUrl,
+            siteName: SITE_NAME,
             locale: 'id_ID',
             type: 'article',
             publishedTime: post.published_at,
             authors: [post.author],
-            images: post.image ? [{ url: post.image, alt: post.title }] : [],
+            images: [
+                {
+                    url: imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: post.title,
+                },
+            ],
         },
         twitter: {
             card: 'summary_large_image',
             title: post.title,
-            description: post.summary,
-            images: post.image ? [post.image] : [],
+            description,
+            images: [imageUrl],
         },
     };
 }
@@ -124,14 +187,17 @@ async function BlogDetailContent({ slug }: { slug: string }) {
     }
 
     const related = await listRelatedBlogPosts(post.slug, post.categories, 3);
+    const postImageUrl = post.image
+        ? getAbsoluteUrl(post.image, siteUrl)
+        : getDefaultSocialImageUrl(siteUrl);
 
     // Schema.org Article JSON-LD
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: post.title,
-        description: post.summary,
-        image: post.image ? [post.image] : [],
+        description: createMetadataDescription(post.summary, post.content),
+        image: [postImageUrl],
         datePublished: post.published_at,
         dateModified: post.published_at, // Use published_at for modification as well for now
         author: [
@@ -142,10 +208,10 @@ async function BlogDetailContent({ slug }: { slug: string }) {
         ],
         publisher: {
             '@type': 'Organization',
-            name: 'BangunWebsite.id',
+            name: SITE_NAME,
             logo: {
                 '@type': 'ImageObject',
-                url: `${siteUrl}/bangun-website.png`,
+                url: getAbsoluteUrl('/bangun-website.png', siteUrl),
             },
         },
         mainEntityOfPage: {

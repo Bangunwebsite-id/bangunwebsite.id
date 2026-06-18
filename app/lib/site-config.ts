@@ -1,4 +1,8 @@
 const DEFAULT_SITE_URL = 'https://bangunwebsite.id';
+export const SITE_NAME = 'BangunWebsite.id';
+export const DEFAULT_SITE_DESCRIPTION =
+    'BangunWebsite.id membantu UMKM dan bisnis lokal melalui pembuatan website, maintenance website, dan konsultasi IT yang terarah.';
+export const DEFAULT_SOCIAL_IMAGE_PATH = '/bangun-website.png';
 const DEFAULT_WHATSAPP_NUMBER = '6282151928443';
 const DEFAULT_WHATSAPP_TEXT =
     'Halo BangunWebsite.id, saya ingin konsultasi tentang website, maintenance, atau kebutuhan IT.';
@@ -56,4 +60,18 @@ export function getPublicSiteConfig() {
         ),
         instagramUrl,
     };
+}
+
+export function getAbsoluteUrl(pathOrUrl: string, baseUrl?: string) {
+    const fallbackBaseUrl = baseUrl ?? getPublicSiteConfig().siteUrl;
+
+    try {
+        return new URL(pathOrUrl, fallbackBaseUrl).toString();
+    } catch {
+        return new URL(DEFAULT_SOCIAL_IMAGE_PATH, fallbackBaseUrl).toString();
+    }
+}
+
+export function getDefaultSocialImageUrl(baseUrl?: string) {
+    return getAbsoluteUrl(DEFAULT_SOCIAL_IMAGE_PATH, baseUrl);
 }
