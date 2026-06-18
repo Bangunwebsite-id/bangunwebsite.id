@@ -5,6 +5,12 @@ import { Suspense } from 'react';
 
 import { TrafficTracker } from './components/traffic-tracker';
 import './globals.css';
+import {
+    DEFAULT_SITE_DESCRIPTION,
+    SITE_NAME,
+    getDefaultSocialImageUrl,
+    getPublicSiteConfig,
+} from './lib/site-config';
 
 const jakartaSans = Plus_Jakarta_Sans({
     subsets: ['latin'],
@@ -12,14 +18,42 @@ const jakartaSans = Plus_Jakarta_Sans({
     display: 'swap',
 });
 
+const { siteUrl } = getPublicSiteConfig();
+const defaultSocialImageUrl = getDefaultSocialImageUrl(siteUrl);
+
 export const metadata: Metadata = {
+    metadataBase: new URL(siteUrl),
     title: {
         default:
             'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
         template: '%s | BangunWebsite.id',
     },
-    description:
-        'BangunWebsite.id membantu UMKM dan bisnis lokal melalui pembuatan website, maintenance website, dan konsultasi IT yang terarah.',
+    description: DEFAULT_SITE_DESCRIPTION,
+    alternates: {
+        canonical: siteUrl,
+    },
+    openGraph: {
+        title: 'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
+        description: DEFAULT_SITE_DESCRIPTION,
+        url: siteUrl,
+        siteName: SITE_NAME,
+        images: [
+            {
+                url: defaultSocialImageUrl,
+                width: 1200,
+                height: 630,
+                alt: SITE_NAME,
+            },
+        ],
+        locale: 'id_ID',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
+        description: DEFAULT_SITE_DESCRIPTION,
+        images: [defaultSocialImageUrl],
+    },
     icons: {
         icon: [
             { url: '/favicon.ico' },

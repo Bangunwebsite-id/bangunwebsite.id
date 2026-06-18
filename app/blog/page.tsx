@@ -5,16 +5,50 @@ import { Suspense } from 'react';
 
 import { LoadingLink } from '@/app/components/loading-link';
 import { countPublishedBlogPosts, listPublishedBlogPosts } from '@/app/lib/blogs';
-import { getPublicSiteConfig } from '@/app/lib/site-config';
+import {
+    SITE_NAME,
+    getDefaultSocialImageUrl,
+    getPublicSiteConfig,
+} from '@/app/lib/site-config';
 
 import { BlogCard } from './blog-card';
 
 export const revalidate = 3600; // Cache for 1 hour
 
+const blogDescription =
+    'Kumpulan artikel BangunWebsite.id tentang website, SEO, AI, dan strategi digital untuk UMKM dan bisnis lokal.';
+const { siteUrl } = getPublicSiteConfig();
+const blogUrl = `${siteUrl}/blog`;
+const blogSocialImageUrl = getDefaultSocialImageUrl(siteUrl);
+
 export const metadata: Metadata = {
     title: 'Blog',
-    description:
-        'Kumpulan artikel BangunWebsite.id tentang website, SEO, AI, dan strategi digital untuk UMKM dan bisnis lokal.',
+    description: blogDescription,
+    alternates: {
+        canonical: blogUrl,
+    },
+    openGraph: {
+        title: 'Blog BangunWebsite.id',
+        description: blogDescription,
+        url: blogUrl,
+        siteName: SITE_NAME,
+        images: [
+            {
+                url: blogSocialImageUrl,
+                width: 1200,
+                height: 630,
+                alt: 'Blog BangunWebsite.id',
+            },
+        ],
+        locale: 'id_ID',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Blog BangunWebsite.id',
+        description: blogDescription,
+        images: [blogSocialImageUrl],
+    },
 };
 
 type BlogPageProps = {
