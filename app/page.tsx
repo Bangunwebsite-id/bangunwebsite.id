@@ -265,14 +265,14 @@ export default async function Home() {
                 <div className='absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.25),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(251,191,36,0.2),transparent_35%)]' />
                 <div className='relative mx-auto w-full max-w-6xl px-4'>
                     <div className='max-w-4xl'>
-                        <p className='animate-on-scroll mb-5 inline-flex rounded-full border border-white/30 bg-white/10 px-4 py-1 text-sm font-semibold text-cyan-100 md:text-base'>
+                        <p className='animate-on-scroll mb-5 inline-flex rounded-full border border-white/30 bg-white/10 px-4 py-1 text-[13px] leading-5 font-semibold text-cyan-100 sm:text-sm md:text-base'>
                             Solusi Website & Konsultasi Digital untuk UMKM dan
                             Bisnis Lokal
                         </p>
-                        <h1 className='animate-on-scroll reveal-delay-100 text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl'>
+                        <h1 className='animate-on-scroll reveal-delay-100 text-[2.5rem] font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-7xl'>
                             Website Anda Masih Jalan? Atau Cuma Ada?
                         </h1>
-                        <p className='animate-on-scroll reveal-delay-200 mt-6 max-w-3xl text-lg text-slate-200 md:text-2xl'>
+                        <p className='animate-on-scroll reveal-delay-200 mt-6 max-w-3xl text-base leading-7 text-slate-200 md:text-2xl'>
                             Banyak bisnis punya website tapi tidak terawat —
                             lemot, error, dan tidak menghasilkan. Kami bantu
                             perbaiki, rawat, dan kembangkan.
@@ -282,13 +282,13 @@ export default async function Home() {
                                 href={whatsappUrl}
                                 target='_blank'
                                 rel='noopener noreferrer'
-                                className='rounded-full bg-amber-400 px-7 py-3 text-base font-bold text-slate-900 transition hover:bg-amber-300 md:text-lg'
+                                className='rounded-full bg-amber-400 px-7 py-3 text-[15px] font-bold text-slate-900 transition hover:bg-amber-300 sm:text-base md:text-lg'
                             >
                                 Konsultasi Sekarang via WhatsApp
                             </a>
                             <a
                                 href='#maintenance'
-                                className='rounded-full border border-white/40 px-7 py-3 text-base font-bold text-white transition hover:bg-white/10 md:text-lg'
+                                className='rounded-full border border-white/40 px-7 py-3 text-[15px] font-bold text-white transition hover:bg-white/10 sm:text-base md:text-lg'
                             >
                                 Cek Layanan Maintenance
                             </a>
@@ -299,7 +299,7 @@ export default async function Home() {
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
                 <div className='animate-on-scroll rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_-35px_rgba(15,23,42,0.25)] md:p-10'>
-                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                         Masalah yang Sering Terjadi di Website Bisnis
                     </h2>
                     <div className='mt-8 grid gap-4 md:grid-cols-2'>
@@ -326,10 +326,10 @@ export default async function Home() {
                         <span className='inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-bold text-amber-700'>
                             Layanan Unggulan
                         </span>
-                        <h2 className='mt-3 text-4xl font-bold leading-tight md:text-5xl'>
+                        <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                             Maintenance Website
                         </h2>
-                        <p className='mt-4 text-lg font-medium text-slate-700 md:text-xl'>
+                        <p className='mt-4 text-base leading-7 font-medium text-slate-700 md:text-xl'>
                             Website yang tidak dirawat akan lambat, rentan
                             diretas, dan ditinggal pengunjung. Kami jaga website
                             Anda tetap sehat, cepat, dan aman setiap bulan.
@@ -423,10 +423,10 @@ export default async function Home() {
             {/* Layanan Lainnya */}
             <section id='layanan' className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
                 <div className='animate-on-scroll max-w-2xl'>
-                    <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                    <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                         Layanan Lainnya
                     </h2>
-                    <p className='mt-3 text-lg text-slate-700 md:text-xl'>
+                    <p className='mt-3 text-base leading-7 text-slate-700 md:text-xl'>
                         Butuh website baru atau arahan strategi digital? Kami
                         juga siap bantu.
                     </p>
@@ -507,10 +507,10 @@ export default async function Home() {
                         <p className='relative text-sm font-bold uppercase tracking-[0.2em] text-cyan-800'>
                             Produk Khusus
                         </p>
-                        <h2 className='relative mt-2 text-4xl font-bold leading-tight md:text-5xl'>
+                        <h2 className='relative mt-2 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                             Website Rental Event
                         </h2>
-                        <p className='relative mt-4 max-w-3xl text-lg font-medium text-slate-700 md:text-xl'>
+                        <p className='relative mt-4 max-w-3xl text-base leading-7 font-medium text-slate-700 md:text-xl'>
                             Untuk bisnis rental event yang butuh katalog,
                             booking, jadwal sewa, invoice, dan dashboard order.
                         </p>
@@ -537,10 +537,10 @@ export default async function Home() {
             >
                 <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                     <div>
-                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                        <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                             Portfolio
                         </h2>
-                        <p className='mt-2 max-w-3xl text-lg font-medium text-slate-700 md:text-xl'>
+                        <p className='mt-2 max-w-3xl text-base leading-7 font-medium text-slate-700 md:text-xl'>
                             Project real yang sudah online dan dipakai klien.
                         </p>
                     </div>
@@ -612,7 +612,7 @@ export default async function Home() {
 
             <section id='harga' className='bg-slate-100 py-20 md:py-24'>
                 <div className='mx-auto w-full max-w-6xl px-4'>
-                    <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
+                    <h2 className='animate-on-scroll text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                         Paket Layanan
                     </h2>
 
@@ -707,7 +707,7 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
+                <h2 className='animate-on-scroll text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                     Proses Kerja
                 </h2>
                 <div className='mt-8 grid gap-6 md:grid-cols-3'>
@@ -735,10 +735,10 @@ export default async function Home() {
                 <div className='mx-auto w-full max-w-6xl px-4'>
                     <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                         <div>
-                            <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                            <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                                 Blog
                             </h2>
-                            <p className='mt-2 text-lg font-medium text-slate-700 md:text-xl'>
+                            <p className='mt-2 text-base leading-7 font-medium text-slate-700 md:text-xl'>
                                 3 artikel terbaru. Untuk semua artikel, buka
                                 halaman blog.
                             </p>
@@ -789,7 +789,7 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='animate-on-scroll text-4xl font-bold leading-tight md:text-5xl'>
+                <h2 className='animate-on-scroll text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                     FAQ
                 </h2>
                 <div className='mt-8 space-y-4'>
@@ -816,10 +816,10 @@ export default async function Home() {
             >
                 <div className='mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-2'>
                     <div className='animate-on-scroll'>
-                        <h2 className='text-4xl font-bold leading-tight md:text-5xl'>
+                        <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
                             Siap Bangun atau Rapikan Website Anda?
                         </h2>
-                        <p className='mt-4 max-w-2xl text-lg font-medium text-slate-200 md:text-xl'>
+                        <p className='mt-4 max-w-2xl text-base leading-7 font-medium text-slate-200 md:text-xl'>
                             Kirim kebutuhan Anda, kami bantu petakan langkah
                             paling efisien.
                         </p>
