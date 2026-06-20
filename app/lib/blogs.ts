@@ -1,4 +1,4 @@
-import { unstable_noStore as noStore } from 'next/cache';
+import { unstable_cache, unstable_noStore as noStore } from 'next/cache';
 import { cache } from 'react';
 
 import { dbPool } from './db';
@@ -112,9 +112,7 @@ function mapRecordToAdminPost(row: AdminBlogPostListItem): AdminBlogPostListItem
     };
 }
 
-export async function listPublishedBlogPosts(limit?: number, offset?: number) {
-    noStore();
-
+async function queryPublishedBlogPosts(limit?: number, offset?: number) {
     const params: Array<number> = [];
     let limitClause = '';
     let offsetClause = '';
@@ -152,6 +150,17 @@ export async function listPublishedBlogPosts(limit?: number, offset?: number) {
 
     return result.rows.map(mapRecordToPublicPostListItem);
 }
+
+export async function listPublishedBlogPosts(limit?: number, offset?: number) {
+    noStore();
+    return queryPublishedBlogPosts(limit, offset);
+}
+
+export const listHomepageBlogPosts = unstable_cache(
+    async () => queryPublishedBlogPosts(3),
+    ['homepage-blog-posts'],
+    { revalidate: 3600 }
+);
 
 export async function countPublishedBlogPosts() {
     noStore();

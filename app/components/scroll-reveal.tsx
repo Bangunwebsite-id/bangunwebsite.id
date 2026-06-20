@@ -7,16 +7,17 @@ export function ScrollReveal() {
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('show');
-                    }
+                    if (!entry.isIntersecting) return;
+
+                    entry.target.classList.add('show');
+                    observer.unobserve(entry.target);
                 });
             },
             { threshold: 0.1 }
         );
 
         const elements = document.querySelectorAll('.animate-on-scroll');
-        elements.forEach((el) => observer.observe(elements.length > 0 ? el : el)); // dummy check for observer
+        elements.forEach((el) => observer.observe(el));
 
         return () => {
             elements.forEach((el) => observer.unobserve(el));

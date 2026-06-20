@@ -143,6 +143,7 @@ export async function POST(request: Request) {
             );
         }
 
+        revalidatePath('/');
         revalidatePath('/blog');
         revalidatePath(`/blog/${payload.slug}`);
 

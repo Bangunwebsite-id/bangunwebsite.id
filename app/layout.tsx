@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     metadataBase: new URL(siteUrl),
     title: {
         default:
-            'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
+            'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
         template: '%s | BangunWebsite.id',
     },
     description: DEFAULT_SITE_DESCRIPTION,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         canonical: siteUrl,
     },
     openGraph: {
-        title: 'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
+        title: 'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
         description: DEFAULT_SITE_DESCRIPTION,
         url: siteUrl,
         siteName: SITE_NAME,
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'BangunWebsite.id | Jasa Website, Maintenance, dan Konsultasi IT',
+        title: 'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
         description: DEFAULT_SITE_DESCRIPTION,
         images: [defaultSocialImageUrl],
     },
@@ -83,4 +83,3 @@ export default function RootLayout({
         </html>
     );
 }
-

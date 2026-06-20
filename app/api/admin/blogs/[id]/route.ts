@@ -233,6 +233,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
+        revalidatePath('/');
         revalidatePath('/blog');
         revalidatePath(`/blog/${previousSlug}`);
         revalidatePath(`/blog/${result.post.slug}`);
@@ -298,6 +299,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
             );
         }
 
+        revalidatePath('/');
         revalidatePath('/blog');
         revalidatePath(`/blog/${existing.slug}`);
 

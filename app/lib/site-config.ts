@@ -1,7 +1,7 @@
 const DEFAULT_SITE_URL = 'https://bangunwebsite.id';
 export const SITE_NAME = 'BangunWebsite.id';
 export const DEFAULT_SITE_DESCRIPTION =
-    'BangunWebsite.id membantu UMKM dan bisnis lokal melalui pembuatan website, maintenance website, dan konsultasi IT yang terarah.';
+    'BangunWebsite.id membantu UMKM dan bisnis lokal mengelola website secara berkelanjutan melalui langganan developer, maintenance website, konsultasi IT, SEO dasar, dan optimasi bulanan.';
 export const DEFAULT_SOCIAL_IMAGE_PATH = '/bangun-website.png';
 const DEFAULT_WHATSAPP_NUMBER = '6282151928443';
 const DEFAULT_WHATSAPP_TEXT =
