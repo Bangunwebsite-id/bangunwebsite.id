@@ -289,6 +289,16 @@ const portfolioProjects = [
         category: 'Automotive',
         url: 'https://ryuki-amber.vercel.app/',
     },
+    {
+        id: 8,
+        title: 'SentulTrip',
+        description:
+            'Landing page wisata trekking dan offroad Sentul dengan struktur paket yang jelas dan CTA booking cepat.',
+        image: '/lovable-uploads/sentultrip.png',
+        tech: ['Next.js', 'Landing Page', 'Responsive', 'SEO'],
+        category: 'Travel',
+        url: 'https://sentultrip.id/',
+    },
 ];
 
 const faqs = [
