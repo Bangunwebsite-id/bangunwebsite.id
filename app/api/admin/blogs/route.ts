@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-import { ensureAdminSession } from '@/app/lib/admin-guard';
+import { ensureAdminSessionOrApiKey } from '@/app/lib/admin-guard';
 import { createBlogPost, listAdminBlogPosts } from '@/app/lib/blogs';
 
 type BlogPayload = {
@@ -68,7 +68,7 @@ function normalizePayload(body: BlogPayload) {
 }
 
 export async function GET(request: Request) {
-    const { unauthorizedResponse } = ensureAdminSession(request);
+    const { unauthorizedResponse } = ensureAdminSessionOrApiKey(request);
 
     if (unauthorizedResponse) {
         return unauthorizedResponse;
@@ -86,7 +86,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-    const { unauthorizedResponse } = ensureAdminSession(request);
+    const { unauthorizedResponse } = ensureAdminSessionOrApiKey(request);
 
     if (unauthorizedResponse) {
         return unauthorizedResponse;

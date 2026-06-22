@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-import { ensureAdminSession } from '@/app/lib/admin-guard';
+import { ensureAdminSessionOrApiKey } from '@/app/lib/admin-guard';
 import {
     deleteBlogPostById,
     getAdminBlogPostById,
@@ -109,7 +109,7 @@ function serializeAdminPost(
 }
 
 export async function PUT(request: Request, { params }: RouteParams) {
-    const { unauthorizedResponse } = ensureAdminSession(request);
+    const { unauthorizedResponse } = ensureAdminSessionOrApiKey(request);
 
     if (unauthorizedResponse) {
         return unauthorizedResponse;
@@ -264,7 +264,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 export async function DELETE(request: Request, { params }: RouteParams) {
-    const { unauthorizedResponse } = ensureAdminSession(request);
+    const { unauthorizedResponse } = ensureAdminSessionOrApiKey(request);
 
     if (unauthorizedResponse) {
         return unauthorizedResponse;

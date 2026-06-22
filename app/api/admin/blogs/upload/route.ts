@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { ensureAdminSession } from '@/app/lib/admin-guard';
+import { ensureAdminSessionOrApiKey } from '@/app/lib/admin-guard';
 import { uploadImageToStorage } from '@/app/lib/storage';
 
 const MAX_UPLOAD_SIZE_BYTES = 8 * 1024 * 1024;
@@ -13,7 +13,7 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 
 export async function POST(request: Request) {
-    const { unauthorizedResponse } = ensureAdminSession(request);
+    const { unauthorizedResponse } = ensureAdminSessionOrApiKey(request);
 
     if (unauthorizedResponse) {
         return unauthorizedResponse;

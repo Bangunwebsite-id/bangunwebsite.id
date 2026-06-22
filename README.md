@@ -74,6 +74,7 @@ Bagian ini ditujukan bagi pengembang yang ingin menjalankan proyek ini secara lo
    ```
 2. Konfigurasi Environment:
    Salin `.env.example` menjadi `.env.local` dan isi nilai yang diperlukan.
+   Jika ingin akses Blog Admin API dari luar dashboard, isi juga `BLOG_API_KEY`.
 3. Jalankan Aplikasi:
    ```bash
    npm run dev
