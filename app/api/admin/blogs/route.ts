@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import { ensureAdminSessionOrApiKey } from '@/app/lib/admin-guard';
 import { createBlogPost, listAdminBlogPosts } from '@/app/lib/blogs';
 
+export const dynamic = 'force-dynamic';
+
 type BlogPayload = {
     title?: string;
     slug?: string;
@@ -82,7 +84,14 @@ export async function GET(request: Request) {
         updated_at: post.updated_at.toISOString(),
     }));
 
-    return NextResponse.json({ posts: serialized });
+    return NextResponse.json(
+        { posts: serialized },
+        {
+            headers: {
+                'Cache-Control': 'private, no-store, max-age=0, must-revalidate',
+            },
+        }
+    );
 }
 
 export async function POST(request: Request) {
