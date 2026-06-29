@@ -180,7 +180,7 @@ export default function BlogDetailPage({ params }: BlogDetailProps) {
 
 async function BlogDetailContent({ slug }: { slug: string }) {
     const post = await getPublishedBlogPostBySlug(slug);
-    const { siteUrl } = getPublicSiteConfig();
+    const { siteUrl, whatsappDefaultUrl } = getPublicSiteConfig();
 
     if (!post) {
         notFound();
@@ -340,16 +340,25 @@ async function BlogDetailContent({ slug }: { slug: string }) {
 
                                     return <li {...props} className='leading-8'>{children}</li>;
                                 },
-                                a: ({ href, children }) => (
-                                    <a
-                                        href={href}
-                                        target='_blank'
-                                        rel='noopener noreferrer'
-                                        className='font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-900'
-                                    >
-                                        {children}
-                                    </a>
-                                ),
+                                a: ({ href, children }) => {
+                                    const isInternal =
+                                        href?.startsWith('/') ||
+                                        href?.startsWith(
+                                            getPublicSiteConfig().siteUrl
+                                        );
+                                    return (
+                                        <a
+                                            href={href}
+                                            {...(!isInternal && {
+                                                target: '_blank',
+                                                rel: 'noopener noreferrer',
+                                            })}
+                                            className='font-bold text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-900'
+                                        >
+                                            {children}
+                                        </a>
+                                    );
+                                },
                                 blockquote: ({ children }) => (
                                     <blockquote className='my-10 rounded-3xl border border-cyan-100 bg-cyan-50 px-6 py-5 text-lg font-semibold italic leading-8 text-slate-800 shadow-sm md:px-7 md:py-6'>
                                         <div className='mb-3 h-1 w-12 rounded-full bg-cyan-600' />
@@ -404,6 +413,36 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                 </article>
             </section>
 
+            <section className='mx-auto w-full max-w-5xl px-4 pb-10'>
+                <div className='rounded-3xl bg-cyan-700 px-8 py-10 text-center md:px-14 md:py-14'>
+                    <p className='text-sm font-extrabold uppercase tracking-widest text-cyan-200'>
+                        BangunWebsite.id
+                    </p>
+                    <h2 className='mt-3 text-2xl font-extrabold leading-snug text-white md:text-3xl'>
+                        Butuh website profesional untuk bisnis Anda?
+                    </h2>
+                    <p className='mx-auto mt-3 max-w-xl text-base font-medium text-cyan-100'>
+                        Kami membantu UMKM dan bisnis lokal punya website yang cepat, SEO-friendly, dan dikelola secara berkelanjutan — tanpa ribet.
+                    </p>
+                    <div className='mt-7 flex flex-wrap justify-center gap-3'>
+                        <Link
+                            href='/'
+                            className='rounded-full bg-white px-6 py-3 text-sm font-extrabold text-cyan-800 transition hover:bg-cyan-50'
+                        >
+                            Lihat Layanan BangunWebsite.id
+                        </Link>
+                        <a
+                            href={whatsappDefaultUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='rounded-full border-2 border-white/60 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-white/10'
+                        >
+                            Konsultasi Gratis via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             <section className='mx-auto w-full max-w-6xl px-4 pb-16'>
                 <h2 className='text-2xl font-bold md:text-3xl'>Artikel Lainnya</h2>
                 <div className='mt-6 grid gap-6 md:grid-cols-3'>
@@ -435,7 +474,7 @@ function BlogDetailSkeleton() {
                     <div className='h-5 w-28 rounded bg-slate-200' />
                 </div>
 
-                <div className='mt-8 aspect-[1200/630] overflow-hidden rounded-2xl border border-slate-200 bg-slate-200' />
+                <div className='mt-8 aspect-1200/630 overflow-hidden rounded-2xl border border-slate-200 bg-slate-200' />
 
                 <article className='mt-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8'>
                     <div className='space-y-4'>
@@ -455,7 +494,7 @@ function BlogDetailSkeleton() {
                     {Array.from({ length: 3 }).map((_, index) => (
                         <article
                             key={index}
-                            className='relative flex min-h-[250px] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)]'
+                            className='relative flex min-h-62.5 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)]'
                             aria-hidden='true'
                         >
                             <div className='h-6 w-24 rounded-full bg-slate-200' />
