@@ -320,6 +320,17 @@ const faqs = [
     },
 ];
 
+const clientLogos = [
+    { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10' },
+    { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16' },
+    { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16' },
+    { name: 'Ryuki Indo Sakato', src: '/perusahaan/ryuki-indo-sakato.webp', size: 'h-10' },
+    { name: 'Sapa Foundation', src: '/perusahaan/sapa-foundation.webp', size: 'h-16' },
+    { name: 'SentulTrip', src: '/perusahaan/sentultrip.webp', size: 'h-16' },
+    { name: 'Sulawesi Pos', src: '/perusahaan/sulawesipos.webp', size: 'h-10' },
+    { name: 'Teknik Academy', src: '/perusahaan/teknikacademy.webp', size: 'h-10' },
+];
+
 const panelBase =
     'relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-6 shadow-[0_16px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)]';
 
@@ -492,6 +503,26 @@ export default async function Home() {
                     </aside>
                 </div>
             </section>
+
+            <div className='border-b border-slate-200 bg-white py-10'>
+                <div className='mx-auto w-full max-w-6xl px-4'>
+                    <p className='text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-400'>
+                        Dipercaya oleh bisnis dari berbagai industri
+                    </p>
+                    <div className='mt-6 flex flex-wrap items-center justify-center gap-8 md:gap-12'>
+                        {clientLogos.map((logo) => (
+                            <Image
+                                key={logo.name}
+                                src={logo.src}
+                                alt={logo.name}
+                                width={120}
+                                height={48}
+                                className={`${logo.size} w-auto object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
 
             <section
                 id='masalah'
@@ -878,60 +909,61 @@ export default async function Home() {
 
                 <div className='mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
                     {portfolioProjects.map((project, index) => (
-                        <article
+                        <a
                             key={project.id}
-                            className={`animate-on-scroll group relative overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${
-                                index % 3 === 0
-                                    ? 'md:col-span-2 lg:col-span-1'
-                                    : ''
+                            href={project.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className={`animate-on-scroll group relative block overflow-hidden rounded-[24px] shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] ${
+                                index % 3 === 0 ? 'md:col-span-2 lg:col-span-1' : ''
                             }`}
-                            style={{
-                                transitionDelay: `${(index % 3) * 100}ms`,
-                            }}
+                            style={{ transitionDelay: `${(index % 3) * 100}ms` }}
                         >
-                            <div className='relative'>
-                                <Image
-                                    src={project.image}
-                                    alt={project.title}
-                                    width={640}
-                                    height={400}
-                                    className='aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105'
-                                />
-                                <div className='absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent' />
-                                <span className='absolute left-3 top-3 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-bold text-white'>
-                                    {project.category}
-                                </span>
-                            </div>
+                            <Image
+                                src={project.image}
+                                alt={project.title}
+                                width={640}
+                                height={400}
+                                className='aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105'
+                            />
 
-                            <div className='space-y-4 p-5'>
-                                <h3 className='text-2xl font-bold leading-tight'>
+                            <span className='absolute left-3 top-3 z-10 rounded-full bg-slate-900/90 px-3 py-1 text-xs font-bold text-white'>
+                                {project.category}
+                            </span>
+
+                            {/* Default: gradient + title at bottom */}
+                            <div className='absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pb-5 pt-16 transition-opacity duration-300 group-hover:opacity-0'>
+                                <h3 className='text-lg font-bold leading-tight text-white'>
                                     {project.title}
                                 </h3>
-                                <p className='text-base font-medium text-slate-700'>
+                            </div>
+
+                            {/* Hover: panel slides up */}
+                            <div className='absolute inset-x-0 bottom-0 translate-y-full bg-slate-900/96 p-5 backdrop-blur-sm transition-transform duration-300 group-hover:translate-y-0'>
+                                <p className='text-xs font-bold uppercase tracking-[0.15em] text-cyan-400'>
+                                    {project.category}
+                                </p>
+                                <h3 className='mt-1 text-xl font-bold leading-tight text-white'>
+                                    {project.title}
+                                </h3>
+                                <p className='mt-2 text-sm leading-relaxed text-slate-300'>
                                     {project.description}
                                 </p>
-
-                                <div className='flex flex-wrap gap-2'>
+                                <div className='mt-3 flex flex-wrap gap-1.5'>
                                     {project.tech.map((tech) => (
                                         <span
                                             key={tech}
-                                            className='rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700'
+                                            className='rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-bold text-slate-200'
                                         >
                                             {tech}
                                         </span>
                                     ))}
                                 </div>
-
-                                <a
-                                    href={project.url}
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                    className='inline-flex w-full justify-center rounded-xl bg-cyan-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-800 md:text-base'
-                                >
+                                <span className='mt-4 inline-flex w-full items-center justify-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white'>
                                     Cek Website
-                                </a>
+                                </span>
                             </div>
-                        </article>
+                        </a>
                     ))}
                 </div>
             </section>
@@ -958,27 +990,22 @@ export default async function Home() {
 
                     <div className='mt-8 grid gap-6 md:grid-cols-3'>
                         {blogPosts.slice(0, 3).map((post, index) => (
-                            <article
+                            <LoadingLink
                                 key={post.slug}
-                                className={`${panelBase} animate-on-scroll`}
+                                href={`/blog/${post.slug}`}
+                                className={`group flex flex-col ${panelBase} animate-on-scroll`}
                                 style={{ transitionDelay: `${index * 100}ms` }}
                             >
-                                <p className='text-xs font-bold uppercase tracking-[0.2em] text-cyan-700'>
+                                <p className='inline-flex self-start rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.15em] text-cyan-800'>
                                     {post.categories[0] ?? 'Blog'}
                                 </p>
-                                <h3 className='mt-2 text-2xl font-bold leading-tight'>
+                                <h3 className='mt-3 text-2xl font-bold leading-tight transition-colors group-hover:text-cyan-700'>
                                     {post.title}
                                 </h3>
-                                <p className='mt-3 text-base font-medium text-slate-700'>
+                                <p className='mt-3 flex-1 text-base font-medium text-slate-700'>
                                     {post.summary}
                                 </p>
-                                <LoadingLink
-                                    href={`/blog/${post.slug}`}
-                                    className='mt-4 inline-flex rounded-full border border-cyan-700 px-4 py-1.5 text-sm font-bold text-cyan-700 transition hover:bg-cyan-50'
-                                >
-                                    Baca Artikel
-                                </LoadingLink>
-                                <p className='mt-3 text-sm font-semibold text-slate-500'>
+                                <p className='mt-4 text-sm font-semibold text-slate-500'>
                                     {new Date(post.published_at).toLocaleDateString(
                                         'id-ID',
                                         {
@@ -988,7 +1015,10 @@ export default async function Home() {
                                         }
                                     )}
                                 </p>
-                            </article>
+                                <span className='mt-4 inline-flex items-center justify-center rounded-full border border-cyan-700 px-4 py-2 text-sm font-bold text-cyan-700 transition group-hover:bg-cyan-50'>
+                                    Baca Artikel
+                                </span>
+                            </LoadingLink>
                         ))}
                     </div>
                 </div>

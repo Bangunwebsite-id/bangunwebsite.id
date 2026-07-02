@@ -8,10 +8,12 @@ export function LoadingLink({
     href,
     children,
     className,
+    style,
 }: {
     href: string;
     children: React.ReactNode;
     className?: string;
+    style?: React.CSSProperties;
 }) {
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
@@ -32,6 +34,7 @@ export function LoadingLink({
         <Link
             href={href}
             onClick={handleClick}
+            style={style}
             className={`${className} ${isPending ? 'opacity-70 cursor-wait' : ''} inline-flex items-center gap-2`}
         >
             {children}
