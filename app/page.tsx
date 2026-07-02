@@ -291,6 +291,16 @@ const portfolioProjects = [
     },
     {
         id: 8,
+        title: 'Sapa Foundation',
+        description:
+            'Website yayasan sosial dengan struktur konten yang jelas untuk membangun kepercayaan donatur dan mitra.',
+        image: '/lovable-uploads/sapa-foundation.webp',
+        tech: ['Next.js', 'Responsive', 'SEO'],
+        category: 'Social',
+        url: 'https://www.sapafoundation.or.id/',
+    },
+    {
+        id: 9,
         title: 'SentulTrip',
         description:
             'Landing page wisata trekking dan offroad Sentul dengan struktur paket yang jelas dan CTA booking cepat.',
