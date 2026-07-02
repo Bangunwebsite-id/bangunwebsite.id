@@ -505,16 +505,27 @@ export default async function Home() {
             </section>
 
             <div className='border-b border-slate-200 bg-white py-10'>
-                <div className='mx-auto w-full max-w-6xl px-4'>
-                    <p className='text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-400'>
-                        Dipercaya oleh bisnis dari berbagai industri
-                    </p>
-                    <div className='mt-6 flex flex-wrap items-center justify-center gap-8 md:gap-12'>
+                <p className='text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-400'>
+                    Dipercaya oleh bisnis dari berbagai industri
+                </p>
+                <div className='mx-auto mt-6 w-full max-w-6xl overflow-hidden px-4'>
+                    <div className='marquee-track flex w-max items-center gap-10 md:gap-16'>
                         {clientLogos.map((logo) => (
                             <Image
                                 key={logo.name}
                                 src={logo.src}
                                 alt={logo.name}
+                                width={120}
+                                height={48}
+                                className={`${logo.size} w-auto object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
+                            />
+                        ))}
+                        {clientLogos.map((logo) => (
+                            <Image
+                                key={`${logo.name}-2`}
+                                src={logo.src}
+                                alt=''
+                                aria-hidden
                                 width={120}
                                 height={48}
                                 className={`${logo.size} w-auto object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
