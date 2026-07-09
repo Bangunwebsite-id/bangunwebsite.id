@@ -213,7 +213,7 @@ const projectPackages = [
     },
     {
         name: 'Custom Website/System',
-        price: 'Mulai Rp3.000.000',
+        price: 'Mulai Rp3.500.000',
         note: 'Untuk dashboard, booking system, katalog, order management, payment gateway, atau sistem khusus.',
     },
 ];
@@ -428,11 +428,11 @@ export default async function Home() {
                             Langganan website bulanan untuk bisnis yang butuh
                             partner teknis
                         </p>
-                        <h1 className='text-[2.6rem] font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-7xl'>
+                        <h1 className='text-[2rem] font-bold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl'>
                             Developer, Maintenance Website, dan Konsultan IT
                             dalam Satu Paket Bulanan
                         </h1>
-                        <p className='mt-6 max-w-3xl text-base leading-7 text-slate-200 md:text-2xl'>
+                        <p className='mt-6 max-w-3xl text-base leading-7 text-slate-200 md:text-lg'>
                             Website bisnis Anda kami rawat, perbaiki,
                             optimalkan, dan kembangkan bertahap setiap bulan.
                             Cocok untuk UMKM, bisnis lokal, company profile,
@@ -444,7 +444,7 @@ export default async function Home() {
                                 <p className='text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100'>
                                     Mulai
                                 </p>
-                                <p className='mt-2 whitespace-nowrap text-3xl font-bold leading-none tracking-tight text-white sm:text-4xl'>
+                                <p className='mt-2 whitespace-nowrap text-2xl font-bold leading-none tracking-tight text-white sm:text-3xl'>
                                     Rp500.000
                                     <span className='text-[0.52em] font-semibold tracking-normal text-cyan-100'>
                                         /bulan
@@ -491,7 +491,7 @@ export default async function Home() {
                         <p className='text-sm font-bold uppercase tracking-[0.24em] text-cyan-100'>
                             Ringkasan manfaat
                         </p>
-                        <h2 className='mt-3 text-2xl font-bold leading-tight md:text-[2rem]'>
+                        <h2 className='mt-3 text-xl font-bold leading-tight md:text-2xl'>
                             Website Care untuk bisnis yang butuh partner teknis
                             rutin
                         </h2>
@@ -527,7 +527,8 @@ export default async function Home() {
                                 alt={logo.name}
                                 width={120}
                                 height={48}
-                                className={`${logo.size} w-auto object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
+                                style={{ width: 'auto' }}
+                                className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
                             />
                         ))}
                         {clientLogos.map((logo) => (
@@ -538,7 +539,8 @@ export default async function Home() {
                                 aria-hidden
                                 width={120}
                                 height={48}
-                                className={`${logo.size} w-auto object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
+                                style={{ width: 'auto' }}
+                                className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
                             />
                         ))}
                     </div>
@@ -553,10 +555,10 @@ export default async function Home() {
                     <span className='inline-flex rounded-full bg-cyan-100 px-4 py-1 text-sm font-bold text-cyan-800'>
                         Problem website bisnis
                     </span>
-                    <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                    <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                         Website Sudah Ada, Tapi Tidak Terurus?
                     </h2>
-                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-xl'>
+                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-lg'>
                         Kalau masalahnya seperti ini, Anda tidak butuh
                         developer sekali panggil. Anda butuh partner teknis
                         bulanan yang bisa menjaga website tetap aktif dan terus
@@ -588,10 +590,10 @@ export default async function Home() {
                         <span className='inline-flex rounded-full bg-slate-900 px-4 py-1 text-sm font-bold text-white'>
                             Solusi bulanan
                         </span>
-                        <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                        <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                             Ini yang Kami Bantu Setiap Bulan
                         </h2>
-                        <p className='mt-4 text-base leading-7 text-slate-700 md:text-xl'>
+                        <p className='mt-4 text-base leading-7 text-slate-700 md:text-lg'>
                             Bukan cuma maintenance pas error. Kami bantu
                             website bisnis tetap sehat, rapi, dan makin siap
                             dipakai untuk marketing dari bulan ke bulan.
@@ -605,7 +607,7 @@ export default async function Home() {
                                 className={`${panelBase} animate-on-scroll`}
                                 style={{ transitionDelay: `${index * 100}ms` }}
                             >
-                                <h3 className='text-2xl font-bold leading-tight md:text-3xl'>
+                                <h3 className='text-xl font-bold leading-tight md:text-2xl'>
                                     {item.title}
                                 </h3>
                                 <p className='mt-4 text-base leading-7 font-medium text-slate-700'>
@@ -622,10 +624,10 @@ export default async function Home() {
                     <span className='inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-bold text-amber-700'>
                         Maintenance bulanan
                     </span>
-                    <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                    <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                         Paket Website Care Bulanan
                     </h2>
-                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-xl'>
+                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-lg'>
                         Pilih paket maintenance website sesuai kebutuhan
                         bisnis Anda. Cocok untuk website yang sudah berjalan dan
                         butuh dirawat, diperbaiki, dioptimalkan, serta
@@ -650,10 +652,10 @@ export default async function Home() {
                                 </span>
                             ) : null}
 
-                            <h3 className='text-2xl font-bold md:text-3xl'>
+                            <h3 className='text-xl font-bold md:text-2xl'>
                                 {item.name}
                             </h3>
-                            <p className='mt-3 text-3xl font-bold md:text-4xl'>
+                            <p className='mt-3 text-2xl font-bold md:text-3xl'>
                                 {item.price}
                             </p>
                             <p
@@ -759,11 +761,11 @@ export default async function Home() {
                         <span className='inline-flex rounded-full bg-slate-900 px-4 py-1 text-sm font-bold text-white'>
                             Cara kerja bulanan
                         </span>
-                        <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                        <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                             Bulan Pertama Audit dan Perbaikan Dasar, Bulan
                             Berikutnya Maintenance dan Pengembangan Ringan
                         </h2>
-                        <p className='mt-4 text-base leading-7 text-slate-700 md:text-xl'>
+                        <p className='mt-4 text-base leading-7 text-slate-700 md:text-lg'>
                             Klien jadi paham bahwa bulan pertama fokus merapikan
                             fondasi, lalu bulan berikutnya lanjut ke maintenance
                             rutin dan request kecil sesuai paket.
@@ -776,7 +778,7 @@ export default async function Home() {
                             <p className='text-sm font-bold uppercase tracking-[0.2em] text-cyan-700'>
                                 Bulan pertama
                             </p>
-                            <h3 className='mt-3 text-2xl font-bold md:text-3xl'>
+                            <h3 className='mt-3 text-xl font-bold md:text-2xl'>
                                 Audit dan Perbaikan Dasar
                             </h3>
                             <ul className='mt-5 space-y-3 text-sm font-medium text-slate-700 md:text-base'>
@@ -798,7 +800,7 @@ export default async function Home() {
                             <p className='text-sm font-bold uppercase tracking-[0.2em] text-amber-700'>
                                 Bulan berikutnya
                             </p>
-                            <h3 className='mt-3 text-2xl font-bold md:text-3xl'>
+                            <h3 className='mt-3 text-xl font-bold md:text-2xl'>
                                 Maintenance dan Pengembangan Ringan
                             </h3>
                             <ul className='mt-5 space-y-3 text-sm font-medium text-slate-700 md:text-base'>
@@ -821,11 +823,11 @@ export default async function Home() {
                     <span className='inline-flex rounded-full bg-cyan-100 px-4 py-1 text-sm font-bold text-cyan-800'>
                         Tiga layanan dalam satu paket
                     </span>
-                    <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                    <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                         Developer, Maintenance, dan Konsultan IT Berjalan dalam
                         Satu Ritme Kerja
                     </h2>
-                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-xl'>
+                    <p className='mt-4 text-base leading-7 text-slate-700 md:text-lg'>
                         Anda tidak perlu pecah vendor untuk hal-hal kecil.
                         Semua kebutuhan teknis ringan dikelola dalam satu alur
                         yang lebih jelas.
@@ -842,7 +844,7 @@ export default async function Home() {
                             <div
                                 className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${pillar.accent}`}
                             />
-                            <h3 className='text-2xl font-bold md:text-3xl'>
+                            <h3 className='text-xl font-bold md:text-2xl'>
                                 {pillar.title}
                             </h3>
                             <ul className='mt-5 space-y-3 text-sm font-medium text-slate-700 md:text-base'>
@@ -861,10 +863,10 @@ export default async function Home() {
                         <span className='inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm font-bold text-cyan-100'>
                             Project sekali bayar
                         </span>
-                        <h2 className='mt-3 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                        <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                             Butuh Website Baru atau Fitur Besar?
                         </h2>
-                        <p className='mt-4 text-base leading-7 text-slate-200 md:text-xl'>
+                        <p className='mt-4 text-base leading-7 text-slate-200 md:text-lg'>
                             Untuk bisnis yang belum punya website, ingin membuat
                             website baru, atau membutuhkan fitur besar di luar
                             paket maintenance bulanan.
@@ -910,10 +912,10 @@ export default async function Home() {
             >
                 <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                     <div>
-                        <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                        <h2 className='text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                             Portfolio
                         </h2>
-                        <p className='mt-2 max-w-3xl text-base leading-7 font-medium text-slate-700 md:text-xl'>
+                        <p className='mt-2 max-w-3xl text-base leading-7 font-medium text-slate-700 md:text-lg'>
                             Project real untuk company profile, event, media,
                             edukasi, dan bisnis lokal.
                         </p>
@@ -993,10 +995,10 @@ export default async function Home() {
                 <div className='mx-auto w-full max-w-6xl px-4'>
                     <div className='animate-on-scroll flex flex-wrap items-end justify-between gap-4'>
                         <div>
-                            <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                            <h2 className='text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                                 Blog
                             </h2>
-                            <p className='mt-2 text-base leading-7 font-medium text-slate-700 md:text-xl'>
+                            <p className='mt-2 text-base leading-7 font-medium text-slate-700 md:text-lg'>
                                 Insight praktis seputar website, maintenance,
                                 SEO dasar, dan digital growth untuk bisnis.
                             </p>
@@ -1046,7 +1048,7 @@ export default async function Home() {
             </section>
 
             <section className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
-                <h2 className='animate-on-scroll text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                <h2 className='animate-on-scroll text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                     FAQ
                 </h2>
                 <div className='mt-8 space-y-4'>
@@ -1073,10 +1075,10 @@ export default async function Home() {
             >
                 <div className='mx-auto grid w-full max-w-6xl gap-8 px-4 lg:grid-cols-2'>
                     <div className='animate-on-scroll'>
-                        <h2 className='text-3xl font-bold leading-tight sm:text-4xl md:text-5xl'>
+                        <h2 className='text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                             Siap Diskusi Tentang Website Care atau Project Baru?
                         </h2>
-                        <p className='mt-4 max-w-2xl text-base leading-7 font-medium text-slate-200 md:text-xl'>
+                        <p className='mt-4 max-w-2xl text-base leading-7 font-medium text-slate-200 md:text-lg'>
                             Kirim kondisi website atau kebutuhan bisnis Anda.
                             Kami bantu petakan apakah lebih cocok maintenance
                             bulanan atau project sekali bayar.
@@ -1092,7 +1094,7 @@ export default async function Home() {
                     </div>
 
                     <div className='animate-on-scroll reveal-delay-200 rounded-[24px] border border-white/20 bg-white/10 p-6 backdrop-blur-sm'>
-                        <h3 className='text-2xl font-bold md:text-3xl'>
+                        <h3 className='text-xl font-bold md:text-2xl'>
                             Kontak
                         </h3>
                         <ul className='mt-4 space-y-3 text-base font-medium text-slate-100 md:text-lg'>
