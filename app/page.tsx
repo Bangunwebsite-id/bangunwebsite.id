@@ -381,7 +381,7 @@ export default async function Home() {
         <main className='min-h-screen bg-slate-50 text-slate-900'>
             <ScrollReveal />
 
-            <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
+            <header className='sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 shadow-[0_1px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl'>
                 <div className='mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3'>
                     <a href='#top' className='flex items-center gap-3'>
                         <Image
@@ -439,7 +439,7 @@ export default async function Home() {
                             landing page, dan website yang sudah berjalan.
                         </p>
 
-                        <div className='mt-8 inline-flex max-w-2xl flex-col gap-4 rounded-[26px] border border-white/15 bg-white/10 px-5 py-4 shadow-[0_24px_70px_-45px_rgba(14,165,233,0.65)] backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between sm:gap-6'>
+                        <div className='mt-8 flex w-full flex-col gap-4 rounded-[26px] border border-white/15 bg-white/10 px-5 py-4 shadow-[0_24px_70px_-45px_rgba(14,165,233,0.65)] backdrop-blur-sm sm:max-w-2xl sm:flex-row sm:items-end sm:justify-between sm:gap-6'>
                             <div>
                                 <p className='text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100'>
                                     Mulai
@@ -458,24 +458,24 @@ export default async function Home() {
                             </p>
                         </div>
 
-                        <div className='mt-8 flex flex-wrap gap-3'>
+                        <div className='mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap'>
                             <a
                                 href={whatsappUrl}
                                 target='_blank'
                                 rel='noopener noreferrer'
-                                className='rounded-full bg-amber-400 px-7 py-3 text-[15px] font-bold text-slate-900 transition hover:bg-amber-300 sm:text-base md:text-lg'
+                                className='w-full rounded-full bg-amber-400 px-7 py-3 text-center text-[15px] font-bold text-slate-900 transition hover:bg-amber-300 sm:w-auto sm:text-base md:text-lg'
                             >
                                 Konsultasi Gratis via WhatsApp
                             </a>
                             <a
                                 href='#paket'
-                                className='rounded-full border border-white/30 px-7 py-3 text-[15px] font-bold text-white transition hover:bg-white/10 sm:text-base md:text-lg'
+                                className='w-full rounded-full border border-white/30 px-7 py-3 text-center text-[15px] font-bold text-white transition hover:bg-white/10 sm:w-auto sm:text-base md:text-lg'
                             >
                                 Cek Paket Bulanan
                             </a>
                         </div>
 
-                        <div className='mt-8 grid max-w-2xl gap-3 sm:grid-cols-2'>
+                        <div className='mt-8 hidden max-w-2xl gap-3 sm:grid-cols-2 lg:grid'>
                             {heroTrustBadges.map((badge) => (
                                 <span
                                     key={badge}
@@ -487,7 +487,7 @@ export default async function Home() {
                         </div>
                     </div>
 
-                    <aside className='w-full max-w-[24rem] rounded-[30px] border border-white/15 bg-white/10 p-6 shadow-[0_28px_80px_-45px_rgba(14,165,233,0.7)] backdrop-blur md:p-7 lg:justify-self-end'>
+                    <aside className='w-full rounded-[30px] border border-white/15 bg-white/10 p-6 shadow-[0_28px_80px_-45px_rgba(14,165,233,0.7)] backdrop-blur md:p-7 lg:max-w-[24rem] lg:justify-self-end'>
                         <p className='text-sm font-bold uppercase tracking-[0.24em] text-cyan-100'>
                             Ringkasan manfaat
                         </p>
@@ -511,6 +511,33 @@ export default async function Home() {
                             ))}
                         </ul>
                     </aside>
+
+                    <div className='lg:hidden -mx-4 mt-6 overflow-hidden'>
+                        <div
+                            className='marquee-track flex w-max items-center gap-3 px-4'
+                            style={{ animationDuration: '18s' }}
+                        >
+                            {heroTrustBadges.map((badge) => (
+                                <span
+                                    key={badge}
+                                    className='inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border border-white/15 bg-white/8 px-4 py-2.5 text-sm font-semibold text-slate-100'
+                                >
+                                    <span className='text-cyan-300'>✓</span>
+                                    {badge}
+                                </span>
+                            ))}
+                            {heroTrustBadges.map((badge) => (
+                                <span
+                                    key={`${badge}-dup`}
+                                    aria-hidden
+                                    className='inline-flex items-center gap-2 whitespace-nowrap rounded-2xl border border-white/15 bg-white/8 px-4 py-2.5 text-sm font-semibold text-slate-100'
+                                >
+                                    <span className='text-cyan-300'>✓</span>
+                                    {badge}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </section>
 

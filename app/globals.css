@@ -55,6 +55,24 @@ body {
 .reveal-delay-300 { transition-delay: 300ms; }
 .reveal-delay-400 { transition-delay: 400ms; }
 
+/* Floating WhatsApp bounce: 3s idle → 3 bounces → 3s idle → repeat (7.5s total) */
+@keyframes wa-bounce-anim {
+    0%, 40%   { transform: translateY(0) scale(1, 1); }
+    43.3%     { transform: translateY(-18px) scale(0.9, 1.1); }
+    46.7%     { transform: translateY(0) scale(1.12, 0.88); }
+    48%       { transform: translateY(0) scale(1, 1); }
+    50%       { transform: translateY(-13px) scale(0.92, 1.08); }
+    53.3%     { transform: translateY(0) scale(1.08, 0.92); }
+    54.6%     { transform: translateY(0) scale(1, 1); }
+    56.7%     { transform: translateY(-8px) scale(0.95, 1.05); }
+    60%, 100% { transform: translateY(0) scale(1, 1); }
+}
+
+.wa-bounce {
+    animation: wa-bounce-anim 7.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+    transform-origin: bottom center;
+}
+
 .blog-article-content > ul,
 .blog-article-content li > ul {
     list-style: none;

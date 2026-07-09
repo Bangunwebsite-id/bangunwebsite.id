@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { Suspense } from 'react';
 
+import { FloatingWhatsapp } from './components/floating-whatsapp';
 import { TrafficTracker } from './components/traffic-tracker';
 import './globals.css';
 import {
@@ -18,7 +19,7 @@ const jakartaSans = Plus_Jakarta_Sans({
     display: 'swap',
 });
 
-const { siteUrl } = getPublicSiteConfig();
+const { siteUrl, whatsappDefaultUrl } = getPublicSiteConfig();
 const defaultSocialImageUrl = getDefaultSocialImageUrl(siteUrl);
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default function RootLayout({
         <html lang='id' className={`h-full antialiased ${jakartaSans.variable}`}>
             <body className='min-h-full font-sans'>
                 {children}
+                <FloatingWhatsapp whatsappUrl={whatsappDefaultUrl} />
                 <Suspense fallback={null}>
                     <TrafficTracker />
                 </Suspense>
