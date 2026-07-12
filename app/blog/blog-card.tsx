@@ -24,7 +24,7 @@ export function BlogCard({ post }: { post: PublicBlogPost }) {
                     year: 'numeric',
                 })}
             </p>
-            <span className='mt-4 inline-flex items-center justify-center rounded-full border border-cyan-700 px-4 py-2 text-sm font-bold text-cyan-700 transition group-hover:bg-cyan-50'>
+            <span role='presentation' className='mt-4 inline-flex items-center justify-center rounded-full border border-cyan-700 px-4 py-2 text-sm font-bold text-cyan-700 transition group-hover:bg-cyan-50'>
                 Baca Artikel
             </span>
         </Link>

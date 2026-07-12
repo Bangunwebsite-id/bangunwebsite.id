@@ -137,6 +137,13 @@ export default function BlogDetailPage({ params }: BlogDetailProps) {
 
     return (
         <main className='min-h-screen bg-slate-50 text-slate-900'>
+            <a
+                href='#article-content'
+                className='sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-4 focus:rounded-lg focus:bg-cyan-700 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white'
+            >
+                Lewati ke konten utama
+            </a>
+
             <header className='sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur'>
                 <div className='mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3'>
                     <Link href='/' className='flex items-center gap-3'>
@@ -150,10 +157,10 @@ export default function BlogDetailPage({ params }: BlogDetailProps) {
                         />
                     </Link>
 
-                    <div className='flex items-center gap-3'>
+                    <div className='flex items-center gap-2'>
                         <LoadingLink
                             href='/blog'
-                            className='rounded-full border-2 border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100'
+                            className='hidden rounded-full border-2 border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 sm:inline-flex'
                         >
                             Semua Blog
                         </LoadingLink>
@@ -169,11 +176,13 @@ export default function BlogDetailPage({ params }: BlogDetailProps) {
                 </div>
             </header>
 
-            <Suspense fallback={<BlogDetailSkeleton />}>
-                {params.then(({ slug }) => (
-                    <BlogDetailContent slug={slug} />
-                ))}
-            </Suspense>
+            <div id='article-content'>
+                <Suspense fallback={<BlogDetailSkeleton />}>
+                    {params.then(({ slug }) => (
+                        <BlogDetailContent slug={slug} />
+                    ))}
+                </Suspense>
+            </div>
         </main>
     );
 }
@@ -255,7 +264,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                     <p className='inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-extrabold uppercase text-cyan-800'>
                         {post.categories[0] ?? 'Blog'}
                     </p>
-                    <h1 className='mt-5 max-w-3xl text-4xl font-extrabold leading-[1.08] text-slate-950 md:text-6xl md:leading-[1.03]'>
+                    <h1 className='mt-5 max-w-3xl text-4xl font-extrabold leading-[1.1] text-slate-950 md:text-6xl md:leading-[1.1]'>
                         {post.title}
                     </h1>
                     <div className='mt-6 h-px w-28 bg-cyan-600' />
@@ -263,7 +272,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                         {post.summary}
                     </p>
 
-                    <div className='mt-6 flex flex-wrap items-center gap-3 text-sm font-bold text-slate-500'>
+                    <div className='mt-6 flex flex-wrap items-center gap-3 text-sm font-bold text-slate-600'>
                         <span>
                             {new Date(post.published_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
@@ -290,7 +299,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                 )}
 
                 <article className='mx-auto mt-12 max-w-3xl rounded-[28px] border border-slate-200 bg-white px-5 py-8 shadow-[0_22px_80px_-60px_rgba(15,23,42,0.5)] md:px-10 md:py-12'>
-                    <div className='blog-article-content text-[17px] leading-8 text-slate-800 md:text-[18px] md:leading-9'>
+                    <div className='blog-article-content text-[17px] leading-relaxed text-slate-800 md:text-[18px] md:leading-7'>
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -388,7 +397,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                     </thead>
                                 ),
                                 th: ({ children }) => (
-                                    <th className='border-b border-slate-200 px-4 py-3 align-top'>
+                                    <th scope='col' className='border-b border-slate-200 px-4 py-3 align-top'>
                                         {children}
                                     </th>
                                 ),
@@ -403,6 +412,7 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                                         alt={alt ?? ''}
                                         className='my-10 h-auto w-full rounded-[22px] border border-slate-200 object-contain shadow-sm'
                                         loading='lazy'
+                                        style={{ aspectRatio: 'auto' }}
                                     />
                                 ),
                             }}
@@ -443,9 +453,9 @@ async function BlogDetailContent({ slug }: { slug: string }) {
                 </div>
             </section>
 
-            <section className='mx-auto w-full max-w-6xl px-4 pb-16'>
+            <section aria-label='Artikel terkait' className='mx-auto w-full max-w-6xl px-4 pb-16'>
                 <h2 className='text-2xl font-bold md:text-3xl'>Artikel Lainnya</h2>
-                <div className='mt-6 grid gap-6 md:grid-cols-3'>
+                <div className='mt-6 grid gap-6 sm:grid-cols-2 md:grid-cols-3'>
                     {related.map((item) => (
                         <BlogCard key={item.slug} post={item} />
                     ))}

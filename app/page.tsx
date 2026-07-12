@@ -331,14 +331,14 @@ const faqs = [
 ];
 
 const clientLogos = [
-    { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10' },
-    { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16' },
-    { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16' },
-    { name: 'Ryuki Indo Sakato', src: '/perusahaan/ryuki-indo-sakato.webp', size: 'h-10' },
-    { name: 'Sapa Foundation', src: '/perusahaan/sapa-foundation.webp', size: 'h-16' },
-    { name: 'SentulTrip', src: '/perusahaan/sentultrip.webp', size: 'h-16' },
-    { name: 'Sulawesi Pos', src: '/perusahaan/sulawesipos.webp', size: 'h-10' },
-    { name: 'Teknik Academy', src: '/perusahaan/teknikacademy.webp', size: 'h-10' },
+    { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10', height: 40 },
+    { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16', height: 64 },
+    { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16', height: 64 },
+    { name: 'Ryuki Indo Sakato', src: '/perusahaan/ryuki-indo-sakato.webp', size: 'h-10', height: 40 },
+    { name: 'Sapa Foundation', src: '/perusahaan/sapa-foundation.webp', size: 'h-16', height: 64 },
+    { name: 'SentulTrip', src: '/perusahaan/sentultrip.webp', size: 'h-16', height: 64 },
+    { name: 'Sulawesi Pos', src: '/perusahaan/sulawesipos.webp', size: 'h-10', height: 40 },
+    { name: 'Teknik Academy', src: '/perusahaan/teknikacademy.webp', size: 'h-10', height: 40 },
 ];
 
 const panelBase =
@@ -553,7 +553,7 @@ export default async function Home() {
                                 src={logo.src}
                                 alt={logo.name}
                                 width={120}
-                                height={48}
+                                height={logo.height}
                                 style={{ width: 'auto' }}
                                 className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
                             />
@@ -565,7 +565,7 @@ export default async function Home() {
                                 alt=''
                                 aria-hidden
                                 width={120}
-                                height={48}
+                                height={logo.height}
                                 style={{ width: 'auto' }}
                                 className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
                             />

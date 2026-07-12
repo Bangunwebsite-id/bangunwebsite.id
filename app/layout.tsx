@@ -73,7 +73,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang='id' className={`h-full antialiased ${jakartaSans.variable}`}>
+        <html lang='id' data-scroll-behavior='smooth' className={`h-full antialiased ${jakartaSans.variable}`}>
             <body className='min-h-full font-sans'>
                 {children}
                 <FloatingWhatsapp whatsappUrl={whatsappDefaultUrl} />
