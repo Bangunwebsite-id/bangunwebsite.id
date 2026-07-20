@@ -309,6 +309,16 @@ const portfolioProjects = [
         category: 'Travel',
         url: 'https://sentultrip.id/',
     },
+    {
+        id: 10,
+        title: 'Harsyahputra',
+        description:
+            'Website spesialis undangan pernikahan dan undangan acara dengan alur pemesanan yang jelas.',
+        image: '/lovable-uploads/harsyahputra.png',
+        tech: ['Next.js', 'Tailwind CSS', 'Responsive', 'SEO'],
+        category: 'Wedding',
+        url: 'https://harsyahputra.id',
+    },
 ];
 
 const faqs = [
@@ -331,6 +341,7 @@ const faqs = [
 ];
 
 const clientLogos = [
+    { name: 'Harsyahputra', src: '/perusahaan/logo-hp.jpg', size: 'h-16', height: 64 },
     { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10', height: 40 },
     { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16', height: 64 },
     { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16', height: 64 },
