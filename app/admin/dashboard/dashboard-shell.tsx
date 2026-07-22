@@ -25,7 +25,10 @@ export function DashboardShell({ username, children }: DashboardShellProps) {
 
     return (
         <main className='min-h-screen bg-slate-50 text-slate-900'>
-            <aside className='fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-slate-200 bg-white lg:flex lg:flex-col'>
+            <aside
+                data-admin-shell-aside
+                className='fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-slate-200 bg-white lg:flex lg:flex-col'
+            >
                 <div className='border-b border-slate-200 p-6'>
                     <p className='text-xs font-bold uppercase tracking-[0.18em] text-cyan-700'>
                         BangunWebsite Admin
@@ -87,9 +90,12 @@ export function DashboardShell({ username, children }: DashboardShellProps) {
                 </div>
             </aside>
 
-            <div className='lg:pl-72'>
+            <div data-admin-shell-content className='lg:pl-72'>
                 <div className='mx-auto w-full max-w-[1240px] px-4 py-6 md:px-6 lg:px-8'>
-                    <header className='rounded-2xl border border-slate-200 bg-white p-5'>
+                    <header
+                        data-admin-shell-header
+                        className='rounded-2xl border border-slate-200 bg-white p-5'
+                    >
                         <div className='flex flex-wrap items-start justify-between gap-4'>
                             <div>
                                 <p className='text-xs font-bold uppercase tracking-[0.18em] text-cyan-700'>

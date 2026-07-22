@@ -22,6 +22,11 @@ export const dashboardTabs = [
         description: 'CRUD artikel',
     },
     {
+        id: 'invoice',
+        label: 'Invoice',
+        description: 'Surat penawaran',
+    },
+    {
         id: 'notulen',
         label: 'Notulen',
         description: 'CRUD rapat',
