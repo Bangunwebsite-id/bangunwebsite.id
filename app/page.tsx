@@ -68,16 +68,17 @@ const websiteCarePackages = [
             'Untuk website bisnis yang butuh dirawat rutin, tetap aman, rapi, dan aktif.',
         cta: 'Konsultasi Paket Basic',
         points: [
-            'Audit awal website',
             'Backup berkala',
-            'Cek error dasar',
-            'Monitoring dasar website',
-            'Update konten ringan',
             'Perbaikan bug minor',
             'Optimasi kecepatan ringan',
             'Cek tampilan mobile',
             'Cek tombol WhatsApp/form kontak',
             'SEO dasar on-page ringan',
+            'Setup Google Ads & campaign awal',
+            'Audit awal website',
+            'Cek error dasar',
+            'Monitoring dasar website',
+            'Update konten ringan',
             'Setup/cek Google Analytics',
             'Setup/cek Google Search Console',
             'Konsultasi via WhatsApp',
@@ -87,64 +88,35 @@ const websiteCarePackages = [
         examples: [],
     },
     {
-        id: 'growth',
-        name: 'Website Care Growth',
-        price: 'Rp1.000.000/bulan',
-        subtitle:
-            'Untuk bisnis yang butuh maintenance lebih aktif, prioritas normal, dan request fitur semi kompleks.',
-        cta: 'Konsultasi Paket Growth',
-        featured: true,
-        badge: 'Paling Direkomendasikan',
-        points: [
-            'Semua fitur Basic',
-            'Prioritas pengerjaan lebih cepat',
-            'Evaluasi performa bulanan',
-            'Optimasi CTA/form WhatsApp',
-            'Optimasi landing page ringan',
-            'SEO on-page lebih mendalam',
-            'Bantuan kesiapan Google Ads',
-            'Perbaikan bug lebih teknis',
-            'Request fitur semi kompleks',
-            'Maksimal 2-3 request per bulan',
-        ],
-        examplesTitle: 'Contoh request semi kompleks',
-        examples: [
-            'Tambah section landing page',
-            'Buat halaman baru sederhana',
-            'Form lead/contact lebih rapi',
-            'Integrasi tracking/pixel ringan',
-            'Perbaikan layout mobile',
-            'Penyesuaian CTA untuk campaign',
-        ],
-    },
-    {
         id: 'priority',
         name: 'Website Care Priority',
         price: 'Rp2.000.000/bulan',
         subtitle:
-            'Untuk bisnis yang butuh prioritas tinggi, optimasi lebih serius, dan request fitur kompleks bertahap.',
+            'Untuk bisnis yang butuh maintenance lebih aktif, prioritas tinggi, dan request fitur semi kompleks hingga kompleks.',
         cta: 'Konsultasi Paket Priority',
+        featured: true,
+        badge: 'Paling Direkomendasikan',
         points: [
-            'Semua fitur Growth',
+            'Semua fitur Basic',
             'Prioritas pengerjaan tertinggi',
-            'Support lebih intensif via WhatsApp',
-            'Review strategi website bulanan',
-            'Optimasi funnel/landing page',
-            'Support campaign/iklan digital',
-            'Pengembangan fitur kompleks bertahap',
-            'Integrasi tools bisnis ringan-menengah',
-            'Maintenance teknis lebih mendalam',
+            'Optimasi CTA, funnel, dan landing page',
+            'SEO on-page lebih mendalam',
+            'Maintenance & perbaikan bug teknis mendalam',
+            'Support campaign/iklan digital lanjutan',
             'Maksimal 4-5 request per bulan',
+            'Support intensif via WhatsApp',
+            'Evaluasi & review strategi performa bulanan',
+            'Integrasi tools bisnis ringan-menengah',
         ],
-        examplesTitle: 'Contoh request kompleks',
+        examplesTitle: 'Contoh request semi kompleks - kompleks',
         examples: [
+            'Tambah section/halaman baru pada landing page',
+            'Form lead/contact lebih rapi dengan database',
+            'Integrasi tracking/pixel & WhatsApp lanjutan',
             'Mini dashboard/admin sederhana',
             'Katalog produk/jasa sederhana',
-            'Sistem form dengan database',
-            'Integrasi WhatsApp/tracking lebih lanjut',
             'Booking sederhana',
             'Perbaikan flow order/lead',
-            'Landing page campaign lebih lengkap',
         ],
     },
 ];
@@ -202,14 +174,9 @@ const servicePillars = [
 
 const projectPackages = [
     {
-        name: 'Starter Website',
-        price: 'Mulai Rp750.000',
-        note: 'Untuk landing page atau company profile sederhana.',
-    },
-    {
-        name: 'Business Website',
-        price: 'Mulai Rp1.500.000',
-        note: 'Untuk UMKM yang butuh halaman lebih lengkap, CTA jelas, dan fondasi SEO.',
+        name: 'Starter & Business Website',
+        price: 'Mulai Rp1.000.000',
+        note: 'Untuk landing page, company profile, atau halaman bisnis lebih lengkap dengan CTA jelas dan fondasi SEO.',
     },
     {
         name: 'Custom Website/System',
@@ -355,6 +322,16 @@ const clientLogos = [
 const panelBase =
     'relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-6 shadow-[0_16px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)]';
 
+const checkColors = [
+    'bg-rose-100 text-rose-700',
+    'bg-amber-100 text-amber-700',
+    'bg-emerald-100 text-emerald-700',
+    'bg-sky-100 text-sky-700',
+    'bg-violet-100 text-violet-700',
+    'bg-teal-100 text-teal-700',
+    'bg-fuchsia-100 text-fuchsia-700',
+];
+
 function createWhatsappLink(number: string, text: string) {
     return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
@@ -372,10 +349,6 @@ export default async function Home() {
         basic: createWhatsappLink(
             whatsappNumber,
             'Halo BangunWebsite.id, saya ingin konsultasi tentang paket Website Care Basic.'
-        ),
-        growth: createWhatsappLink(
-            whatsappNumber,
-            'Halo BangunWebsite.id, saya ingin konsultasi tentang paket Website Care Growth.'
         ),
         priority: createWhatsappLink(
             whatsappNumber,
@@ -604,17 +577,17 @@ export default async function Home() {
                     </p>
                 </div>
 
-                <div className='mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
+                <div className='mt-6 grid gap-3 sm:mt-8 sm:gap-4 md:grid-cols-2 xl:grid-cols-4'>
                     {painPoints.map((issue, index) => (
                         <article
                             key={issue}
-                            className='animate-on-scroll rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.35)]'
+                            className='animate-on-scroll rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.35)] sm:rounded-3xl sm:p-5'
                             style={{ transitionDelay: `${index * 60}ms` }}
                         >
-                            <span className='inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white'>
+                            <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white sm:h-10 sm:w-10 sm:text-sm'>
                                 {index + 1}
                             </span>
-                            <p className='mt-4 text-base font-semibold text-slate-800 md:text-lg'>
+                            <p className='mt-3 text-sm font-semibold text-slate-800 sm:mt-4 sm:text-base md:text-lg'>
                                 {issue}
                             </p>
                         </article>
@@ -638,17 +611,17 @@ export default async function Home() {
                         </p>
                     </div>
 
-                    <div className='mt-8 grid gap-6 md:grid-cols-3'>
+                    <div className='mt-6 grid gap-4 sm:mt-8 sm:gap-6 md:grid-cols-3'>
                         {solutionCards.map((item, index) => (
                             <article
                                 key={item.title}
-                                className={`${panelBase} animate-on-scroll`}
+                                className='animate-on-scroll relative overflow-hidden rounded-[20px] border border-slate-200/80 bg-white p-4 shadow-[0_16px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)] sm:rounded-[26px] sm:p-6'
                                 style={{ transitionDelay: `${index * 100}ms` }}
                             >
-                                <h3 className='text-xl font-bold leading-tight md:text-2xl'>
+                                <h3 className='text-lg font-bold leading-tight sm:text-xl md:text-2xl'>
                                     {item.title}
                                 </h3>
-                                <p className='mt-4 text-base leading-7 font-medium text-slate-700'>
+                                <p className='mt-3 text-sm leading-6 font-medium text-slate-700 sm:mt-4 sm:text-base sm:leading-7'>
                                     {item.description}
                                 </p>
                             </article>
@@ -659,9 +632,15 @@ export default async function Home() {
 
             <section id='paket' className='mx-auto w-full max-w-6xl px-4 py-20 md:py-24'>
                 <div className='animate-on-scroll max-w-4xl'>
-                    <span className='inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-bold text-amber-700'>
-                        Maintenance bulanan
-                    </span>
+                    <div className='flex flex-wrap items-center gap-2'>
+                        <span className='inline-flex rounded-full bg-amber-100 px-4 py-1 text-sm font-bold text-amber-700'>
+                            Maintenance bulanan
+                        </span>
+                        <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-4 py-1 text-sm font-bold text-rose-700'>
+                            <span className='h-1.5 w-1.5 rounded-full bg-rose-600' />
+                            Hanya menerima 3 klien baru bulan ini
+                        </span>
+                    </div>
                     <h2 className='mt-3 text-2xl font-bold leading-tight sm:text-3xl md:text-4xl'>
                         Paket Website Care Bulanan
                     </h2>
@@ -673,110 +652,109 @@ export default async function Home() {
                     </p>
                 </div>
 
-                <div className='mt-8 grid gap-6 lg:grid-cols-3'>
-                    {websiteCarePackages.map((item, index) => (
-                        <article
-                            key={item.id}
-                            className={`animate-on-scroll relative overflow-hidden rounded-[28px] border p-6 shadow-[0_18px_55px_-35px_rgba(15,23,42,0.35)] ${
-                                item.featured
-                                    ? 'border-cyan-300 bg-cyan-700 text-white'
-                                    : 'border-slate-200 bg-white text-slate-900'
-                            }`}
-                            style={{ transitionDelay: `${index * 100}ms` }}
-                        >
-                            {item.featured && item.badge ? (
-                                <span className='mb-4 inline-flex rounded-full bg-white/18 px-3 py-1 text-xs font-bold tracking-[0.14em] uppercase'>
-                                    {item.badge}
-                                </span>
-                            ) : null}
+                <div className='mt-8 grid gap-4 sm:grid-cols-2'>
+                    {websiteCarePackages.map((item, index) => {
+                        const visiblePoints = item.points.slice(0, 7);
+                        const morePoints = item.points.slice(7);
+                        const hasMore = morePoints.length > 0 || item.examples.length > 0;
 
-                            <h3 className='text-xl font-bold md:text-2xl'>
-                                {item.name}
-                            </h3>
-                            <p className='mt-3 text-2xl font-bold md:text-3xl'>
-                                {item.price}
-                            </p>
-                            <p
-                                className={`mt-4 text-base leading-7 font-medium ${
-                                    item.featured ? 'text-cyan-50' : 'text-slate-700'
+                        return (
+                            <article
+                                key={item.id}
+                                className={`animate-on-scroll relative overflow-hidden rounded-2xl border bg-white p-4 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.35)] ${
+                                    item.featured
+                                        ? 'border-cyan-300 ring-2 ring-cyan-100'
+                                        : 'border-slate-200'
                                 }`}
+                                style={{ transitionDelay: `${index * 100}ms` }}
                             >
-                                {item.subtitle}
-                            </p>
+                                {item.featured && item.badge ? (
+                                    <span className='mb-2 inline-flex rounded-full bg-cyan-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cyan-800'>
+                                        {item.badge}
+                                    </span>
+                                ) : null}
 
-                            <ul
-                                className={`mt-6 space-y-3 text-sm font-medium md:text-base ${
-                                    item.featured ? 'text-white' : 'text-slate-700'
-                                }`}
-                            >
-                                {item.points.map((point) => (
-                                    <li key={point} className='flex items-start gap-3'>
-                                        <span
-                                            className={`mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full text-xs font-bold ${
-                                                item.featured
-                                                    ? 'bg-white text-cyan-700'
-                                                    : 'bg-cyan-100 text-cyan-800'
-                                            }`}
-                                        >
-                                            ✓
-                                        </span>
-                                        <span>{point}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                                <h3 className='text-base font-bold text-slate-900'>
+                                    {item.name}
+                                </h3>
+                                <p className='mt-1.5 text-lg font-bold text-slate-900'>
+                                    {item.price}
+                                </p>
+                                <p className='mt-2 text-xs leading-5 font-medium text-slate-600'>
+                                    {item.subtitle}
+                                </p>
 
-                            {item.examples.length > 0 ? (
-                                <div
-                                    className={`mt-6 rounded-2xl border p-4 ${
+                                <ul className='mt-4 space-y-2 text-xs font-medium text-slate-700'>
+                                    {visiblePoints.map((point, i) => (
+                                        <li key={point} className='flex items-start gap-2'>
+                                            <span
+                                                className={`mt-0.5 inline-flex h-4 w-4 flex-none items-center justify-center rounded-full text-[10px] font-bold ${checkColors[i % checkColors.length]}`}
+                                            >
+                                                ✓
+                                            </span>
+                                            <span>{point}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                {hasMore ? (
+                                    <details className='mt-2.5'>
+                                        <summary className='cursor-pointer text-xs font-bold text-cyan-700'>
+                                            Selengkapnya
+                                        </summary>
+
+                                        {morePoints.length > 0 ? (
+                                            <ul className='mt-2.5 space-y-2 text-xs font-medium text-slate-700'>
+                                                {morePoints.map((point, i) => (
+                                                    <li key={point} className='flex items-start gap-2'>
+                                                        <span
+                                                            className={`mt-0.5 inline-flex h-4 w-4 flex-none items-center justify-center rounded-full text-[10px] font-bold ${checkColors[(i + 7) % checkColors.length]}`}
+                                                        >
+                                                            ✓
+                                                        </span>
+                                                        <span>{point}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : null}
+
+                                        {item.examples.length > 0 ? (
+                                            <div className='mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3'>
+                                                <p className='text-xs font-bold text-slate-900'>
+                                                    {item.examplesTitle}
+                                                </p>
+                                                <ul className='mt-2 space-y-1.5 text-xs font-medium text-slate-700'>
+                                                    {item.examples.map((example) => (
+                                                        <li key={example} className='flex items-start gap-1.5'>
+                                                            <span className='mt-0.5 text-[10px]'>-</span>
+                                                            <span>{example}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ) : null}
+                                    </details>
+                                ) : null}
+
+                                <a
+                                    href={
+                                        packageInquiryLinks[
+                                            item.id as keyof typeof packageInquiryLinks
+                                        ]
+                                    }
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    className={`mt-4 inline-flex rounded-full px-4 py-2 text-xs font-bold transition ${
                                         item.featured
-                                            ? 'border-white/18 bg-white/10'
-                                            : 'border-slate-200 bg-slate-50'
+                                            ? 'bg-cyan-700 text-white hover:bg-cyan-800'
+                                            : 'bg-slate-900 text-white hover:bg-slate-700'
                                     }`}
                                 >
-                                    <p
-                                        className={`text-sm font-bold ${
-                                            item.featured
-                                                ? 'text-white'
-                                                : 'text-slate-900'
-                                        }`}
-                                    >
-                                        {item.examplesTitle}
-                                    </p>
-                                    <ul
-                                        className={`mt-3 space-y-2 text-sm font-medium ${
-                                            item.featured
-                                                ? 'text-cyan-50'
-                                                : 'text-slate-700'
-                                        }`}
-                                    >
-                                        {item.examples.map((example) => (
-                                            <li key={example} className='flex items-start gap-2'>
-                                                <span className='mt-0.5 text-xs'>-</span>
-                                                <span>{example}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ) : null}
-
-                            <a
-                                href={
-                                    packageInquiryLinks[
-                                        item.id as keyof typeof packageInquiryLinks
-                                    ]
-                                }
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className={`mt-7 inline-flex rounded-full px-5 py-3 text-sm font-bold transition md:text-base ${
-                                    item.featured
-                                        ? 'bg-white text-cyan-700 hover:bg-cyan-50'
-                                        : 'bg-slate-900 text-white hover:bg-slate-700'
-                                }`}
-                            >
-                                {item.cta}
-                            </a>
-                        </article>
-                    ))}
+                                    {item.cta}
+                                </a>
+                            </article>
+                        );
+                    })}
                 </div>
 
                 <div className='animate-on-scroll mt-8 rounded-[24px] border border-amber-200 bg-amber-50 p-5'>
@@ -810,19 +788,19 @@ export default async function Home() {
                         </p>
                     </div>
 
-                    <div className='mt-8 grid gap-6 lg:grid-cols-2'>
-                        <article className={`${panelBase} animate-on-scroll`}>
+                    <div className='mt-8 grid gap-4 sm:grid-cols-2'>
+                        <article className='animate-on-scroll relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.35)]'>
                             <div className='absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-cyan-500 to-sky-600' />
-                            <p className='text-sm font-bold uppercase tracking-[0.2em] text-cyan-700'>
+                            <p className='text-xs font-bold uppercase tracking-widest text-cyan-700'>
                                 Bulan pertama
                             </p>
-                            <h3 className='mt-3 text-xl font-bold md:text-2xl'>
+                            <h3 className='mt-2 text-base font-bold text-slate-900'>
                                 Audit dan Perbaikan Dasar
                             </h3>
-                            <ul className='mt-5 space-y-3 text-sm font-medium text-slate-700 md:text-base'>
+                            <ul className='mt-4 space-y-2 text-xs font-medium text-slate-700'>
                                 {firstMonthSteps.map((step) => (
-                                    <li key={step} className='flex items-start gap-3'>
-                                        <span className='mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-cyan-100 text-xs font-bold text-cyan-800'>
+                                    <li key={step} className='flex items-start gap-2'>
+                                        <span className='mt-0.5 inline-flex h-4 w-4 flex-none items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-800'>
                                             1
                                         </span>
                                         <span>{step}</span>
@@ -831,20 +809,18 @@ export default async function Home() {
                             </ul>
                         </article>
 
-                        <article
-                            className={`${panelBase} animate-on-scroll reveal-delay-100`}
-                        >
+                        <article className='animate-on-scroll reveal-delay-100 relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.35)]'>
                             <div className='absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-500 to-orange-500' />
-                            <p className='text-sm font-bold uppercase tracking-[0.2em] text-amber-700'>
+                            <p className='text-xs font-bold uppercase tracking-widest text-amber-700'>
                                 Bulan berikutnya
                             </p>
-                            <h3 className='mt-3 text-xl font-bold md:text-2xl'>
+                            <h3 className='mt-2 text-base font-bold text-slate-900'>
                                 Maintenance dan Pengembangan Ringan
                             </h3>
-                            <ul className='mt-5 space-y-3 text-sm font-medium text-slate-700 md:text-base'>
+                            <ul className='mt-4 space-y-2 text-xs font-medium text-slate-700'>
                                 {recurringMonthSteps.map((step) => (
-                                    <li key={step} className='flex items-start gap-3'>
-                                        <span className='mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-800'>
+                                    <li key={step} className='flex items-start gap-2'>
+                                        <span className='mt-0.5 inline-flex h-4 w-4 flex-none items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-800'>
                                             2
                                         </span>
                                         <span>{step}</span>
@@ -911,7 +887,7 @@ export default async function Home() {
                         </p>
                     </div>
 
-                    <div className='mt-8 grid gap-5 md:grid-cols-3'>
+                    <div className='mt-8 grid gap-5 md:grid-cols-2'>
                         {projectPackages.map((item, index) => (
                             <article
                                 key={item.name}
