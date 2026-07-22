@@ -38,6 +38,10 @@ body {
     font-family: var(--font-jakarta), sans-serif;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins), sans-serif;
+}
+
 /* Base scroll animations */
 .animate-on-scroll {
     opacity: 0;

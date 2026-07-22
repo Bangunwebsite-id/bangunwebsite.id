@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans, Poppins } from 'next/font/google';
 import { Suspense } from 'react';
 
 import { FloatingWhatsapp } from './components/floating-whatsapp';
@@ -12,6 +12,13 @@ import {
     getDefaultSocialImageUrl,
     getPublicSiteConfig,
 } from './lib/site-config';
+
+const poppins = Poppins({
+    subsets: ['latin'],
+    weight: ['400', '500', '600', '700', '800'],
+    variable: '--font-poppins',
+    display: 'swap',
+});
 
 const jakartaSans = Plus_Jakarta_Sans({
     subsets: ['latin'],
@@ -73,7 +80,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang='id' data-scroll-behavior='smooth' className={`h-full antialiased ${jakartaSans.variable}`}>
+        <html
+            lang='id'
+            data-scroll-behavior='smooth'
+            className={`h-full antialiased ${poppins.variable} ${jakartaSans.variable}`}
+        >
             <body className='min-h-full font-sans'>
                 {children}
                 <FloatingWhatsapp whatsappUrl={whatsappDefaultUrl} />
