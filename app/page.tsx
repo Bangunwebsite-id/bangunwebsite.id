@@ -370,10 +370,10 @@ export default async function Home() {
                 <div className='mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3'>
                     <a href='#top' className='flex items-center gap-3'>
                         <Image
-                            src='/bangun-website.png'
+                            src='/bangunwebsite-logo.png'
                             alt='BangunWebsite.id'
-                            width={170}
-                            height={44}
+                            width={800}
+                            height={240}
                             className='h-11 w-auto'
                             priority
                         />
