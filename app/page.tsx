@@ -1,6 +1,7 @@
 import Image from 'next/image';
 
 import { LoadingLink } from '@/app/components/loading-link';
+import { PageSpeedChecker } from '@/app/components/pagespeed-checker';
 import { ScrollReveal } from '@/app/components/scroll-reveal';
 import { listHomepageBlogPosts } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
@@ -25,9 +26,9 @@ const heroTrustBadges = [
 ];
 
 const heroSummaryPoints = [
-    'Maintenance, bug fixing, dan optimasi ringan bulanan',
-    'Request kecil bulanan sesuai paket tanpa buka project besar',
-    'Konsultasi teknis dan support via WhatsApp yang lebih praktis',
+    'Maintenance dan perbaikan ringan',
+    'Update kecil sesuai paket',
+    'Konsultasi via WhatsApp',
 ];
 
 const painPoints = [
@@ -476,13 +477,11 @@ export default async function Home() {
                             Ringkasan manfaat
                         </p>
                         <h2 className='mt-3 text-xl font-bold leading-tight md:text-2xl'>
-                            Website Care untuk bisnis yang butuh partner teknis
-                            rutin
+                            Website Care bulanan
                         </h2>
                         <p className='mt-4 text-sm leading-6 font-medium text-slate-200 md:text-base'>
-                            Bukan vendor sekali panggil. Satu ritme kerja untuk
-                            menjaga website tetap sehat, rapi, dan terus
-                            membaik.
+                            Kami bantu jaga website tetap jalan, rapi, dan
+                            mudah dikembangkan.
                         </p>
                         <ul className='mt-6 space-y-3 text-sm font-medium text-white md:text-base'>
                             {heroSummaryPoints.map((point) => (
@@ -494,6 +493,7 @@ export default async function Home() {
                                 </li>
                             ))}
                         </ul>
+                        <PageSpeedChecker />
                     </aside>
 
                     <div className='lg:hidden -mx-4 mt-6 overflow-hidden'>
