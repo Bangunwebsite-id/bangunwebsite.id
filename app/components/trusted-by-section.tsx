@@ -4,6 +4,7 @@ const clientLogos = [
     { name: 'Harsyahputra', src: '/perusahaan/logo-hp.jpg', size: 'h-16', width: 56, height: 64 },
     { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10', width: 125, height: 40 },
     { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16', width: 64, height: 64 },
+    { name: 'Prima Event', src: '/perusahaan/primaevent.webp', size: 'h-16', width: 64, height: 64 },
     { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16', width: 48, height: 64 },
     { name: 'Ryuki Indo Sakato', src: '/perusahaan/ryuki-indo-sakato.webp', size: 'h-10', width: 163, height: 40 },
     { name: 'Sapa Foundation', src: '/perusahaan/sapa-foundation.webp', size: 'h-16', width: 64, height: 64 },

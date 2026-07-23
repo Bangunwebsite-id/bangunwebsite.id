@@ -289,6 +289,16 @@ const portfolioProjects = [
         category: 'Wedding',
         url: 'https://harsyahputra.id',
     },
+    {
+        id: 11,
+        title: 'Prima Event',
+        description:
+            'Website sewa tenda dan perlengkapan event dengan fondasi SEO, katalog layanan, dan funnel WhatsApp.',
+        image: '/lovable-uploads/primaevent.id.png',
+        tech: ['Next.js', 'SEO', 'WhatsApp Funnel', 'Responsive'],
+        category: 'Event Rental',
+        url: 'https://primaevent.id',
+    },
 ];
 
 const faqs = [
