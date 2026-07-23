@@ -307,6 +307,9 @@ export default function MaintenanceWebsiteMakassarPage() {
                             <a href='#faq' className='text-slate-700 hover:text-cyan-700'>
                                 FAQ
                             </a>
+                            <Link href='/blog' className='text-slate-700 hover:text-cyan-700'>
+                                Blog
+                            </Link>
                             <a href='#kontak' className='text-slate-700 hover:text-cyan-700'>
                                 Kontak
                             </a>

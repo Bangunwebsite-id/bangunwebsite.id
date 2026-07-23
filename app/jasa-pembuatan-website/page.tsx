@@ -283,6 +283,7 @@ export default function JasaPembuatanWebsitePage() {
                 navItems={[
                     { label: 'Paket', href: '#paket' },
                     { label: 'Portfolio', href: '#portfolio' },
+                    { label: 'Blog', href: '/blog' },
                     { label: 'Kontak', href: '#kontak' },
                 ]}
             />

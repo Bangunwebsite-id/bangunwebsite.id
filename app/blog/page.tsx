@@ -126,7 +126,7 @@ async function BlogPostGrid({ searchParams }: BlogPageProps) {
 
     return (
         <>
-                <div className='mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                <div className='mt-10 grid gap-4 md:grid-cols-3'>
                     {blogPosts.length === 0 ? (
                         <article className='rounded-[24px] border border-slate-200 bg-white p-6 text-slate-700'>
                             Belum ada artikel blog.
@@ -185,20 +185,20 @@ async function BlogPostGrid({ searchParams }: BlogPageProps) {
 
 function BlogCardGridSkeleton() {
     return (
-        <div className='mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+        <div className='mt-10 grid gap-4 md:grid-cols-3'>
             {Array.from({ length: 12 }).map((_, index) => (
                 <article
                     key={index}
-                    className='relative flex min-h-[280px] flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(2,132,199,0.45)]'
+                    className='relative flex min-h-56 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_14px_35px_-28px_rgba(2,132,199,0.45)]'
                     aria-hidden='true'
                 >
-                    <div className='h-6 w-24 rounded-full bg-slate-200' />
-                    <div className='mt-4 h-7 w-11/12 rounded bg-slate-200' />
-                    <div className='mt-3 h-5 w-full rounded bg-slate-200' />
-                    <div className='mt-2 h-5 w-4/5 rounded bg-slate-200' />
-                    <div className='mt-2 h-5 w-10/12 rounded bg-slate-200' />
-                    <div className='mt-auto h-5 w-32 rounded bg-slate-200' />
-                    <div className='mt-4 h-10 w-36 rounded-full border border-slate-200 bg-slate-100' />
+                    <div className='h-5 w-20 rounded-full bg-slate-200' />
+                    <div className='mt-4 h-6 w-11/12 rounded bg-slate-200' />
+                    <div className='mt-3 h-4 w-full rounded bg-slate-200' />
+                    <div className='mt-2 h-4 w-4/5 rounded bg-slate-200' />
+                    <div className='mt-2 h-4 w-10/12 rounded bg-slate-200' />
+                    <div className='mt-auto h-4 w-28 rounded bg-slate-200' />
+                    <div className='mt-3 h-8 w-28 rounded-full border border-slate-200 bg-slate-100' />
                 </article>
             ))}
         </div>

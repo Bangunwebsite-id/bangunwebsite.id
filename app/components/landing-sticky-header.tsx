@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { LandingAvailabilityBar } from '@/app/components/landing-availability-bar';
-import { LoadingLink } from '@/app/components/loading-link';
 
 type LandingStickyHeaderProps = {
     whatsappUrl: string;
@@ -34,13 +33,13 @@ export function LandingStickyHeader({
                     <nav className='hidden items-center gap-6 text-sm font-semibold md:flex'>
                         {navItems.map((item) =>
                             item.href.startsWith('/') ? (
-                                <LoadingLink
+                                <Link
                                     key={item.href}
                                     href={item.href}
                                     className='text-slate-700 hover:text-cyan-700'
                                 >
                                     {item.label}
-                                </LoadingLink>
+                                </Link>
                             ) : (
                                 <a
                                     key={item.href}

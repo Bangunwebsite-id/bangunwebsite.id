@@ -270,6 +270,7 @@ export default function MaintenanceWebsitePage() {
                 navItems={[
                     { label: 'Paket', href: '#paket' },
                     { label: 'FAQ', href: '#faq' },
+                    { label: 'Blog', href: '/blog' },
                     { label: 'Kontak', href: '#kontak' },
                 ]}
             />

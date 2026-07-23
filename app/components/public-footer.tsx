@@ -1,5 +1,3 @@
-import { LoadingLink } from '@/app/components/loading-link';
-
 export function PublicFooter() {
     const landingPageLinks = [
         {
@@ -21,20 +19,26 @@ export function PublicFooter() {
     ];
 
     return (
-        <footer className='border-t border-slate-200 bg-white py-8'>
-            <div className='mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 text-sm font-medium text-slate-600 md:flex-row md:text-base'>
-                <p>© {new Date().getFullYear()} BangunWebsite.id</p>
-                <nav className='flex flex-wrap items-center justify-center gap-x-4 gap-y-2'>
+        <footer className='border-t border-slate-200 bg-white py-10'>
+            <div className='mx-auto flex w-full max-w-6xl flex-col gap-5 px-4'>
+                <nav
+                    aria-label='Link layanan BangunWebsite.id'
+                    className='grid gap-2 sm:grid-cols-2 lg:grid-cols-4'
+                >
                     {landingPageLinks.map((link) => (
-                        <LoadingLink
+                        <a
                             key={link.href}
                             href={link.href}
-                            className='font-bold text-cyan-800 transition hover:text-cyan-700'
+                            className='rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-800'
                         >
                             {link.label}
-                        </LoadingLink>
+                        </a>
                     ))}
                 </nav>
+
+                <p className='text-center text-sm font-semibold text-slate-500'>
+                    © {new Date().getFullYear()} BangunWebsite.id
+                </p>
             </div>
         </footer>
     );
