@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 
 import { LoadingLink } from '@/app/components/loading-link';
+import { PublicFooter } from '@/app/components/public-footer';
 import { countPublishedBlogPosts, listPublishedBlogPosts } from '@/app/lib/blogs';
 import {
     SITE_NAME,
@@ -105,6 +106,7 @@ export default function BlogPage({ searchParams }: BlogPageProps) {
                     <BlogPostGrid searchParams={searchParams} />
                 </Suspense>
             </section>
+            <PublicFooter />
         </main>
     );
 }

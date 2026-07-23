@@ -2,7 +2,9 @@ import Image from 'next/image';
 
 import { LoadingLink } from '@/app/components/loading-link';
 import { PageSpeedChecker } from '@/app/components/pagespeed-checker';
+import { PublicFooter } from '@/app/components/public-footer';
 import { ScrollReveal } from '@/app/components/scroll-reveal';
+import { TrustedBySection } from '@/app/components/trusted-by-section';
 import { listHomepageBlogPosts } from '@/app/lib/blogs';
 import { getPublicSiteConfig } from '@/app/lib/site-config';
 
@@ -68,6 +70,8 @@ const websiteCarePackages = [
         subtitle:
             'Untuk website bisnis yang butuh dirawat rutin, tetap aman, rapi, dan aktif.',
         cta: 'Konsultasi Paket Basic',
+        featured: true,
+        badge: 'Paling Direkomendasikan',
         points: [
             'Backup berkala',
             'Perbaikan bug minor',
@@ -95,8 +99,6 @@ const websiteCarePackages = [
         subtitle:
             'Untuk bisnis yang butuh maintenance lebih aktif, prioritas tinggi, dan request fitur semi kompleks hingga kompleks.',
         cta: 'Konsultasi Paket Priority',
-        featured: true,
-        badge: 'Paling Direkomendasikan',
         points: [
             'Semua fitur Basic',
             'Prioritas pengerjaan tertinggi',
@@ -308,18 +310,6 @@ const faqs = [
     },
 ];
 
-const clientLogos = [
-    { name: 'Harsyahputra', src: '/perusahaan/logo-hp.jpg', size: 'h-16', height: 64 },
-    { name: 'Lion Magazine', src: '/perusahaan/lionmag_logo.webp', size: 'h-10', height: 40 },
-    { name: 'Maju Mandiri Rentcar', src: '/perusahaan/maju-mandiri-rentcar.webp', size: 'h-16', height: 64 },
-    { name: 'Polda Sulsel', src: '/perusahaan/polda-sulsel.webp', size: 'h-16', height: 64 },
-    { name: 'Ryuki Indo Sakato', src: '/perusahaan/ryuki-indo-sakato.webp', size: 'h-10', height: 40 },
-    { name: 'Sapa Foundation', src: '/perusahaan/sapa-foundation.webp', size: 'h-16', height: 64 },
-    { name: 'SentulTrip', src: '/perusahaan/sentultrip.webp', size: 'h-16', height: 64 },
-    { name: 'Sulawesi Pos', src: '/perusahaan/sulawesipos.webp', size: 'h-10', height: 40 },
-    { name: 'Teknik Academy', src: '/perusahaan/teknikacademy.webp', size: 'h-10', height: 40 },
-];
-
 const panelBase =
     'relative overflow-hidden rounded-[26px] border border-slate-200/80 bg-white p-6 shadow-[0_16px_45px_-30px_rgba(2,132,199,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(2,132,199,0.5)]';
 
@@ -372,8 +362,9 @@ export default async function Home() {
                         <Image
                             src='/bangunwebsite-logo.png'
                             alt='BangunWebsite.id'
-                            width={800}
-                            height={240}
+                            width={180}
+                            height={54}
+                            sizes='180px'
                             className='h-11 w-auto'
                             priority
                         />
@@ -525,38 +516,7 @@ export default async function Home() {
                 </div>
             </section>
 
-            <div className='border-b border-slate-200 bg-white py-10'>
-                <p className='text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-400'>
-                    Dipercaya oleh bisnis dari berbagai industri
-                </p>
-                <div className='mx-auto mt-6 w-full max-w-6xl overflow-hidden px-4'>
-                    <div className='marquee-track flex w-max items-center gap-10 md:gap-16'>
-                        {clientLogos.map((logo) => (
-                            <Image
-                                key={logo.name}
-                                src={logo.src}
-                                alt={logo.name}
-                                width={120}
-                                height={logo.height}
-                                style={{ width: 'auto' }}
-                                className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
-                            />
-                        ))}
-                        {clientLogos.map((logo) => (
-                            <Image
-                                key={`${logo.name}-2`}
-                                src={logo.src}
-                                alt=''
-                                aria-hidden
-                                width={120}
-                                height={logo.height}
-                                style={{ width: 'auto' }}
-                                className={`${logo.size} object-contain opacity-50 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0`}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </div>
+            <TrustedBySection />
 
             <section
                 id='masalah'
@@ -759,6 +719,12 @@ export default async function Home() {
 
                 <div className='animate-on-scroll mt-8 rounded-[24px] border border-amber-200 bg-amber-50 p-5'>
                     <p className='text-sm leading-6 font-medium text-amber-900 md:text-base'>
+                        Paket maintenance kami juga bisa dipakai untuk tambah
+                        fitur. Cukup chat kebutuhan Anda via WhatsApp, kami cek
+                        scope, susun prioritas, lalu eksekusi sesuai jatah
+                        request paket bulanan.
+                    </p>
+                    <p className='mt-3 text-sm leading-6 font-medium text-amber-900 md:text-base'>
                         Request fitur semi kompleks dan kompleks tetap
                         dikerjakan bertahap sesuai scope bulanan. Fitur besar
                         seperti sistem login penuh, payment gateway, aplikasi
@@ -1140,22 +1106,7 @@ export default async function Home() {
                 </div>
             </section>
 
-            <footer className='border-t border-slate-200 bg-white py-8'>
-                <div className='mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 text-sm font-medium text-slate-600 md:flex-row md:text-base'>
-                    <p>© {new Date().getFullYear()} BangunWebsite.id</p>
-                    <p>
-                        WhatsApp Support:{' '}
-                        <a
-                            href={`https://wa.me/${whatsappNumber}`}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='font-bold text-cyan-800'
-                        >
-                            +62 821-5192-8443
-                        </a>
-                    </p>
-                </div>
-            </footer>
+            <PublicFooter />
         </main>
     );
 }

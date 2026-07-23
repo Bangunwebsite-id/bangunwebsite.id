@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     metadataBase: new URL(siteUrl),
     title: {
         default:
-            'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
+            'BangunWebsite.id - Maintenance Website & Developer Bulanan',
         template: '%s | BangunWebsite.id',
     },
     description: DEFAULT_SITE_DESCRIPTION,
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
         canonical: siteUrl,
     },
     openGraph: {
-        title: 'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
+        title: 'BangunWebsite.id - Maintenance Website & Developer Bulanan',
         description: DEFAULT_SITE_DESCRIPTION,
         url: siteUrl,
         siteName: SITE_NAME,
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'BangunWebsite.id | Langganan Developer, Maintenance Website, dan Konsultan IT',
+        title: 'BangunWebsite.id - Maintenance Website & Developer Bulanan',
         description: DEFAULT_SITE_DESCRIPTION,
         images: [defaultSocialImageUrl],
     },

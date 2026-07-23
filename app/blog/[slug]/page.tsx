@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 import { LoadingLink } from '@/app/components/loading-link';
+import { PublicFooter } from '@/app/components/public-footer';
 import {
     getPublishedBlogPostBySlug,
     listAllBlogPostSlugs,
@@ -183,6 +184,7 @@ export default function BlogDetailPage({ params }: BlogDetailProps) {
                     ))}
                 </Suspense>
             </div>
+            <PublicFooter />
         </main>
     );
 }
